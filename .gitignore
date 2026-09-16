@@ -1,0 +1,14 @@
+.runtime/
+.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+data/external/**
+data/raw/**
+data/interim/**
+data/processed/**
+!data/**/.gitkeep
+!data/external/README.md
+artifacts/models/*
+!artifacts/models/.gitkeep
+*.part

@@ -1,0 +1,21 @@
+seed: 42
+dataset_dir: data/external/circor-heart-sound/1.0.3
+sample_rate: 8000
+window_seconds: 5.0
+overlap: 0.5
+# Engineering defaults; no clinical validation. Filtering is disabled initially.
+filter_enabled: false
+filter_low_hz: 20
+filter_high_hz: 1000
+filter_order: 2
+n_fft: 512
+hop_length: 128
+n_mels: 40
+n_mfcc: 13
+feature_fmax: 2000
+train_fraction: 0.7
+validation_fraction: 0.15
+test_fraction: 0.15
+svm_c: 1.0
+svm_gamma: scale
+class_weight: balanced

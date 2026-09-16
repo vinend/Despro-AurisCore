@@ -1,0 +1,211 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}
+
+\title{Arsitektur AI Stetoskop Digital Multi-Mode}
+\author{Proyek PDS 2 dan PDS 3}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Ringkasan Konsep}
+Dokumen ini menjelaskan arsitektur AI untuk prototipe stetoskop digital low-cost berbasis mikrokontroler, mikrofon MEMS, dan desain yang terinspirasi dari Littmann digital stethoscope. Perangkat tidak hanya diarahkan untuk suara abdomen/bowel sounds, tetapi juga untuk suara jantung dan paru sebagai mode auskultasi utama.
+
+PDS 2 digunakan sebagai baseline dengan inference di smartphone atau PC. PDS 3 adalah pengembangan edge AI, yaitu ekstraksi fitur dan inference langsung di mikrokontroler menggunakan TinyML, tetapi tampilan visual hasil tetap diarahkan ke smartphone atau PC. Secara konsep, perangkat memiliki mode akustik original untuk auskultasi biasa dan mode digital untuk perekaman, visualisasi HP/PC, serta AI assistive screening.
+
+Mode klinisnya tetap multi-mode: Heart Mode untuk phonocardiogram, Lung Mode untuk breath sounds, dan Abdomen Mode untuk bowel sounds. Output AI pada tahap prototipe adalah Normal/Abnormal + confidence per mode, bukan diagnosis klinis final.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{diagrams/00_auscultation_mode_strategy.png}
+\caption{Strategi mode auskultasi jantung, paru, dan abdomen.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{diagrams/01_overall_ai_architecture.png}
+\caption{Overall AI Architecture PDS 2 dan PDS 3.}
+\end{figure}
+
+\section{Konsep Machine Learning}
+Input utama sistem adalah suara tubuh yang bersifat non-stasioner, beramplitudo rendah, dan mudah tercampur noise lingkungan. Suara jantung memiliki pola siklik S1/S2, suara paru memiliki pola napas inspirasi-ekspirasi, sedangkan suara abdomen muncul sebagai bowel burst yang tidak selalu periodik. Karena itu, model tidak langsung menerima audio mentah berdurasi panjang.
+
+Pendekatan yang direkomendasikan adalah mode-specific pipeline. Heart Mode, Lung Mode, dan Abdomen Mode dapat memakai kerangka yang sama, tetapi parameter filtering, segmentasi, fitur, dan modelnya disesuaikan. MFCC tetap menjadi fitur utama karena ringkas, tetapi log-mel spectrogram, envelope, spectral centroid, zero-crossing rate, dan temporal statistics dapat ditambahkan sesuai mode.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{0.25\linewidth}p{0.28\linewidth}p{0.37\linewidth}}
+\toprule
+\textbf{Komponen ML} & \textbf{Pilihan Desain} & \textbf{Alasan} \\
+\midrule
+Segmentasi audio & Window pendek dengan overlap & Membantu menangkap S1/S2 pada jantung, fase napas pada paru, dan bowel burst pada abdomen. \\
+Fitur audio & MFCC/log-mel, envelope, delta, temporal stats & Fitur disesuaikan per mode agar model tidak memaksakan satu representasi untuk semua suara tubuh. \\
+Normalisasi fitur & StandardScaler atau mean-variance normalization & SVM sensitif terhadap skala fitur sehingga fitur harus konsisten. \\
+Output model & Probabilitas Normal dan Abnormal & Probabilitas memudahkan thresholding dan interpretasi keyakinan model. \\
+Evaluasi & Accuracy, precision, recall, F1-score, confusion matrix per mode & F1-score penting jika data Normal dan Abnormal tidak seimbang. \\
+\bottomrule
+\end{tabular}
+\caption{Konsep machine learning yang digunakan pada sistem.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{0.17\linewidth}p{0.26\linewidth}p{0.28\linewidth}p{0.21\linewidth}}
+\toprule
+\textbf{Mode} & \textbf{Sinyal Utama} & \textbf{Fokus AI} & \textbf{Catatan ML} \\
+\midrule
+Heart & S1/S2, rhythm, murmur-like sound & Normal/Abnormal atau indikasi murmur & Perlu segmentasi siklus jantung jika dataset memungkinkan. \\
+Lung & Breath sounds, wheeze, crackle & Normal/Abnormal atau adventitious sounds & Pertimbangkan fase inspirasi dan ekspirasi. \\
+Abdomen & Bowel sounds, burst, interval, intensity & Normal/Abnormal bowel activity & Cocok untuk baseline awal proyek. \\
+\bottomrule
+\end{tabular}
+\caption{Mode auskultasi yang didukung oleh desain AI.}
+\end{table}
+
+\section{PDS 2: Smartphone / PC Inference}
+Pada PDS 2, mikrokontroler berperan sebagai perangkat akuisisi dan komunikasi. Suara jantung, paru, atau abdomen direkam oleh sistem chestpiece + MEMS microphone, diproses ringan untuk mengurangi noise, lalu dikirim melalui Wi-Fi WebSocket ke smartphone atau PC.
+
+Ekstraksi fitur, scaling, mode selection, dan inference dilakukan di smartphone atau PC. Pendekatan ini cocok untuk validasi awal karena proses eksperimen, debugging, dan evaluasi model lebih mudah dilakukan pada perangkat dengan komputasi lebih besar.
+
+WebSocket dipilih karena cocok untuk streaming data secara terus-menerus melalui Wi-Fi. Berbeda dari HTTP request biasa yang putus-sambung, WebSocket mempertahankan koneksi dua arah sehingga mikrokontroler dapat mengirim frame audio atau fitur secara kontinu ke aplikasi penerima.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{diagrams/02_pds2_smartphone_inference_pipeline.png}
+\caption{Pipeline AI PDS 2 dengan inference di smartphone atau PC.}
+\end{figure}
+
+Model utama yang direkomendasikan untuk PDS 2 adalah SVM berbasis fitur audio per mode. KNN dan Naive Bayes tetap berguna sebagai baseline pembanding karena sederhana dan mudah dijelaskan secara akademik.
+
+\subsection{Detail Model PDS 2}
+SVM cocok untuk dataset kecil sampai menengah karena mampu membentuk decision boundary yang relatif stabil walaupun jumlah data belum besar. Setiap mode sebaiknya memiliki model atau parameter model sendiri karena distribusi sinyal jantung, paru, dan abdomen berbeda.
+
+KNN dan Naive Bayes tetap digunakan sebagai baseline pembanding. KNN mudah dipahami dan dapat menunjukkan apakah fitur MFCC sudah memisahkan kelas secara natural. Naive Bayes sangat ringan dan cepat, tetapi asumsi independensi fitur sering kurang cocok untuk audio sehingga lebih tepat sebagai baseline, bukan model final utama.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{0.18\linewidth}p{0.23\linewidth}p{0.27\linewidth}p{0.22\linewidth}}
+\toprule
+\textbf{Model} & \textbf{Peran} & \textbf{Kelebihan} & \textbf{Keterbatasan} \\
+\midrule
+SVM & Model utama PDS 2 & Stabil untuk dataset kecil-menengah dan bekerja baik pada MFCC yang sudah diskalakan. & Perlu tuning kernel, C, dan gamma. \\
+KNN & Baseline pembanding & Sederhana dan tidak perlu training kompleks. & Inference makin berat jika data training banyak. \\
+Naive Bayes & Baseline ringan & Cepat dan mudah dijelaskan. & Asumsi independensi fitur sering terlalu sederhana untuk sinyal audio. \\
+\bottomrule
+\end{tabular}
+\caption{Perbandingan model classical machine learning untuk PDS 2.}
+\end{table}
+
+\section{PDS 3: Edge AI / TinyML}
+Pada PDS 3, jalur audio dibagi menjadi dua. Jalur pertama masuk ke audio jack 3.5 mm agar dokter atau tenaga ahli dapat mendengar suara secara real-time. Jalur kedua masuk ke mikrokontroler untuk preprocessing, feature extraction, dan mode-specific inference. Tidak ada display onboard khusus; hasil label, confidence, dan metadata dikirim ke smartphone atau PC untuk visualisasi.
+
+Dengan desain ini, pembeda utama PDS 2 dan PDS 3 bukan lokasi tampilan visualnya, melainkan lokasi komputasi AI. Pada PDS 2, HP/PC menjalankan feature extraction dan model ML. Pada PDS 3, mikrokontroler menjalankan TinyML secara lokal, lalu HP/PC hanya menjadi dashboard, logger, dan antarmuka pengguna.
+
+Model yang direkomendasikan adalah 1D-CNN ringan yang sudah dikuantisasi, dengan model atau head berbeda untuk Heart, Lung, dan Abdomen Mode. Model ini sesuai untuk pola audio karena dapat mempelajari pola lokal pada domain waktu atau urutan fitur, tetapi tetap harus dibatasi ukuran dan kompleksitasnya agar cocok untuk RAM dan flash mikrokontroler.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{diagrams/03_pds3_edge_ai_audio_jack_pipeline.png}
+\caption{Pipeline PDS 3 dengan audio jack real-time dan inference on-device.}
+\end{figure}
+
+\subsection{Detail Model PDS 3}
+PDS 3 memakai konsep TinyML: model dilatih di Python/Keras, kemudian dikompresi dan dideploy ke firmware mikrokontroler. Input model berupa feature window per mode. Conv1D digunakan karena dapat menangkap pola lokal antar-frame, misalnya siklus S1/S2 pada jantung, wheeze/crackle pada paru, atau burst interval pada abdomen.
+
+1D-CNN dipilih dibandingkan RNN/LSTM karena lebih ringan untuk inference embedded. Dibandingkan 2D-CNN spectrogram penuh, 1D-CNN pada MFCC/log-mel window lebih hemat memori dan lebih realistis untuk mikrokontroler low-cost.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{0.23\linewidth}p{0.32\linewidth}p{0.35\linewidth}}
+\toprule
+\textbf{Komponen TinyML} & \textbf{Rancangan} & \textbf{Alasan} \\
+\midrule
+Input & MFCC window, misalnya 20--40 koefisien per frame & Lebih ringkas daripada waveform mentah dan cukup informatif untuk klasifikasi audio. \\
+Model & Small 1D-CNN & Menangkap pola temporal lokal dengan jumlah parameter relatif kecil. \\
+Output & Softmax atau sigmoid & Menghasilkan probabilitas kelas Normal dan Abnormal. \\
+Optimisasi & Quantization int8 & Mengurangi ukuran model, RAM, dan waktu inference pada mikrokontroler. \\
+Runtime & TensorFlow Lite for Microcontrollers & Dirancang untuk menjalankan model kecil tanpa sistem operasi besar. \\
+\bottomrule
+\end{tabular}
+\caption{Rancangan model TinyML untuk PDS 3.}
+\end{table}
+
+\section{Workflow Machine Learning}
+Dataset dibagi berdasarkan mode auskultasi: Heart, Lung, dan Abdomen. Setiap mode memiliki label Normal/Abnormal dan metadata lokasi perekaman. Audio diproses melalui resampling, filtering, segmentation, dan normalisasi sebelum fitur diekstraksi.
+
+Untuk PDS 2, model diekspor sebagai file model klasik seperti \texttt{.pkl}. Untuk PDS 3, model Keras dikompresi melalui quantization, dikonversi menjadi \texttt{.tflite}, lalu diubah menjadi C array agar bisa dimasukkan ke firmware mikrokontroler.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{diagrams/04_ml_training_deployment_workflow.png}
+\caption{Workflow training, evaluasi, dan deployment model.}
+\end{figure}
+
+\section{Konsep Model TinyML}
+Input model PDS 3 berupa feature window berukuran kecil sesuai mode. Blok Conv1D menangkap pola lokal, pooling mengurangi dimensi, dense layer menggabungkan fitur, dan softmax/sigmoid menghasilkan probabilitas kelas Normal atau Abnormal.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{diagrams/05_tinyml_1d_cnn_model_concept.png}
+\caption{Konsep arsitektur 1D-CNN ringan untuk TinyML pada mikrokontroler.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{diagrams/06_ml_decision_logic.png}
+\caption{Decision logic untuk mengubah probabilitas model menjadi label diagnosis.}
+\end{figure}
+
+\section{Penjelasan Detail Diagram}
+\subsection*{Gambar 1: Overall AI Architecture}
+Common acquisition menunjukkan input fisik yang sama untuk PDS 2 dan PDS 3, yaitu suara jantung, paru, atau abdomen yang ditangkap melalui chestpiece/acoustic coupling dan MEMS microphone. Perangkat tetap memiliki mode akustik original untuk auskultasi biasa. PDS 2 menempatkan AI di smartphone atau PC, sedangkan PDS 3 menempatkan inference di mikrokontroler dan mengirim hasil ke HP/PC untuk visualisasi.
+
+\subsection*{Gambar 2: PDS 2 AI Pipeline}
+PDS 2 memisahkan embedded acquisition layer dan application/AI layer. Mikrokontroler menangkap audio, melakukan filtering ringan, dan streaming data melalui Wi-Fi WebSocket. Smartphone atau PC menjalankan buffer, mode selection, feature extraction, dan SVM per mode.
+
+\subsection*{Gambar 3: PDS 3 Edge AI + Audio Jack}
+PDS 3 memiliki dua jalur audio. Jalur listening path langsung menuju audio jack agar dokter mendengar suara tanpa delay inference. Jalur edge AI path menuju mikrokontroler untuk preprocessing, fitur per mode, dan quantized TinyML model. Hasil inference dikirim ke smartphone atau PC sebagai dashboard visual, bukan ke display onboard khusus. Pemisahan jalur ini penting karena AI tidak boleh mengganggu fungsi utama stetoskop sebagai alat auskultasi.
+
+\subsection*{Gambar 4: Machine Learning Workflow}
+Workflow ML dimulai dari dataset heart/lung/abdomen berlabel Normal dan Abnormal, dilanjutkan mode label, preprocessing, feature extraction, training, evaluation, dan deployment. PDS 2 mengekspor model klasik seperti \texttt{.pkl}. PDS 3 mengekspor model \texttt{.tflite} yang dikuantisasi dan dikonversi menjadi C array untuk firmware mikrokontroler.
+
+\subsection*{Gambar 5: TinyML 1D-CNN Model}
+Input model adalah feature window per mode. Conv1D menangkap pola temporal lokal, pooling mengurangi dimensi, dense layer menggabungkan fitur, dan softmax/sigmoid menghasilkan probabilitas kelas. Constraint utama adalah ukuran model, RAM, flash, dan latency inference.
+
+\subsection*{Gambar 6: ML Decision Logic}
+Model menghasilkan probabilitas kelas, bukan hanya label. Jika probabilitas Abnormal melewati threshold, sistem menampilkan Abnormal; jika tidak, sistem menampilkan Normal. Threshold awal dapat memakai 0.5, tetapi nilai final sebaiknya disetel memakai validation set agar trade-off false alarm dan missed abnormal lebih terkontrol.
+
+\section{Perbandingan PDS 2 dan PDS 3}
+\begin{table}[H]
+\centering
+\begin{tabular}{p{0.25\linewidth}p{0.33\linewidth}p{0.33\linewidth}}
+\toprule
+\textbf{Aspek} & \textbf{PDS 2} & \textbf{PDS 3} \\
+\midrule
+Lokasi inference & Smartphone / PC & Mikrokontroler \\
+Output visual & Smartphone / PC menampilkan hasil AI yang dihitung di aplikasi & Smartphone / PC menampilkan hasil AI yang dihitung di mikrokontroler \\
+Model utama & SVM berbasis fitur per mode & Quantized 1D-CNN per mode \\
+Kompleksitas embedded & Rendah & Tinggi \\
+Latency audio dokter & Bergantung streaming & Real-time melalui audio jack \\
+Kelebihan & Mudah diuji dan dievaluasi & AI berjalan lokal sehingga beban HP/PC lebih ringan dan data yang dikirim bisa berupa hasil ringkas \\
+Risiko teknis & Stabilitas Wi-Fi, latency jaringan, buffering, dan packet drop & RAM, flash, latency inference, optimasi model, dan sinkronisasi hasil ke HP/PC \\
+\bottomrule
+\end{tabular}
+\caption{Perbandingan desain AI PDS 2 dan PDS 3.}
+\end{table}
+
+\section{Rekomendasi Desain}
+Rekomendasi implementasi bertahap adalah memvalidasi pipeline PDS 2 terlebih dahulu menggunakan mode-specific features + SVM sebagai baseline. Abdomen Mode dapat menjadi fokus awal karena target bowel sounds sudah jelas, lalu Heart Mode dan Lung Mode ditambahkan sebagai ekspansi dataset dan model.
+
+Dengan strategi ini, PDS 2 berfungsi sebagai proof-of-concept AI untuk semua mode, sedangkan PDS 3 menjadi prototipe edge-AI yang menambahkan audio jack real-time dan inference lokal, namun tetap memakai HP/PC sebagai tampilan visual agar hardware tetap sederhana dan low-cost.
+
+\end{document}
