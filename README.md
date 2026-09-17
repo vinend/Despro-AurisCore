@@ -26,20 +26,22 @@ dari `mock-device` — bukan perangkat keras sungguhan dan bukan model AI.
 
 ## Menjalankan (dua proses)
 
+Pastikan dependensi sudah terinstal (`npm install` di root dan di `mini-services/mock-device`).
+
 ```bash
 # Terminal 1 — perangkat tiruan (port 8081)
 cd mini-services/mock-device
-bun run dev            # tambahkan --chaos untuk uji gap: bun run start -- --chaos
+npm run dev            # atau dengan chaos test: npx tsx index.ts --chaos
 
 # Terminal 2 — aplikasi web (port 3000)
-cd .                   # root proyek ini
-bun run dev
+cd ../..               # kembali ke root proyek jika dari mock-device
+npm run dev
 ```
 
-Buka aplikasi lewat gateway/preview (port eksternal). Browser otomatis
-menyambung ke `ws(s)://<host>/ws?XTransformPort=8081`; indikator koneksi ada
-di header. Uji koneksi langsung ke perangkat lain:
-`.../?device=ws://<alamat-perangkat>/ws`.
+Buka aplikasi di browser:
+- Akses lokal langsung: `http://localhost:3000/?device=ws://localhost:8081`
+- Atau lewat gateway Caddy/preview jika di sandbox: `http://<host>:3000` (otomatis menyambung ke `ws(s)://<host>/ws?XTransformPort=8081`).
+- Indikator koneksi ada di header. Uji koneksi langsung ke ESP32 fisik: `.../?device=ws://<alamat-perangkat>/ws`.
 
 ## Status fitur (DoD pekan 3)
 

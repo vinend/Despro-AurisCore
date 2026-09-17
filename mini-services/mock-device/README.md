@@ -21,22 +21,21 @@ Ringkasan singkat:
 - Nilai sinyal PCG hanya untuk visual demo, bukan model fisiologis akurat.
 
 ## Cara menjalankan
-
-```bash
-cd mini-services/mock-device
-bun install        # sekali saja
-bun run dev        # mode pengembangan (bun --hot, hot-reload)
-# atau
-bun run start      # tanpa hot-reload
-```
-
-Flag chaos (menjatuhkan ~1% `pcg_packet` secara acak, lihat bagian Aturan):
-
-```bash
-bun run start --chaos      # argumen diteruskan bun run ke skrip
-# atau setara:
-bun index.ts --chaos
-```
+ 
+ ```bash
+ cd mini-services/mock-device
+ npm install        # sekali saja
+ npm run dev        # mode pengembangan (tsx watch, auto reload)
+ # atau
+ npm run start      # mode start biasa
+ ```
+ 
+ Flag chaos (menjatuhkan ~1% `pcg_packet` secara acak, lihat bagian Aturan):
+ 
+ ```bash
+ npx tsx index.ts --chaos
+ # atau jika menggunakan bun: bun index.ts --chaos
+ ```
 
 Akses dari browser: sandbox hanya mengekspos gateway Caddy, jadi klien TIDAK
 menyambung langsung ke `localhost:8081`, melainkan lewat forwarding query:
