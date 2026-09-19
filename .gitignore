@@ -4,14 +4,14 @@
 __pycache__/
 .pytest_cache/
 *.egg-info/
-data/external/**
-data/raw/**
-data/interim/**
-data/processed/**
-!data/**/.gitkeep
-!data/external/README.md
-artifacts/models/*
-!artifacts/models/.gitkeep
+AI-Pipeline/data/external/**
+AI-Pipeline/data/raw/**
+AI-Pipeline/data/interim/**
+AI-Pipeline/data/processed/**
+!AI-Pipeline/data/**/.gitkeep
+!AI-Pipeline/data/external/README.md
+AI-Pipeline/artifacts/models/*
+!AI-Pipeline/artifacts/models/.gitkeep
 *.part
 
 # Dependencies
@@ -72,5 +72,5 @@ Thumbs.db
 *.sublime-project
 
 # Database (Prisma local dev / SQLite)
-prisma/*.db
-prisma/*.db-journal
+WebApp/prisma/*.db
+WebApp/prisma/*.db-journal
