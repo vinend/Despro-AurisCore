@@ -17,6 +17,7 @@ from .preprocessing import preprocess
 from .segmentation import segment
 from .splitting import assign_splits, assert_no_leakage
 from .training import train_baseline
+from .cnn import train_cnn
 from .validation import sha256
 
 LOG = logging.getLogger(__name__)
@@ -139,19 +140,23 @@ def run(root: Path, config: dict[str, Any], stage: str = "run_pipeline", downloa
         analyze_dataset(root, frame)
     if stage in ("run_pipeline", "preprocess_dataset"):
         preprocess_dataset(root, config, frame)
-    if stage in ("run_pipeline", "extract_features"):
+    model_type = config.get("model_type", "svm")
+    if stage == "extract_features" or (stage == "run_pipeline" and model_type == "svm"):
         feature_dataset(root, config)
-    if stage in ("run_pipeline", "train_baseline"):
+    if stage == "train_baseline" or (stage == "run_pipeline" and model_type == "svm"):
         stamp(root, config, "features", verify=True)
         return train_baseline(read_table(root / "data/processed/features.csv"), config, root, synthetic=synthetic)
+    if stage == "train_cnn" or (stage == "run_pipeline" and model_type == "cnn"):
+        stamp(root, config, "segments", verify=True)
+        return train_cnn(read_table(root / "data/processed/segments.csv"), config, root, synthetic=synthetic)
     return {"status": "completed", "stage": stage}
 
 
-def main(stage: str = "run_pipeline") -> int:
+def main(stage: str = "run_pipeline", default_config: str = "configs/heart_baseline.yaml") -> int:
     """CLI with actionable expected-error messages and nonzero failure exit codes."""
     parser = argparse.ArgumentParser(description="AurisCore research heart-sound pipeline")
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument("--config", type=Path, default=Path("configs/heart_baseline.yaml"))
+    parser.add_argument("--config", type=Path, default=Path(default_config))
     parser.add_argument("--download", action="store_true", help="Acquire the complete public CirCor release first")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")

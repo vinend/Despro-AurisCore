@@ -14,8 +14,8 @@ Ringkasan singkat:
 - Mini-service bun yang menyimulasikan stetoskop digital AurisCore.
 - Server WebSocket di **port 8081** (hardcoded, tidak pernah dibaca dari
   environment).
-- Mengirim PCG sintetis 2000 Hz, 1 kanal, 100 sampel int16 per paket
-  (100 / 2000 Hz = 50 ms audio).
+- Mengirim PCG sintetis 8000 Hz, 1 kanal, 400 sampel int16 per paket
+  (400 / 8000 Hz = 50 ms audio).
 - Protokol versi 1: setiap pesan adalah SATU objek JSON dengan field `type`;
   semua timestamp adalah epoch milidetik.
 - Nilai sinyal PCG hanya untuk visual demo, bukan model fisiologis akurat.
@@ -64,7 +64,7 @@ Klien (browser)                                  mock-device (:8081)
       |<-----------------------------------------------|
       |                                                |
       |          pcg_packet (setiap 50 ms realtime)    |
-      |<-----------------------------------------------|  100 sampel int16
+      |<-----------------------------------------------|  400 sampel int16
       |          pcg_packet ...                        |
       |          device_status (setiap 1000 ms)        |
       |<-----------------------------------------------|  bpm, baterai, mutu
@@ -92,7 +92,7 @@ Klien (browser)                                  mock-device (:8081)
 ### 1. `hello` — server ke klien (sekali, saat koneksi terbuka)
 
 ```json
-{"type":"hello","protocol":1,"device":"AurisCore-Mock","fw":"0.1.0-mock","samplingRate":2000,"channels":1}
+{"type":"hello","protocol":1,"device":"AurisCore-Mock","fw":"0.1.0-mock","samplingRate":8000,"channels":1}
 ```
 
 | Field | Tipe | Keterangan |
@@ -101,13 +101,13 @@ Klien (browser)                                  mock-device (:8081)
 | `protocol` | number | versi protokol; saat ini `1` |
 | `device` | string | nama perangkat; mock: `"AurisCore-Mock"` |
 | `fw` | string | versi firmware; mock: `"0.1.0-mock"` |
-| `samplingRate` | number | laju sampling PCG dalam Hz (`2000`) |
+| `samplingRate` | number | laju sampling PCG dalam Hz (`8000`) |
 | `channels` | number | jumlah kanal audio (`1`) |
 
 ### 2. `pcg_packet` — server ke klien (setiap 50 ms realtime, per koneksi)
 
 ```json
-{"type":"pcg_packet","seq":42,"ts":1762541234567,"samplingRate":2000,"organMode":"mitral","qualityFlag":"good","channels":1,"samples":[12,-34,56,"(tepat 100 nilai)"]}
+{"type":"pcg_packet","seq":42,"ts":1762541234567,"samplingRate":8000,"organMode":"mitral","qualityFlag":"good","channels":1,"samples":[12,-34,56,"(tepat 400 nilai)"]}
 ```
 
 | Field | Tipe | Keterangan |
@@ -115,11 +115,11 @@ Klien (browser)                                  mock-device (:8081)
 | `type` | string | `"pcg_packet"` |
 | `seq` | number | nomor urut paket; mulai `0` per koneksi; bertambah tepat `1` per paket |
 | `ts` | number | epoch milidetik saat paket dibuat |
-| `samplingRate` | number | `2000` |
+| `samplingRate` | number | `8000` |
 | `organMode` | string | `"mitral"` / `"aortic"` / `"pulmonic"` / `"tricuspid"` (awal: `"mitral"`) |
 | `qualityFlag` | string | `"good"` / `"fair"` / `"poor"` (aturan lihat bagian Aturan) |
 | `channels` | number | `1` |
-| `samples` | number[] | TEPAT 100 nilai int16 (-32768..32767) sebagai angka JSON; 50 ms audio |
+| `samples` | number[] | TEPAT 400 nilai int16 (-32768..32767) sebagai angka JSON; 50 ms audio |
 
 ### 3. `device_status` — server ke klien (setiap 1000 ms)
 
@@ -187,7 +187,7 @@ saat beat berganti). TIDAK ada pesan balasan.
    terbuka; server tidak pernah melempar error ke luar.
 3. **Semantik `seq`.** `seq` berurutan mulai 0 per koneksi, +1 tepat satu per
    paket. Lompatan `seq` berarti ada paket hilang; klien menyisipkan keheningan
-   sepanjang `selisih_seq * 100` sampel (gap-fill).
+   sepanjang `selisih_seq * 400` sampel (gap-fill).
 4. **Clamp bpm 60-100.** `set_bpm` di luar rentang diklem; hasil clamp
    terlihat di `device_status.bpm`. Berlaku mulai beat berikutnya (aturan di
    atas).

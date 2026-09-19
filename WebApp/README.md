@@ -12,7 +12,7 @@ Next.js prototype for the AurisCore ESP32-S3 digital stethoscope. PCG data and c
 
 - The frontend connects to the mock device through a real WebSocket transport.
 - A physical device can be selected with `?device=ws://<device-address>/ws` without changing the client code.
-- The protocol uses JSON, epoch-millisecond timestamps, signed int16 mono PCM, 2000 Hz, and 100 samples per 50 ms packet.
+- The protocol uses JSON, epoch-millisecond timestamps, signed int16 mono PCM, 8000 Hz, and 400 samples per 50 ms packet. The 2 kHz figure in the PDS is the upper signal-band frequency, not the sampling rate.
 - The protocol reference is [`mini-services/mock-device/README.md`](mini-services/mock-device/README.md).
 
 ## Run locally

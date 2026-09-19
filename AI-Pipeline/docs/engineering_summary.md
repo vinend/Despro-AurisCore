@@ -48,7 +48,7 @@ Original audio is never rewritten. Source TXT files supply identity and labels; 
 
 DSP uses mono averaging, polyphase resampling to 8 kHz, DC removal, disabled-by-default conservative filtering, peak normalization and five-second windows with 50% overlap. MFCCs, deltas, log-mel, RMS, centroid, zero-crossing and temporal statistics yield 349 features. Window features are averaged per recording.
 
-Seed 42 fixes a stratified participant split. Training uses `Pipeline(StandardScaler(), SVC(kernel='rbf', C=1, gamma='scale', class_weight='balanced'))`. No hyperparameter search or test-based model selection took place. Participant screening uses the mean recording decision margin with threshold zero. Margins are explicitly uncalibrated.
+Seed 42 fixes a stratified participant split. The historical run used `Pipeline(StandardScaler(), SVC(kernel='rbf', C=1, gamma='scale', class_weight='balanced'))` and threshold zero. The current code instead selects and stores a sensitivity-oriented threshold using validation participants only, and training does not evaluate the final holdout. Margins remain explicitly uncalibrated.
 
 Every processed stage has manifest/configuration/code fingerprints and table hashes. Changed configuration or artifacts require regeneration. CLI stages give useful missing-data errors. Downloading is resumable and uses the official public S3 endpoint with PhysioNet fallback and checksum verification.
 
@@ -60,7 +60,7 @@ The final suite emitted 14 nonfatal Matplotlib/Pyparsing deprecation warnings. `
 
 ## Actual model metrics
 
-These are internal research screening results from local holdouts of the public release, not official hidden Challenge scores or clinical diagnostic accuracy.
+These are historical internal research screening results. Because the local test result has been inspected, it is now development evidence rather than an untouched holdout. It is not an official hidden Challenge score or clinical diagnostic accuracy.
 
 | Evaluation unit | Accuracy | Precision | Sensitivity | Macro F1 |
 |---|---:|---:|---:|---:|

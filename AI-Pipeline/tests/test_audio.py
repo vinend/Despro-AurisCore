@@ -5,7 +5,7 @@ import soundfile as sf
 from auriscore.io import load_audio
 from auriscore.preprocessing import preprocess, to_mono
 from auriscore.segmentation import segment
-from auriscore.features import extract_features
+from auriscore.features import extract_features, extract_logmel_tensor
 from auriscore.validation import inspect_audio
 
 
@@ -43,6 +43,9 @@ def test_feature_shape(config):
     assert len(features) == (13 + 13 + 40 + 3) * 5 + 4
     assert np.isfinite(list(features.values())).all()
     assert features == extract_features(x, config)
+    tensor = extract_logmel_tensor(x, config)
+    assert tensor.shape[0] == config["n_mels"] and tensor.ndim == 2
+    assert np.isfinite(tensor).all() and tensor.min() >= 0 and tensor.max() <= 1
 
 
 def test_corrupt_empty_nonfinite_audio(tmp_path):

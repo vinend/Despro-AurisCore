@@ -8,7 +8,8 @@ from auriscore.inference import screen
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("audio", type=Path)
-    parser.add_argument("--model", type=Path, default=Path("artifacts/models/heart_svm.joblib"))
+    parser.add_argument("--model", type=Path, default=Path("artifacts/models/heart_svm.joblib"),
+                        help="Trusted heart_svm.joblib or heart_cnn.keras artifact")
     args = parser.parse_args()
     try:
         print(json.dumps(screen(args.audio, args.model), indent=2))

@@ -14,7 +14,7 @@ rencana eksekusi) dan dilarang memutuskan pertanyaan terbuka.
 ## 2. Pertanyaan terbuka (TIDAK diputuskan agent)
 
 - Jumlah kanal: draf 1 kanal (`channels: 1` pada protokol).
-- Sampling rate final: draf 2000 Hz.
+- Sampling rate final: 8000 Hz, mengikuti PDS dan pipeline AI. Angka 2000 Hz adalah batas atas pita sinyal, bukan laju sampling.
 - Bentuk pesan produksi: JSON untuk prototipe; bingkai biner kandidat produksi
   (perlu pengukuran ukuran pesan — stretch seksi 11.4).
 - `set_mode` / `set_bpm` adalah kontrol demo, bukan bagian kontrak klinis final.
@@ -23,7 +23,7 @@ rencana eksekusi) dan dilarang memutuskan pertanyaan terbuka.
   wajib mengajukan klarifikasi sebelum laporan berikutnya.
 
 Pemetaan draft kontrak data kelompok yang sudah terwakili protokol:
-samplingRate, durasi window (50 ms implisit dari 100 sampel per paket),
+samplingRate, durasi window (50 ms implisit dari 400 sampel per paket),
 timestamp epoch milidetik, label mode organ, quality flag, jumlah kanal,
 format PCM int16 signed.
 
@@ -77,7 +77,7 @@ dan dicatat di bagian ini. Jangan membuat monorepo atau paket bersama.
 ## 5. Peluang perbaikan (belum diimplementasikan — seksi 14)
 
 - Manifes PWA + ikon agar dapat dipasang di home screen (stretch 11.1).
-- Pemutaran audio stream via Web Audio API, buffer 2000 Hz (stretch 11.2).
+- Pemutaran audio stream via Web Audio API, buffer 8000 Hz (stretch 11.2).
 - Pengukuran ukuran pesan JSON vs bingkai biner sebagai bahan keputusan
   kontrak data produksi (stretch 11.4). Flag `--chaos` (11.3) sudah tersedia
   di mock-device.

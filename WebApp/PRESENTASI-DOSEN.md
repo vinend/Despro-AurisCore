@@ -61,8 +61,8 @@ nyata dengan sumber data yang disimulasikan.
 >
 > **Dari perangkat ke aplikasi:**
 > - `hello` — dikirim sekali saat koneksi: nama perangkat, versi firmware, sampling rate.
-> - `pcg_packet` — paket data gelombang: 100 sampel PCM int16 setiap 50 ms
->   (= sampling rate 2000 Hz), lengkap dengan nomor urut, timestamp, mode auskultasi,
+> - `pcg_packet` — paket data gelombang: 400 sampel PCM int16 setiap 50 ms
+>   (= sampling rate 8000 Hz), lengkap dengan nomor urut, timestamp, mode auskultasi,
 >   dan flag kualitas sinyal.
 > - `device_status` — tiap 1 detik: BPM, baterai, kualitas sinyal.
 > - `mode_ack` — konfirmasi pergantian mode.
@@ -119,7 +119,7 @@ Urutan demo yang disarankan (siapkan sebelum presentasi):
 
 ## 5. Hal Teknis yang Layak Disorot (bila dosen bertanya)
 
-- **Ring buffer** — buffer melingkar 20.000 sampel (10 detik) tanpa alokasi memori
+- **Ring buffer** — buffer melingkar 80.000 sampel (10 detik) tanpa alokasi memori
   per frame; penanganan seq untuk gap/duplikat/telat.
 - **Reconnect otomatis dengan exponential backoff** (1s → 2s → maks 5s, tanpa batas percobaan).
 - **Canvas berperforma** — hanya menggambar saat ada data/resize baru; sadar
@@ -144,8 +144,8 @@ risiko yang butuh klarifikasi:
 >    karena satu basis kode untuk semua platform dan bisa di-install sebagai PWA.
 >    Apakah ini sesuai ekspektasi untuk tugas/konteks mata kuliah ini?"
 > 2. **Jumlah kanal mikrofon** — draf saat ini 1 kanal. Apakah perlu stereo?
-> 3. **Sampling rate final** — draf 2000 Hz. Cukup untuk PCG (frekuensi jantung
->    dominan di bawah 500 Hz), tapi ingin konfirmasi.
+> 3. **Sampling rate final** — 8000 Hz sesuai PDS. Nilai 2000 Hz adalah batas atas
+>    pita sinyal, bukan sampling rate.
 > 4. **Format pesan produksi** — JSON vs biner. Rencananya akan diukur perbandingan
 >    ukurannya sebelum memutuskan."
 

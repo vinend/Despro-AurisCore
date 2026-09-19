@@ -21,8 +21,8 @@ export class RingBuffer {
   private count = 0;
   private lastSeq: number | null = null;
 
-  constructor(samplingRate = 2000, capacity = 20000) {
-    // 20.000 sampel @ 2000 Hz = 10 detik (kapasitas sesuai spesifikasi seksi 8).
+  constructor(samplingRate = 8000, capacity = 80000) {
+    // 80.000 sampel @ 8000 Hz = 10 detik (spesifikasi PDS dan pipeline AI).
     this.samplingRate = samplingRate;
     this.capacity = capacity;
     this.data = new Float32Array(capacity);

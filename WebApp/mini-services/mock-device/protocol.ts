@@ -7,13 +7,13 @@ export const PROTOCOL_VERSION = 1;
 export const DEVICE_NAME = 'AurisCore-Mock';
 export const FIRMWARE_VERSION = '0.1.0-mock';
 
-/** Laju sampling PCG (Hz). Draf 2000 Hz (pertanyaan terbuka, lihat DECISIONS.md). */
-export const SAMPLING_RATE = 2000;
+/** Laju sampling PCG (Hz), mengikuti spesifikasi PDS dan pipeline AI. */
+export const SAMPLING_RATE = 8000;
 /** Jumlah kanal audio. Draf 1 kanal (pertanyaan terbuka, lihat DECISIONS.md). */
 export const CHANNELS = 1;
 
-/** 100 sampel @ 2000 Hz = 50 ms audio per paket. */
-export const SAMPLES_PER_PACKET = 100;
+/** 400 sampel @ 8000 Hz = 50 ms audio per paket. */
+export const SAMPLES_PER_PACKET = 400;
 /** Interval pengiriman pcg_packet (realtime, per koneksi). */
 export const PACKET_INTERVAL_MS = 50;
 /** Interval pengiriman device_status. */

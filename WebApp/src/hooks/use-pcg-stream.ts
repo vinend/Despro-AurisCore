@@ -9,6 +9,7 @@ import {
 } from "@/lib/auriscore/pcg-connection";
 import { RingBuffer } from "@/lib/auriscore/ring-buffer";
 import {
+  EXPECTED_SAMPLING_RATE,
   PROTOCOL_VERSION,
   type DeviceStatusMsg,
   type HelloMsg,
@@ -42,7 +43,9 @@ export interface PcgStream {
 export function usePcgStream(): PcgStream {
   // Buffer gelombang dibuat sekali per komponen lewat lazy state initializer
   // (bukan ref) agar tidak ada akses ref saat render.
-  const [ring] = useState(() => new RingBuffer(2000, 20000));
+  const [ring] = useState(
+    () => new RingBuffer(EXPECTED_SAMPLING_RATE, EXPECTED_SAMPLING_RATE * 10)
+  );
 
   const versionRef = useRef(0);
   const connRef = useRef<PcgConnection | null>(null);

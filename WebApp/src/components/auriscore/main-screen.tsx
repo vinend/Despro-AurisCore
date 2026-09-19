@@ -13,6 +13,7 @@ import { ResultCard } from "./result-card";
 import { usePcgStream } from "@/hooks/use-pcg-stream";
 import { useRecording } from "@/hooks/use-recording";
 import { ORGAN_MODE_LABELS } from "@/lib/auriscore/format";
+import { EXPECTED_SAMPLING_RATE } from "@/lib/auriscore/protocol";
 
 /**
  * Layar utama (seksi 9), atas ke bawah dan responsif untuk ponsel:
@@ -70,7 +71,7 @@ export function MainScreen() {
             <div className="flex items-center gap-2 text-xs text-muted-foreground tabular-nums">
               <span>jendela 5 dtk</span>
               <span className="hidden sm:inline">
-                · {stream.hello?.samplingRate ?? 2000} Hz · int16
+                · {stream.hello?.samplingRate ?? EXPECTED_SAMPLING_RATE} Hz · int16
               </span>
             </div>
           </div>

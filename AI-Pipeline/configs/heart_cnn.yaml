@@ -1,11 +1,10 @@
 seed: 42
-model_type: svm
+model_type: cnn
 dataset_dir: data/external/circor-heart-sound/1.0.3
 sample_rate: 8000
 signal_band_max_hz: 2000
 window_seconds: 5.0
 overlap: 0.5
-# Engineering defaults; no clinical validation. Filtering is disabled initially.
 filter_enabled: false
 filter_low_hz: 20
 filter_high_hz: 2000
@@ -18,12 +17,13 @@ feature_fmax: 2000
 train_fraction: 0.7
 validation_fraction: 0.15
 test_fraction: 0.15
-svm_c: 1.0
-svm_gamma: scale
-class_weight: balanced
 threshold_target_sensitivity: 0.90
 threshold_min_specificity: 0.50
-# The historical CirCor test split has already been inspected. Training never
-# evaluates it automatically; a genuinely fresh external/device holdout is
-# required before this can be changed to locked_unseen.
-holdout_status: legacy_exposed
+holdout_status: pending_new_data
+cnn_top_db: 80.0
+cnn_batch_size: 32
+cnn_epochs: 50
+cnn_patience: 8
+cnn_learning_rate: 0.001
+cnn_dropout: 0.30
+cnn_verbose: 1

@@ -6,6 +6,9 @@
  */
 
 export const PROTOCOL_VERSION = 1;
+export const EXPECTED_SAMPLING_RATE = 8000;
+export const EXPECTED_CHANNELS = 1;
+export const SAMPLES_PER_PACKET = 400;
 
 export const ORGAN_MODES = ["mitral", "aortic", "pulmonic", "tricuspid"] as const;
 export type OrganMode = (typeof ORGAN_MODES)[number];
@@ -23,7 +26,7 @@ export interface HelloMsg {
   channels: number;
 }
 
-/** Server → klien. Dikirim tiap 50 ms: tepat 100 sampel int16 signed. */
+/** Server → klien. Dikirim tiap 50 ms: tepat 400 sampel int16 signed @ 8 kHz. */
 export interface PcgPacketMsg {
   type: "pcg_packet";
   seq: number;
@@ -78,6 +81,9 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 const isFiniteNumber = (v: unknown): v is number =>
   typeof v === "number" && Number.isFinite(v);
 
+const isInt16 = (v: unknown): v is number =>
+  isFiniteNumber(v) && Number.isInteger(v) && v >= -32768 && v <= 32767;
+
 const isNonNegativeInt = (v: unknown): v is number =>
   isFiniteNumber(v) && Number.isInteger(v) && v >= 0;
 
@@ -111,8 +117,8 @@ export function parseServerMessage(raw: unknown): ServerMessage | null {
       !isFiniteNumber(raw.protocol) ||
       !isNonEmptyString(raw.device) ||
       !isNonEmptyString(raw.fw) ||
-      !isPositiveInt(raw.samplingRate) ||
-      !isPositiveInt(raw.channels)
+      raw.samplingRate !== EXPECTED_SAMPLING_RATE ||
+      raw.channels !== EXPECTED_CHANNELS
     ) {
       console.warn("[pcg] pesan hello tidak valid, diabaikan:", raw);
       return null;
@@ -131,13 +137,13 @@ export function parseServerMessage(raw: unknown): ServerMessage | null {
     if (
       !isNonNegativeInt(raw.seq) ||
       !isFiniteNumber(raw.ts) ||
-      !isPositiveInt(raw.samplingRate) ||
+      raw.samplingRate !== EXPECTED_SAMPLING_RATE ||
       !isOrganMode(raw.organMode) ||
       !isQualityFlag(raw.qualityFlag) ||
-      !isPositiveInt(raw.channels) ||
+      raw.channels !== EXPECTED_CHANNELS ||
       !Array.isArray(raw.samples) ||
-      raw.samples.length === 0 ||
-      !raw.samples.every(isFiniteNumber)
+      raw.samples.length !== SAMPLES_PER_PACKET ||
+      !raw.samples.every(isInt16)
     ) {
       // Jangan cetak seluruh isi (samples panjang) — cukup ringkas.
       console.warn(

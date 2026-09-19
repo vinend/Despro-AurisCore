@@ -1,8 +1,10 @@
 # Heart murmur screening baseline
 
+> Historical result only (2026-09-16). This test partition has been inspected and is no longer considered an untouched final holdout. Current training code selects its threshold on validation data and does not evaluate a final holdout automatically.
+
 Evaluation ran on real CirCor recordings. Research results; no clinical validity claimed.
 
-Target: participant murmur Absent versus Present; Unknown excluded, outcome not used. Linked Additional IDs stay together in deterministic stratified train/validation/test splits. Preprocessing: mono, 8 kHz polyphase resampling, DC removal, optional filter (see config), peak normalization, 5-second windows at 50% overlap by default. MFCC/delta/log-mel/RMS/centroid/ZCR/statistics are averaged over windows per recording. StandardScaler is fitted on training recordings only, followed by a fixed balanced RBF SVM. No hyperparameter search or test-based selection was performed. Participant decisions use the mean recording margin at threshold zero.
+Target: participant murmur Absent versus Present; Unknown excluded, outcome not used. Linked Additional IDs stay together in deterministic stratified train/validation/test splits. Preprocessing: mono, 8 kHz polyphase resampling, DC removal, optional filter (see config), peak normalization, 5-second windows at 50% overlap by default. MFCC/delta/log-mel/RMS/centroid/ZCR/statistics are averaged over windows per recording. StandardScaler is fitted on training recordings only, followed by a fixed balanced RBF SVM. This archived run used threshold zero; it predates validation-selected threshold locking.
 
 ```json
 {

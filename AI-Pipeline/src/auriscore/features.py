@@ -4,6 +4,30 @@ import librosa
 import numpy as np
 
 
+def extract_logmel_tensor(audio: np.ndarray, config: dict[str, Any]) -> np.ndarray:
+    """Return a deterministic normalized log-mel image for CNN training/inference."""
+    if audio.ndim != 1 or not audio.size or not np.isfinite(audio).all():
+        raise ValueError("Log-mel extraction requires finite, nonempty mono audio")
+    power = np.abs(librosa.stft(
+        audio,
+        n_fft=config["n_fft"],
+        hop_length=config["hop_length"],
+    )) ** 2
+    mel = librosa.feature.melspectrogram(
+        S=power,
+        sr=config["sample_rate"],
+        n_fft=config["n_fft"],
+        n_mels=config["n_mels"],
+        fmax=config["feature_fmax"],
+    )
+    logmel = librosa.power_to_db(mel, ref=np.max, top_db=config.get("cnn_top_db", 80.0))
+    floor = -float(config.get("cnn_top_db", 80.0))
+    tensor = np.clip((logmel - floor) / -floor, 0.0, 1.0).astype(np.float32)
+    if not np.isfinite(tensor).all():
+        raise ValueError("Nonfinite log-mel tensor")
+    return tensor
+
+
 def extract_features(audio: np.ndarray, config: dict[str, Any]) -> dict[str, float]:
     """Aggregate MFCC, deltas, log-mel, RMS, centroid, ZCR and temporal stats."""
     if audio.ndim != 1 or not audio.size or not np.isfinite(audio).all():
