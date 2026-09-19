@@ -1,3 +1,4 @@
+# Python environment, caches, datasets, and generated models
 .runtime/
 .venv/
 __pycache__/
@@ -12,3 +13,64 @@ data/processed/**
 artifacts/models/*
 !artifacts/models/.gitkeep
 *.part
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js Build & Output
+.next/
+out/
+build/
+dist/
+
+# Environment Variables
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dev.log
+dev.out.log
+server.log
+
+# TypeScript / Caches
+*.tsbuildinfo
+.eslintcache
+
+# Tooling, AI Agents & IDE Cache
+.codegraph/
+.kilo/
+.zscripts/
+.claude/
+.z-ai-config/
+skills/
+.vercel/
+
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+*.pem
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Database (Prisma local dev / SQLite)
+prisma/*.db
+prisma/*.db-journal

@@ -2,7 +2,7 @@
 
 AurisCore is a university capstone cyber-physical stethoscope research prototype. The intended acquisition path is body sound → MEMS microphone/analog front-end → ESP32-S3 (mono ADC near 8 kHz) → BLE → smartphone → offline signal processing and AI → clinical decision support. Heavy AI processing belongs on the phone for the current design. Optional backend/tele-auscultation comes later.
 
-This milestone implements an executable **heart-sound/PCG dataset pipeline and SVM murmur-screening baseline in Python**. Heart-only scope allows us to verify provenance, signal processing and participant separation before adding other modalities. Lung and abdomen classifiers, CNNs, embedded firmware and phone UI are not implemented here.
+The repository combines an executable **heart-sound/PCG dataset pipeline and SVM murmur-screening baseline in Python** with a **Next.js web prototype and WebSocket mock device**. The web prototype currently displays simulated PCG data and simulated classifications; it is not yet connected to the Python model. Heart-only model scope allows us to verify provenance, signal processing and participant separation before adding other modalities. Lung and abdomen classifiers, CNNs, embedded firmware, and production mobile integration are not implemented here.
 
 Verified run (2026-09-16): **21 tests passed**; full real CirCor pipeline completed with 22,819 windows and 349 features. Participant test sensitivity was **60.87%** (9 of 23 positive participants missed), despite 90.16% accuracy. See the [engineering handoff](docs/engineering_summary.md) and [complete baseline results](docs/baseline_results.md). These results establish an executable baseline, not clinical readiness.
 
@@ -129,3 +129,97 @@ CirCor's cohort/device/environment may differ substantially from future AurisCor
 9. Abdomen mode.
 
 Before phase 3, review the baseline errors and quality exclusions with the project team and preserve a fresh evaluation strategy for future model comparisons.
+## Web app prototype (Pekan 3)
+
+Prototipe layar utama untuk stetoskop digital AurisCore (ESP32-S3).
+Seluruh data PCG dan hasil klasifikasi pada prototipe ini adalah **simulasi**
+dari `mock-device` — bukan perangkat keras sungguhan dan bukan model AI.
+
+## Arsitektur
+
+```
+[Browser]                        [Komputer dev]                 [Masa depan]
+ React (Next.js)  ──WebSocket──►  mock-device   ──diganti──►  firmware ESP32-S3
+ route / (port 3000)  JSON        (port 8081)                memakai protokol sama
+        │                                ▲
+        └── ws(s)://<host>/ws?XTransformPort=8081 ──┘
+            (gateway Caddy meneruskan ke port 8081)
+```
+
+- Frontend tidak memuat logika tiruan apa pun: ia terhubung lewat WebSocket
+  sungguhan ke `mock-device` dengan protokol (seksi 5 rencana) yang kelak
+  ditiru firmware ESP32.
+- Saat ESP32 asli tersedia, arahkan aplikasi ke alamat perangkat lewat
+  parameter URL `?device=ws://...` tanpa perubahan kode.
+- Kontrak data: JSON, timestamp epoch milidetik, PCM int16 signed, 1 kanal,
+  2000 Hz, paket 100 sampel tiap 50 ms. Detail lengkap:
+  `mini-services/mock-device/README.md` (referensi tim firmware).
+
+## Menjalankan (dua proses)
+
+Pastikan dependensi sudah terinstal (`npm install` di root dan di `mini-services/mock-device`).
+
+```bash
+# Terminal 1 — perangkat tiruan (port 8081)
+cd mini-services/mock-device
+npm run dev            # atau dengan chaos test: npx tsx index.ts --chaos
+
+# Terminal 2 — aplikasi web (port 3000)
+cd ../..               # kembali ke root proyek jika dari mock-device
+npm run dev
+```
+
+Buka aplikasi di browser:
+- Akses lokal langsung: `http://localhost:3000/?device=ws://localhost:8081`
+- Atau lewat gateway Caddy/preview jika di sandbox: `http://<host>:3000` (otomatis menyambung ke `ws(s)://<host>/ws?XTransformPort=8081`).
+- Indikator koneksi ada di header. Uji koneksi langsung ke ESP32 fisik: `.../?device=ws://<alamat-perangkat>/ws`.
+
+## Status fitur (DoD pekan 3)
+
+| Fitur | Status |
+|---|---|
+| Responsif desktop & ponsel | selesai |
+| Koneksi WebSocket + validasi pesan | selesai |
+| Gelombang PCG bergulir real-time (canvas, jendela 5 dtk) | selesai |
+| Kontrol dua arah: mode organ + BPM 60–100 | selesai |
+| Alur rekam 10 dtk → memproses 1,5 dtk → kartu hasil (tiruan) | selesai |
+| Riwayat sesi dalam memori | selesai |
+| Reconnect otomatis (1 dtk → 2 dtk → maks 5 dtk) + gap fill hening | selesai |
+| Badge koneksi: Terputus / Terhubung, simulasi / Perangkat | selesai |
+| Unit test (seksi 12) | **tidak ditulis** — kebijakan lingkungan tanpa kode test; digantikan verifikasi manual browser, lihat DECISIONS.md |
+| Stretch: PWA, pemutaran audio, JSON vs biner | belum (stretch, seksi 11) |
+
+## Verifikasi manual (ringkas)
+
+1. Jalankan dua proses di atas, buka aplikasi.
+2. Badge "Terhubung, simulasi" muncul; gelombang bergulir mulus.
+3. Geser slider BPM → laju denyut berubah (status perangkat ikut).
+4. Ganti mode organ → buffer reset setelah `mode_ack`, label berubah.
+5. Rekam → 10 detik → "Memproses…" → kartu hasil berlabel "hasil simulasi".
+6. Matikan mock-device (Ctrl+C) → badge "Terputus"; nyalakan lagi → koneksi
+   pulih otomatis dan gelombang lanjut.
+7. DevTools → Network → filter WS → frame `pcg_packet` terlihat sebagai JSON
+   (bukti untuk laporan pekanan).
+
+## Struktur kode
+
+```
+src/
+  lib/auriscore/
+    protocol.ts        # salinan tipe protokol (sumber kebenaran: mock-device)
+    pcg-connection.ts  # transport: validasi, reconnect, gap fill, ?device=
+    ring-buffer.ts     # buffer melingkar 10 dtk + penanganan seq
+    fake-classifier.ts # klasifikasi tiruan (FORCE_ABNORMAL_RESULT)
+    format.ts          # label & format waktu (Asia/Jakarta)
+  hooks/
+    use-pcg-stream.ts  # memiliki PcgConnection + RingBuffer
+    use-recording.ts   # alur rekam 10 dtk → memproses → hasil
+  components/auriscore/ # MainScreen, PcgWaveform, kartu status/hasil/riwayat
+mini-services/mock-device/ # perangkat tiruan (lihat README.md di dalamnya)
+DECISIONS.md               # log keputusan & pertanyaan terbuka
+```
+
+Token desain: `src/app/globals.css` (`.pcg-scope`) — nilai default sementara,
+bertanda TODO-FIGMA sampai token Figma tersedia.
+
+Penting: prototipe ini bukan alat medis; semua keluaran diberi label simulasi.

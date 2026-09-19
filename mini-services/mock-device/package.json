@@ -1,0 +1,17 @@
+{
+  "name": "mock-device",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "ws": "^8"
+  },
+  "devDependencies": {
+    "@types/ws": "^8",
+    "tsx": "^4.23.13",
+    "typescript": "^5"
+  }
+}
