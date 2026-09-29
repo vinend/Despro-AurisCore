@@ -129,7 +129,7 @@ def evaluate_cnn_holdout(segments: pd.DataFrame, config: dict[str, Any], root: P
     model_path = model_path or root / "artifacts/models/heart_cnn.keras"
     metadata_path = model_path.with_suffix(".json")
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    if metadata.get("model_kind") != "cnn_logmel" or "decision_threshold" not in metadata:
+    if metadata.get("model_kind") not in {"cnn_logmel", "cnn_spectrogram"} or "decision_threshold" not in metadata:
         raise ValueError("Model metadata is not a threshold-locked CNN")
     holdout_segments = segments[segments.split.eq("test")].reset_index(drop=True)
     if holdout_segments.empty or holdout_segments.label.nunique() != 2:
@@ -145,7 +145,7 @@ def evaluate_cnn_holdout(segments: pd.DataFrame, config: dict[str, Any], root: P
     result, predictions = evaluate(recordings, scores, float(metadata["decision_threshold"]))
     result.update({
         "status": "final_locked_holdout_evaluation",
-        "model_kind": "cnn_logmel",
+        "model_kind": metadata.get("model_kind", "cnn_logmel"),
         "model_sha256": hashlib.sha256(model_path.read_bytes()).hexdigest(),
         "holdout_identity_sha256": holdout_digest(segments),
         "warning": "One-time research evaluation; not evidence of clinical validity.",

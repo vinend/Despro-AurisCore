@@ -1,0 +1,90 @@
+{
+  "generatedAtUtc": "2026-09-19T02:53:07.670Z",
+  "endpoint": "ws://localhost:8081",
+  "passed": true,
+  "checks": {
+    "hello8000Hz": true,
+    "helloMono": true,
+    "fourPackets": true,
+    "packet8000Hz": true,
+    "packet400Samples": true,
+    "packetMono": true,
+    "int16Range": true,
+    "contiguousSequence": true,
+    "nominal50msTimestamps": true,
+    "modeAckAortic": true,
+    "packetModeAortic": true,
+    "bpm84Status": true
+  },
+  "observed": {
+    "hello": {
+      "type": "hello",
+      "protocol": 1,
+      "device": "AurisCore-Mock",
+      "fw": "0.1.0-mock",
+      "samplingRate": 8000,
+      "channels": 1
+    },
+    "packets": [
+      {
+        "seq": 0,
+        "ts": 1789786386724,
+        "samplingRate": 8000,
+        "channels": 1,
+        "organMode": "aortic",
+        "qualityFlag": "fair",
+        "sampleCount": 400,
+        "minSample": -12280,
+        "maxSample": 20055,
+        "integerSamples": true
+      },
+      {
+        "seq": 1,
+        "ts": 1789786386785,
+        "samplingRate": 8000,
+        "channels": 1,
+        "organMode": "aortic",
+        "qualityFlag": "fair",
+        "sampleCount": 400,
+        "minSample": -523,
+        "maxSample": 521,
+        "integerSamples": true
+      },
+      {
+        "seq": 2,
+        "ts": 1789786386848,
+        "samplingRate": 8000,
+        "channels": 1,
+        "organMode": "aortic",
+        "qualityFlag": "fair",
+        "sampleCount": 400,
+        "minSample": -521,
+        "maxSample": 518,
+        "integerSamples": true
+      },
+      {
+        "seq": 3,
+        "ts": 1789786386910,
+        "samplingRate": 8000,
+        "channels": 1,
+        "organMode": "aortic",
+        "qualityFlag": "fair",
+        "sampleCount": 400,
+        "minSample": -523,
+        "maxSample": 524,
+        "integerSamples": true
+      }
+    ],
+    "modeAck": {
+      "type": "mode_ack",
+      "organMode": "aortic"
+    },
+    "status": {
+      "type": "device_status",
+      "ts": 1789786387669,
+      "bpm": 84,
+      "batteryPercent": 87,
+      "signalQuality": "good"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+seed: 42
+model_type: cnn
+dataset_dir: data/external/circor-heart-sound/1.0.3
+
+# This remains 8 kHz for compatibility with the current acquisition contract.
+# If measured hardware output is 2 kHz, change this to 2000 and feature_fmax
+# to at most 1000, then rerun preprocessing and training from the beginning.
+sample_rate: 8000
+signal_band_max_hz: 2000
+window_seconds: 5.0
+overlap: 0.5
+filter_enabled: false
+filter_low_hz: 20
+filter_high_hz: 2000
+filter_order: 2
+
+# Floating-point image tensor; PNG/JPEG files are never model inputs.
+spectrogram_type: logmel
+spectrogram_center: true
+n_fft: 512
+hop_length: 128
+n_mels: 96
+n_mfcc: 13
+feature_fmin: 20
+feature_fmax: 2000
+cnn_top_db: 80.0
+spectrogram_normalization: per_frequency
+spectrogram_normalization_clip: 5.0
+spectrogram_cache_enabled: true
+
+train_fraction: 0.7
+validation_fraction: 0.15
+test_fraction: 0.15
+cross_validation_folds: 5
+threshold_target_sensitivity: 0.90
+threshold_min_specificity: 0.50
+holdout_status: pending_new_data
+
+cnn_architecture: residual_se
+cnn_filters: [24, 48, 96]
+cnn_se_ratio: 8
+cnn_batch_size: 24
+cnn_epochs: 50
+cnn_patience: 8
+cnn_learning_rate: 0.001
+cnn_dropout: 0.30
+cnn_loss: binary_crossentropy
+cnn_label_smoothing: 0.0
+cnn_verbose: 1
+
+# All augmentation is training-only. Validation, threshold selection, final
+# holdout evaluation, and inference remain deterministic.
+augmentation_enabled: true
+augmentation_gain_db: 4.0
+augmentation_time_shift_fraction: 0.08
+augmentation_noise_probability: 0.50
+augmentation_snr_db_min: 20.0
+augmentation_snr_db_max: 35.0
+augmentation_frequency_mask_bins: 8
+augmentation_frequency_mask_count: 1
+augmentation_time_mask_frames: 24
+augmentation_time_mask_count: 2
+mixup_probability: 0.20
+mixup_alpha: 0.20
+cutmix_probability: 0.10
+cutmix_alpha: 1.0

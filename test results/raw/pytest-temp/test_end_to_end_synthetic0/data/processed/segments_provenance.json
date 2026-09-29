@@ -1,0 +1,31 @@
+{
+  "fingerprint": "64e6f9f5d7df44e7edfbdbda66792cbbd35f911c896759ea561afcf6591836c1",
+  "config": {
+    "seed": 42,
+    "model_type": "svm",
+    "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+    "sample_rate": 8000,
+    "signal_band_max_hz": 2000,
+    "window_seconds": 5.0,
+    "overlap": 0.5,
+    "filter_enabled": false,
+    "filter_low_hz": 20,
+    "filter_high_hz": 2000,
+    "filter_order": 2,
+    "n_fft": 512,
+    "hop_length": 128,
+    "n_mels": 40,
+    "n_mfcc": 13,
+    "feature_fmax": 2000,
+    "train_fraction": 0.7,
+    "validation_fraction": 0.15,
+    "test_fraction": 0.15,
+    "svm_c": 1.0,
+    "svm_gamma": "scale",
+    "class_weight": "balanced",
+    "threshold_target_sensitivity": 0.9,
+    "threshold_min_specificity": 0.5,
+    "holdout_status": "legacy_exposed"
+  },
+  "table_sha256": "6a79ef64e926a0195834d693df9d597708f1c58b5f2022e0c9ec75c8e43126e6"
+}

@@ -1,0 +1,25 @@
+{
+  "generatedAtUtc": "2026-09-19T02:53:36.3610021Z",
+  "passed": true,
+  "server": "Next.js standalone",
+  "checks": [
+    {
+      "url": "http://127.0.0.1:3000/",
+      "passed": true,
+      "statusCode": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bodyBytes": 27949,
+      "elapsedMs": 140,
+      "containsAurisCore": true
+    },
+    {
+      "url": "http://127.0.0.1:3000/api",
+      "passed": true,
+      "statusCode": 200,
+      "contentType": "application/json",
+      "bodyBytes": 27,
+      "elapsedMs": 68,
+      "containsAurisCore": false
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+subject_id,subject_group,recording_id,label,split,score,screening_result
+2006,2006,2006_AV,Absent,test,0.5010509490966797,murmur absent screening
+2011,2011,2011_AV,Present,test,0.5022304058074951,murmur present screening
+2014,2014,2014_AV,Absent,test,0.5011153221130371,murmur absent screening
+2015,2015,2015_AV,Present,test,0.5022001266479492,murmur present screening

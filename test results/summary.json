@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-19T02:51:19.5040541Z",
+  "git_commit": "4e9947460465365e55b21f0bd216f42ee236d529",
+  "git_branch": "master",
+  "overall_passed": true,
+  "gate_count": 6,
+  "gate_passed": 6,
+  "gate_failed": 0,
+  "informational_check_count": 3,
+  "duration_seconds": 39.265,
+  "real_external_wav_count": 0,
+  "tests": [
+    {
+      "name": "AI bytecode compilation",
+      "gate": true,
+      "exit_code": 0,
+      "passed": true,
+      "duration_seconds": 0.151,
+      "started_at": "2026-09-19T02:50:40.2448501Z",
+      "finished_at": "2026-09-19T02:50:40.3957404Z",
+      "log": "logs/ai-compile.log"
+    },
+    {
+      "name": "AI pytest suite",
+      "gate": true,
+      "exit_code": 0,
+      "passed": true,
+      "duration_seconds": 11.6,
+      "started_at": "2026-09-19T02:50:40.4152194Z",
+      "finished_at": "2026-09-19T02:50:52.0153279Z",
+      "log": "logs/ai-pytest.log"
+    },
+    {
+      "name": "AI installed dependencies",
+      "gate": false,
+      "exit_code": 0,
+      "passed": true,
+      "duration_seconds": 0.78,
+      "started_at": "2026-09-19T02:50:52.0170563Z",
+      "finished_at": "2026-09-19T02:50:52.7975007Z",
+      "log": "logs/ai-pip-freeze.txt"
+    },
+    {
+      "name": "WebApp ESLint",
+      "gate": true,
+      "exit_code": 0,
+      "passed": true,
+      "duration_seconds": 6.316,
+      "started_at": "2026-09-19T02:50:52.7989160Z",
+      "finished_at": "2026-09-19T02:50:59.1148274Z",
+      "log": "logs/web-eslint.log"
+    },
+    {
+      "name": "WebApp TypeScript",
+      "gate": true,
+      "exit_code": 0,
+      "passed": true,
+      "duration_seconds": 5.318,
+      "started_at": "2026-09-19T02:50:59.1179704Z",
+      "finished_at": "2026-09-19T02:51:04.4362555Z",
+      "log": "logs/web-typescript.log"
+    },
+    {
+      "name": "Mock-device TypeScript",
+      "gate": true,
+      "exit_code": 0,
+      "passed": true,
+      "duration_seconds": 5.067,
+      "started_at": "2026-09-19T02:51:04.4372213Z",
+      "finished_at": "2026-09-19T02:51:09.5037649Z",
+      "log": "logs/mock-typescript.log"
+    },
+    {
+      "name": "Next.js production build",
+      "gate": true,
+      "exit_code": 0,
+      "passed": true,
+      "duration_seconds": 4.622,
+      "started_at": "2026-09-19T02:51:09.5045429Z",
+      "finished_at": "2026-09-19T02:51:14.1265669Z",
+      "log": "logs/web-build.log"
+    },
+    {
+      "name": "Web production dependency audit",
+      "gate": false,
+      "exit_code": 1,
+      "passed": false,
+      "duration_seconds": 3.561,
+      "started_at": "2026-09-19T02:51:14.1275588Z",
+      "finished_at": "2026-09-19T02:51:17.6881452Z",
+      "log": "logs/web-npm-audit.json"
+    },
+    {
+      "name": "Web installed dependencies",
+      "gate": false,
+      "exit_code": 0,
+      "passed": true,
+      "duration_seconds": 1.189,
+      "started_at": "2026-09-19T02:51:17.6892019Z",
+      "finished_at": "2026-09-19T02:51:18.8784502Z",
+      "log": "logs/web-npm-ls.json"
+    }
+  ]
+}

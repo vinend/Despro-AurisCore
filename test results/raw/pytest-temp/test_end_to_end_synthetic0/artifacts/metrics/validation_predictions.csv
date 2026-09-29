@@ -1,0 +1,5 @@
+subject_id,subject_group,recording_id,label,split,score,screening_result
+1005,1005,1005_AV,Present,validation,0.05864330870237355,murmur present screening
+1008,1008,1008_AV,Absent,validation,-0.0010194641779943947,murmur present screening
+1012,1012,1012_AV,Absent,validation,0.00013923732988160853,murmur present screening
+1023,1023,1023_AV,Present,validation,-0.0417265129017787,murmur present screening

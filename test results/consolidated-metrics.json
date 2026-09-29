@@ -1,0 +1,1176 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-19T02:56:36.142759+00:00",
+  "overall_passed": true,
+  "scope": {
+    "git_commit": "4e9947460465365e55b21f0bd216f42ee236d529",
+    "git_branch": "master",
+    "real_external_wav_count": 0,
+    "clinical_performance_evaluated": false,
+    "model_metrics_kind": "synthetic smoke-test metrics only"
+  },
+  "automated_gates": {
+    "schema_version": 1,
+    "generated_at_utc": "2026-09-19T02:51:19.5040541Z",
+    "git_commit": "4e9947460465365e55b21f0bd216f42ee236d529",
+    "git_branch": "master",
+    "overall_passed": true,
+    "gate_count": 6,
+    "gate_passed": 6,
+    "gate_failed": 0,
+    "informational_check_count": 3,
+    "duration_seconds": 39.265,
+    "real_external_wav_count": 0,
+    "tests": [
+      {
+        "name": "AI bytecode compilation",
+        "gate": true,
+        "exit_code": 0,
+        "passed": true,
+        "duration_seconds": 0.151,
+        "started_at": "2026-09-19T02:50:40.2448501Z",
+        "finished_at": "2026-09-19T02:50:40.3957404Z",
+        "log": "logs/ai-compile.log"
+      },
+      {
+        "name": "AI pytest suite",
+        "gate": true,
+        "exit_code": 0,
+        "passed": true,
+        "duration_seconds": 11.6,
+        "started_at": "2026-09-19T02:50:40.4152194Z",
+        "finished_at": "2026-09-19T02:50:52.0153279Z",
+        "log": "logs/ai-pytest.log"
+      },
+      {
+        "name": "AI installed dependencies",
+        "gate": false,
+        "exit_code": 0,
+        "passed": true,
+        "duration_seconds": 0.78,
+        "started_at": "2026-09-19T02:50:52.0170563Z",
+        "finished_at": "2026-09-19T02:50:52.7975007Z",
+        "log": "logs/ai-pip-freeze.txt"
+      },
+      {
+        "name": "WebApp ESLint",
+        "gate": true,
+        "exit_code": 0,
+        "passed": true,
+        "duration_seconds": 6.316,
+        "started_at": "2026-09-19T02:50:52.7989160Z",
+        "finished_at": "2026-09-19T02:50:59.1148274Z",
+        "log": "logs/web-eslint.log"
+      },
+      {
+        "name": "WebApp TypeScript",
+        "gate": true,
+        "exit_code": 0,
+        "passed": true,
+        "duration_seconds": 5.318,
+        "started_at": "2026-09-19T02:50:59.1179704Z",
+        "finished_at": "2026-09-19T02:51:04.4362555Z",
+        "log": "logs/web-typescript.log"
+      },
+      {
+        "name": "Mock-device TypeScript",
+        "gate": true,
+        "exit_code": 0,
+        "passed": true,
+        "duration_seconds": 5.067,
+        "started_at": "2026-09-19T02:51:04.4372213Z",
+        "finished_at": "2026-09-19T02:51:09.5037649Z",
+        "log": "logs/mock-typescript.log"
+      },
+      {
+        "name": "Next.js production build",
+        "gate": true,
+        "exit_code": 0,
+        "passed": true,
+        "duration_seconds": 4.622,
+        "started_at": "2026-09-19T02:51:09.5045429Z",
+        "finished_at": "2026-09-19T02:51:14.1265669Z",
+        "log": "logs/web-build.log"
+      },
+      {
+        "name": "Web production dependency audit",
+        "gate": false,
+        "exit_code": 1,
+        "passed": false,
+        "duration_seconds": 3.561,
+        "started_at": "2026-09-19T02:51:14.1275588Z",
+        "finished_at": "2026-09-19T02:51:17.6881452Z",
+        "log": "logs/web-npm-audit.json"
+      },
+      {
+        "name": "Web installed dependencies",
+        "gate": false,
+        "exit_code": 0,
+        "passed": true,
+        "duration_seconds": 1.189,
+        "started_at": "2026-09-19T02:51:17.6892019Z",
+        "finished_at": "2026-09-19T02:51:18.8784502Z",
+        "log": "logs/web-npm-ls.json"
+      }
+    ]
+  },
+  "python_tests": {
+    "source": "ai-pytest-junit.xml",
+    "name": "pytest",
+    "tests": 25,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "duration_seconds": 10.36,
+    "test_cases": [
+      {
+        "classname": "tests.test_acquisition",
+        "name": "test_download_atomic_and_preserves_originals",
+        "duration_seconds": 0.006,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_acquisition",
+        "name": "test_acquisition_checksum_rejects_changed_original",
+        "duration_seconds": 0.007,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_audio_loading_and_mono",
+        "duration_seconds": 0.012,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_resampling[4000]",
+        "duration_seconds": 0.003,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_resampling[8000]",
+        "duration_seconds": 0.002,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_resampling[44100]",
+        "duration_seconds": 0.003,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_segmentation",
+        "duration_seconds": 0.001,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_feature_shape",
+        "duration_seconds": 1.213,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_corrupt_empty_nonfinite_audio",
+        "duration_seconds": 0.023,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_silence_and_clipping",
+        "duration_seconds": 0.013,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_audio",
+        "name": "test_filter_option",
+        "duration_seconds": 0.003,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_dataset",
+        "name": "test_deterministic_split_no_leakage",
+        "duration_seconds": 0.02,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_dataset",
+        "name": "test_repeat_subject_ids_and_conflicting_labels",
+        "duration_seconds": 0.022,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_dataset",
+        "name": "test_manifest_validation",
+        "duration_seconds": 0.005,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_dataset",
+        "name": "test_unknown_exclusion",
+        "duration_seconds": 0.012,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_dataset",
+        "name": "test_duplicate_hash_leakage",
+        "duration_seconds": 0.015,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_dataset",
+        "name": "test_bad_file_logged_manifest",
+        "duration_seconds": 0.016,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_dataset",
+        "name": "test_invalid_orphan_does_not_block_valid_dataset",
+        "duration_seconds": 0.022,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_dataset",
+        "name": "test_combined_silent_quality_flags_excluded",
+        "duration_seconds": 0.013,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_evaluation",
+        "name": "test_threshold_selection_prioritizes_sensitivity",
+        "duration_seconds": 0.032,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_evaluation",
+        "name": "test_exposed_holdout_cannot_be_relabelled_fresh",
+        "duration_seconds": 0.004,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_evaluation",
+        "name": "test_cnn_model_shape",
+        "duration_seconds": 2.401,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_smoke",
+        "name": "test_end_to_end_synthetic",
+        "duration_seconds": 1.73,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_smoke",
+        "name": "test_missing_dataset_actionable",
+        "duration_seconds": 0.005,
+        "status": "passed",
+        "details": null
+      },
+      {
+        "classname": "tests.test_smoke",
+        "name": "test_cnn_end_to_end_synthetic",
+        "duration_seconds": 3.372,
+        "status": "passed",
+        "details": null
+      }
+    ]
+  },
+  "runtime_checks": {
+    "mock_device": {
+      "generatedAtUtc": "2026-09-19T02:53:07.670Z",
+      "endpoint": "ws://localhost:8081",
+      "passed": true,
+      "checks": {
+        "hello8000Hz": true,
+        "helloMono": true,
+        "fourPackets": true,
+        "packet8000Hz": true,
+        "packet400Samples": true,
+        "packetMono": true,
+        "int16Range": true,
+        "contiguousSequence": true,
+        "nominal50msTimestamps": true,
+        "modeAckAortic": true,
+        "packetModeAortic": true,
+        "bpm84Status": true
+      },
+      "observed": {
+        "hello": {
+          "type": "hello",
+          "protocol": 1,
+          "device": "AurisCore-Mock",
+          "fw": "0.1.0-mock",
+          "samplingRate": 8000,
+          "channels": 1
+        },
+        "packets": [
+          {
+            "seq": 0,
+            "ts": 1789786386724,
+            "samplingRate": 8000,
+            "channels": 1,
+            "organMode": "aortic",
+            "qualityFlag": "fair",
+            "sampleCount": 400,
+            "minSample": -12280,
+            "maxSample": 20055,
+            "integerSamples": true
+          },
+          {
+            "seq": 1,
+            "ts": 1789786386785,
+            "samplingRate": 8000,
+            "channels": 1,
+            "organMode": "aortic",
+            "qualityFlag": "fair",
+            "sampleCount": 400,
+            "minSample": -523,
+            "maxSample": 521,
+            "integerSamples": true
+          },
+          {
+            "seq": 2,
+            "ts": 1789786386848,
+            "samplingRate": 8000,
+            "channels": 1,
+            "organMode": "aortic",
+            "qualityFlag": "fair",
+            "sampleCount": 400,
+            "minSample": -521,
+            "maxSample": 518,
+            "integerSamples": true
+          },
+          {
+            "seq": 3,
+            "ts": 1789786386910,
+            "samplingRate": 8000,
+            "channels": 1,
+            "organMode": "aortic",
+            "qualityFlag": "fair",
+            "sampleCount": 400,
+            "minSample": -523,
+            "maxSample": 524,
+            "integerSamples": true
+          }
+        ],
+        "modeAck": {
+          "type": "mode_ack",
+          "organMode": "aortic"
+        },
+        "status": {
+          "type": "device_status",
+          "ts": 1789786387669,
+          "bpm": 84,
+          "batteryPercent": 87,
+          "signalQuality": "good"
+        }
+      }
+    },
+    "web_http": {
+      "generatedAtUtc": "2026-09-19T02:53:36.3610021Z",
+      "passed": true,
+      "server": "Next.js standalone",
+      "checks": [
+        {
+          "url": "http://127.0.0.1:3000/",
+          "passed": true,
+          "statusCode": 200,
+          "contentType": "text/html; charset=utf-8",
+          "bodyBytes": 27949,
+          "elapsedMs": 140,
+          "containsAurisCore": true
+        },
+        {
+          "url": "http://127.0.0.1:3000/api",
+          "passed": true,
+          "statusCode": 200,
+          "contentType": "application/json",
+          "bodyBytes": 27,
+          "elapsedMs": 68,
+          "containsAurisCore": false
+        }
+      ]
+    }
+  },
+  "model_artifacts": [
+    {
+      "artifact_type": "cnn_development",
+      "source": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/metrics/cnn_metrics.json",
+      "data": {
+        "status": "synthetic_smoke_only",
+        "target": "subject-level murmur Absent=0 vs Present=1; Unknown excluded",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 2000,
+        "seed": 42,
+        "python": "3.13.7",
+        "tensorflow": "2.21.0",
+        "development_split_counts": {
+          "train": {
+            "subjects": 16,
+            "original_subject_ids": 16,
+            "recordings": 16,
+            "recording_class_counts": {
+              "Absent": 8,
+              "Present": 8
+            },
+            "subject_class_counts": {
+              "Absent": 8,
+              "Present": 8
+            }
+          },
+          "validation": {
+            "subjects": 4,
+            "original_subject_ids": 4,
+            "recordings": 4,
+            "recording_class_counts": {
+              "Present": 2,
+              "Absent": 2
+            },
+            "subject_class_counts": {
+              "Present": 2,
+              "Absent": 2
+            }
+          }
+        },
+        "threshold_selection": {
+          "threshold": 0.5021942853927612,
+          "target_sensitivity": 0.9,
+          "minimum_specificity": 0.5,
+          "constraints_met": true,
+          "selection_unit": "linked participant mean recording score",
+          "validation_subject_metrics": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall_sensitivity": 1.0,
+            "specificity": 1.0,
+            "negative_predictive_value": 1.0,
+            "macro_f1": 1.0,
+            "confusion_matrix": [
+              [
+                2,
+                0
+              ],
+              [
+                0,
+                2
+              ]
+            ],
+            "class_counts": {
+              "Absent": 2,
+              "Present": 2
+            }
+          },
+          "candidate_count": 4
+        },
+        "validation": {
+          "threshold": 0.5021942853927612,
+          "recording": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall_sensitivity": 1.0,
+            "specificity": 1.0,
+            "negative_predictive_value": 1.0,
+            "macro_f1": 1.0,
+            "confusion_matrix": [
+              [
+                2,
+                0
+              ],
+              [
+                0,
+                2
+              ]
+            ],
+            "class_counts": {
+              "Absent": 2,
+              "Present": 2
+            }
+          },
+          "subject": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall_sensitivity": 1.0,
+            "specificity": 1.0,
+            "negative_predictive_value": 1.0,
+            "macro_f1": 1.0,
+            "confusion_matrix": [
+              [
+                2,
+                0
+              ],
+              [
+                0,
+                2
+              ]
+            ],
+            "class_counts": {
+              "Absent": 2,
+              "Present": 2
+            }
+          },
+          "recording_count": 4,
+          "subject_count": 4
+        },
+        "training_epochs": 1,
+        "best_validation_loss": 0.692043662071228,
+        "development_segments_table_sha256": "935351fe7f2e04094b80bacb1130c2c76f1a4ae7d1f63380371beffdf6e463ca",
+        "holdout": {
+          "evaluated": false,
+          "status": "pending_new_data"
+        },
+        "warning": "Research screening only; no clinical validity established."
+      }
+    },
+    {
+      "artifact_type": "locked_holdout",
+      "source": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/metrics/final_holdout_metrics.json",
+      "data": {
+        "threshold": 0.5021942853927612,
+        "recording": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall_sensitivity": 1.0,
+          "specificity": 1.0,
+          "negative_predictive_value": 1.0,
+          "macro_f1": 1.0,
+          "confusion_matrix": [
+            [
+              2,
+              0
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "class_counts": {
+            "Absent": 2,
+            "Present": 2
+          }
+        },
+        "subject": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall_sensitivity": 1.0,
+          "specificity": 1.0,
+          "negative_predictive_value": 1.0,
+          "macro_f1": 1.0,
+          "confusion_matrix": [
+            [
+              2,
+              0
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "class_counts": {
+            "Absent": 2,
+            "Present": 2
+          }
+        },
+        "recording_count": 4,
+        "subject_count": 4,
+        "status": "final_locked_holdout_evaluation",
+        "model_kind": "cnn_logmel",
+        "model_sha256": "3ec8caad779014bcf1114f561d1bba7bb22a8963ad7b4e1a9f4aa454f0e55702",
+        "holdout_identity_sha256": "ada22a420da73241e3d88a4b84ff2b7840c8a6a058983b28f52a255c3791f6cd",
+        "warning": "One-time research evaluation; not evidence of clinical validity."
+      }
+    },
+    {
+      "artifact_type": "holdout_identity",
+      "source": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/metadata/holdout_lock.json",
+      "data": {
+        "schema_version": 1,
+        "created_at_utc": "2026-09-19T02:50:50.837862+00:00",
+        "split": "test",
+        "subject_count": 4,
+        "recording_count": 4,
+        "identity_sha256": "ada22a420da73241e3d88a4b84ff2b7840c8a6a058983b28f52a255c3791f6cd",
+        "policy": "Do not inspect labels, scores or predictions until the model and threshold are frozen."
+      }
+    },
+    {
+      "artifact_type": "svm_development",
+      "source": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/metrics/baseline_metrics.json",
+      "data": {
+        "status": "synthetic_smoke_only",
+        "target": "subject-level murmur Absent=0 vs Present=1; Unknown excluded",
+        "dataset": [
+          "CirCor DigiScope 1.0.3"
+        ],
+        "feature_count": 349,
+        "development_segment_count": 20,
+        "seed": 42,
+        "configuration": {
+          "seed": 42,
+          "model_type": "svm",
+          "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+          "sample_rate": 8000,
+          "signal_band_max_hz": 2000,
+          "window_seconds": 5.0,
+          "overlap": 0.5,
+          "filter_enabled": false,
+          "filter_low_hz": 20,
+          "filter_high_hz": 2000,
+          "filter_order": 2,
+          "n_fft": 512,
+          "hop_length": 128,
+          "n_mels": 40,
+          "n_mfcc": 13,
+          "feature_fmax": 2000,
+          "train_fraction": 0.7,
+          "validation_fraction": 0.15,
+          "test_fraction": 0.15,
+          "svm_c": 1.0,
+          "svm_gamma": "scale",
+          "class_weight": "balanced",
+          "threshold_target_sensitivity": 0.9,
+          "threshold_min_specificity": 0.5,
+          "holdout_status": "legacy_exposed"
+        },
+        "development_split_counts": {
+          "train": {
+            "subjects": 16,
+            "original_subject_ids": 16,
+            "recordings": 16,
+            "recording_class_counts": {
+              "Absent": 8,
+              "Present": 8
+            },
+            "subject_class_counts": {
+              "Absent": 8,
+              "Present": 8
+            }
+          },
+          "validation": {
+            "subjects": 4,
+            "original_subject_ids": 4,
+            "recordings": 4,
+            "recording_class_counts": {
+              "Present": 2,
+              "Absent": 2
+            },
+            "subject_class_counts": {
+              "Present": 2,
+              "Absent": 2
+            }
+          }
+        },
+        "python": "3.13.7",
+        "sklearn": "1.6.1",
+        "development_feature_table_sha256": "892306a34c2aa15053ad4bd1485a555117639455b58045b066662063d7eab5e7",
+        "confidence": "Uncalibrated decision margin; not a probability",
+        "holdout": {
+          "evaluated": false,
+          "status": "legacy_exposed",
+          "note": "Training does not read holdout labels or scores. Use a new locked external/device holdout for final evaluation."
+        },
+        "threshold_selection": {
+          "threshold": -0.0417265129017787,
+          "target_sensitivity": 0.9,
+          "minimum_specificity": 0.5,
+          "constraints_met": false,
+          "selection_unit": "linked participant mean recording score",
+          "validation_subject_metrics": {
+            "accuracy": 0.5,
+            "precision": 0.5,
+            "recall_sensitivity": 1.0,
+            "specificity": 0.0,
+            "negative_predictive_value": 0.0,
+            "macro_f1": 0.3333333333333333,
+            "confusion_matrix": [
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ],
+            "class_counts": {
+              "Absent": 2,
+              "Present": 2
+            }
+          },
+          "candidate_count": 4
+        },
+        "validation": {
+          "threshold": -0.0417265129017787,
+          "recording": {
+            "accuracy": 0.5,
+            "precision": 0.5,
+            "recall_sensitivity": 1.0,
+            "specificity": 0.0,
+            "negative_predictive_value": 0.0,
+            "macro_f1": 0.3333333333333333,
+            "confusion_matrix": [
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ],
+            "class_counts": {
+              "Absent": 2,
+              "Present": 2
+            }
+          },
+          "subject": {
+            "accuracy": 0.5,
+            "precision": 0.5,
+            "recall_sensitivity": 1.0,
+            "specificity": 0.0,
+            "negative_predictive_value": 0.0,
+            "macro_f1": 0.3333333333333333,
+            "confusion_matrix": [
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ],
+            "class_counts": {
+              "Absent": 2,
+              "Present": 2
+            }
+          },
+          "recording_count": 4,
+          "subject_count": 4
+        }
+      }
+    },
+    {
+      "artifact_type": "locked_holdout",
+      "source": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/metrics/final_holdout_metrics.json",
+      "data": {
+        "threshold": -0.0417265129017787,
+        "recording": {
+          "accuracy": 0.5,
+          "precision": 0.5,
+          "recall_sensitivity": 1.0,
+          "specificity": 0.0,
+          "negative_predictive_value": 0.0,
+          "macro_f1": 0.3333333333333333,
+          "confusion_matrix": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "class_counts": {
+            "Absent": 2,
+            "Present": 2
+          }
+        },
+        "subject": {
+          "accuracy": 0.5,
+          "precision": 0.5,
+          "recall_sensitivity": 1.0,
+          "specificity": 0.0,
+          "negative_predictive_value": 0.0,
+          "macro_f1": 0.3333333333333333,
+          "confusion_matrix": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "class_counts": {
+            "Absent": 2,
+            "Present": 2
+          }
+        },
+        "recording_count": 4,
+        "subject_count": 4,
+        "status": "final_locked_holdout_evaluation",
+        "model_sha256": "7d24f8b3bd4494458b76665377963c1e1e2c93b13ed3fdac88ac8588a1414b02",
+        "holdout_identity_sha256": "f45ddfe0c9cd823028a62e6467042c5e6c1e3ae047c836d78a8567e2d6072002",
+        "warning": "One-time research evaluation; not evidence of clinical validity."
+      }
+    },
+    {
+      "artifact_type": "holdout_identity",
+      "source": "raw/pytest-temp/test_end_to_end_synthetic0/metadata/holdout_lock.json",
+      "data": {
+        "schema_version": 1,
+        "created_at_utc": "2026-09-19T02:50:47.563861+00:00",
+        "split": "test",
+        "subject_count": 4,
+        "recording_count": 4,
+        "identity_sha256": "f45ddfe0c9cd823028a62e6467042c5e6c1e3ae047c836d78a8567e2d6072002",
+        "policy": "Do not inspect labels, scores or predictions until the model and threshold are frozen."
+      }
+    }
+  ],
+  "dependency_audit": {
+    "source": "logs/web-npm-audit.json",
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 4,
+        "high": 5,
+        "critical": 0,
+        "total": 9
+      },
+      "dependencies": {
+        "prod": 506,
+        "dev": 367,
+        "optional": 140,
+        "peer": 7,
+        "peerOptional": 0,
+        "total": 965
+      }
+    },
+    "vulnerabilities": {
+      "@mdxeditor/editor": {
+        "name": "@mdxeditor/editor",
+        "severity": "moderate",
+        "isDirect": true,
+        "via": [
+          "js-yaml"
+        ],
+        "effects": [],
+        "range": "<=4.0.3",
+        "nodes": [
+          "node_modules/@mdxeditor/editor"
+        ],
+        "fixAvailable": {
+          "name": "@mdxeditor/editor",
+          "version": "4.2.5",
+          "isSemVerMajor": true
+        }
+      },
+      "@prisma/config": {
+        "name": "@prisma/config",
+        "severity": "high",
+        "isDirect": false,
+        "via": [
+          "deepmerge-ts"
+        ],
+        "effects": [
+          "prisma"
+        ],
+        "range": "6.13.0-dev.1 - 8.1.0-dev.4",
+        "nodes": [
+          "node_modules/@prisma/config"
+        ],
+        "fixAvailable": true
+      },
+      "deepmerge-ts": {
+        "name": "deepmerge-ts",
+        "severity": "high",
+        "isDirect": false,
+        "via": [
+          {
+            "source": 1145093,
+            "name": "deepmerge-ts",
+            "dependency": "deepmerge-ts",
+            "title": "DeepmergeTS has stack exhaustion when merging recursive object graphs",
+            "url": "https://github.com/advisories/GHSA-ggr8-5vv4-36mx",
+            "severity": "high",
+            "cwe": [
+              "CWE-674"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": "<8.0.0"
+          }
+        ],
+        "effects": [
+          "@prisma/config"
+        ],
+        "range": "<8.0.0",
+        "nodes": [
+          "node_modules/deepmerge-ts"
+        ],
+        "fixAvailable": true
+      },
+      "js-yaml": {
+        "name": "js-yaml",
+        "severity": "high",
+        "isDirect": false,
+        "via": [
+          {
+            "source": 1121860,
+            "name": "js-yaml",
+            "dependency": "js-yaml",
+            "title": "JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases",
+            "url": "https://github.com/advisories/GHSA-h67p-54hq-rp68",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-407"
+            ],
+            "cvss": {
+              "score": 5.3,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+            },
+            "range": ">=4.0.0 <=4.1.1"
+          },
+          {
+            "source": 1123911,
+            "name": "js-yaml",
+            "dependency": "js-yaml",
+            "title": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+            "url": "https://github.com/advisories/GHSA-52cp-r559-cp3m",
+            "severity": "high",
+            "cwe": [
+              "CWE-400",
+              "CWE-407"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=4.0.0 <4.3.0"
+          },
+          {
+            "source": 1138115,
+            "name": "js-yaml",
+            "dependency": "js-yaml",
+            "title": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) \u2014 CVE-2026-59870 fix not backported",
+            "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj",
+            "severity": "high",
+            "cwe": [
+              "CWE-407"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=4.0.0 <4.3.1"
+          },
+          {
+            "source": 1193727,
+            "name": "js-yaml",
+            "dependency": "js-yaml",
+            "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+            "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh",
+            "severity": "high",
+            "cwe": [
+              "CWE-400",
+              "CWE-407"
+            ],
+            "cvss": {
+              "score": 7.5,
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "range": ">=4.0.0 <4.3.2"
+          }
+        ],
+        "effects": [
+          "@mdxeditor/editor"
+        ],
+        "range": "4.0.0 - 4.3.1",
+        "nodes": [
+          "node_modules/js-yaml"
+        ],
+        "fixAvailable": {
+          "name": "@mdxeditor/editor",
+          "version": "4.2.5",
+          "isSemVerMajor": true
+        }
+      },
+      "prisma": {
+        "name": "prisma",
+        "severity": "high",
+        "isDirect": true,
+        "via": [
+          "@prisma/config"
+        ],
+        "effects": [],
+        "range": "6.13.0-dev.1 - 8.1.0-dev.4",
+        "nodes": [
+          "node_modules/prisma"
+        ],
+        "fixAvailable": true
+      },
+      "prismjs": {
+        "name": "prismjs",
+        "severity": "moderate",
+        "isDirect": false,
+        "via": [
+          {
+            "source": 1105770,
+            "name": "prismjs",
+            "dependency": "prismjs",
+            "title": "PrismJS DOM Clobbering vulnerability",
+            "url": "https://github.com/advisories/GHSA-x7hr-w5r2-h6wg",
+            "severity": "moderate",
+            "cwe": [
+              "CWE-79",
+              "CWE-94"
+            ],
+            "cvss": {
+              "score": 4.9,
+              "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:L/I:L/A:N"
+            },
+            "range": "<1.30.0"
+          }
+        ],
+        "effects": [
+          "refractor"
+        ],
+        "range": "<1.30.0",
+        "nodes": [
+          "node_modules/refractor/node_modules/prismjs"
+        ],
+        "fixAvailable": {
+          "name": "react-syntax-highlighter",
+          "version": "16.1.1",
+          "isSemVerMajor": true
+        }
+      },
+      "react-syntax-highlighter": {
+        "name": "react-syntax-highlighter",
+        "severity": "moderate",
+        "isDirect": true,
+        "via": [
+          "refractor"
+        ],
+        "effects": [],
+        "range": "6.0.0 - 15.6.6",
+        "nodes": [
+          "node_modules/react-syntax-highlighter"
+        ],
+        "fixAvailable": {
+          "name": "react-syntax-highlighter",
+          "version": "16.1.1",
+          "isSemVerMajor": true
+        }
+      },
+      "refractor": {
+        "name": "refractor",
+        "severity": "moderate",
+        "isDirect": false,
+        "via": [
+          "prismjs"
+        ],
+        "effects": [
+          "react-syntax-highlighter"
+        ],
+        "range": "<=4.6.0",
+        "nodes": [
+          "node_modules/refractor"
+        ],
+        "fixAvailable": {
+          "name": "react-syntax-highlighter",
+          "version": "16.1.1",
+          "isSemVerMajor": true
+        }
+      },
+      "sharp": {
+        "name": "sharp",
+        "severity": "high",
+        "isDirect": true,
+        "via": [
+          {
+            "source": 1124066,
+            "name": "sharp",
+            "dependency": "sharp",
+            "title": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+            "url": "https://github.com/advisories/GHSA-f88m-g3jw-g9cj",
+            "severity": "high",
+            "cwe": [
+              "CWE-1395"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": "<0.35.0"
+          },
+          {
+            "source": 1193725,
+            "name": "sharp",
+            "dependency": "sharp",
+            "title": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+            "url": "https://github.com/advisories/GHSA-rgj7-g3m4-5g8c",
+            "severity": "high",
+            "cwe": [
+              "CWE-122"
+            ],
+            "cvss": {
+              "score": 0,
+              "vectorString": null
+            },
+            "range": "<0.35.4"
+          }
+        ],
+        "effects": [],
+        "range": "<=0.35.4-rc.0",
+        "nodes": [
+          "node_modules/sharp"
+        ],
+        "fixAvailable": {
+          "name": "sharp",
+          "version": "0.35.4",
+          "isSemVerMajor": true
+        }
+      }
+    }
+  },
+  "environment": {
+    "generated_at_utc": "2026-09-19T02:51:19.0580499Z",
+    "timezone": "SE Asia Standard Time",
+    "operating_system": "Microsoft Windows NT 10.0.26100.0",
+    "powershell": "7.6.5",
+    "python": "Python 3.13.7",
+    "node": "v22.19.0",
+    "npm": "10.9.3",
+    "git_commit": "4e9947460465365e55b21f0bd216f42ee236d529",
+    "git_branch": "master",
+    "working_tree_porcelain_at_collection": "?? \"test results/\"",
+    "real_external_wav_count": 0
+  },
+  "limitations": [
+    "No real external WAV dataset was present, so no clinical model-performance claim can be made.",
+    "SVM and CNN metrics were produced from small, separable synthetic fixtures and only verify pipeline behavior.",
+    "The dependency audit is informational and reports known production dependency advisories."
+  ]
+}

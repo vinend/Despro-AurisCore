@@ -1,0 +1,1114 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-19T02:56:36.210438+00:00",
+  "algorithm": "SHA-256",
+  "file_count_excluding_manifest": 221,
+  "total_bytes_excluding_manifest": 11081419,
+  "files": [
+    {
+      "path": "ai-pytest-junit.xml",
+      "bytes": 2597,
+      "sha256": "9953ea0ad83bcf4c39395244d7f76927f0b331f19d276f1ad1a81652b04269f5"
+    },
+    {
+      "path": "collect_results.py",
+      "bytes": 5423,
+      "sha256": "f680c8526ec68ebe0ac0a6d4f02dc0d25a46cda7437ddd58171a40b89474330b"
+    },
+    {
+      "path": "consolidated-metrics.json",
+      "bytes": 35113,
+      "sha256": "8bf87f4b039a38cc5f1fc286bfc32db2c2b2068b6590cb1418424431a3b02fdd"
+    },
+    {
+      "path": "logs/ai-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/ai-pip-freeze.txt",
+      "bytes": 1375,
+      "sha256": "c1ce15d3f763970c7b71ab313908ac2d8df52835671b4848a0eeb4b806e98b50"
+    },
+    {
+      "path": "logs/ai-pytest.log",
+      "bytes": 3366,
+      "sha256": "eac8ca6bce7002dfba36fb74138aee5fedc88397eb8a9be500767c9d4f6d94ce"
+    },
+    {
+      "path": "logs/mock-typescript.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/web-build.log",
+      "bytes": 971,
+      "sha256": "b3d63eb932b6b7d7aacebaecb6935e3f75428d42a0dd6224bb5488ab7717adf6"
+    },
+    {
+      "path": "logs/web-eslint.log",
+      "bytes": 56,
+      "sha256": "7de3f573ba3727995ae7c6f73d219b85d1d06a18f262e91a61bbe20c79dd4d3b"
+    },
+    {
+      "path": "logs/web-npm-audit.json",
+      "bytes": 8268,
+      "sha256": "ed7d6951d577c03129105aee9037208242eb2104917ce4cfd16bb8d10489a60d"
+    },
+    {
+      "path": "logs/web-npm-ls.json",
+      "bytes": 16752,
+      "sha256": "1cf407d7ba2c3daf4672d2999affc2ad6acd0edea45d24a70252d937c26da56a"
+    },
+    {
+      "path": "logs/web-typescript.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "metadata/environment.json",
+      "bytes": 447,
+      "sha256": "d58d9c0c5c47a046e7467ffce26ba9bcc170e9019b85cfc470463c573c87d914"
+    },
+    {
+      "path": "raw/pytest-temp/test_acquisition_checksum_reje0/original.txt",
+      "bytes": 13,
+      "sha256": "aa2353a76c07b8615467bb59085dc2d9867c94f2c1d2e7a15df72b196bfdebf0"
+    },
+    {
+      "path": "raw/pytest-temp/test_acquisition_checksum_reje0/SHA256SUMS.txt",
+      "bytes": 79,
+      "sha256": "24b2962db63f7b59e638f724e185814218e46da6a8e12c6d2d2aac9099266376"
+    },
+    {
+      "path": "raw/pytest-temp/test_audio_loading_and_mono0/stereo.wav",
+      "bytes": 888,
+      "sha256": "001a73cc3e2b803a4ebff1161a00e0076dc2ebdcae8ea4cefbfbbae6183474f6"
+    },
+    {
+      "path": "raw/pytest-temp/test_bad_file_logged_manifest0/data/1_AV.wav",
+      "bytes": 6,
+      "sha256": "f526795c95399cea27c055c842c3d6ab018ed0fa4f66f701c28ab22dec28237b"
+    },
+    {
+      "path": "raw/pytest-temp/test_bad_file_logged_manifest0/metadata/audio_validation.csv",
+      "bytes": 453,
+      "sha256": "ef13054ad7c34a453c983f066df4263ac85438348ec76c4730e742700fbc1ee9"
+    },
+    {
+      "path": "raw/pytest-temp/test_bad_file_logged_manifest0/metadata/dataset_manifest.csv",
+      "bytes": 618,
+      "sha256": "3f3379b67e762fa5ccff823c50465ffe03069ecac2c7b26db25ac267d9fa60b5"
+    },
+    {
+      "path": "raw/pytest-temp/test_bad_file_logged_manifest0/metadata/metadata_errors.csv",
+      "bytes": 12,
+      "sha256": "00558fa33bf6f4543fbcad78479fb2e20df69cf8cf65631c7058a38f3e617ea3"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/dataset_analysis/auscultation_location.png",
+      "bytes": 16040,
+      "sha256": "e4d1d3aed73a2596f78687173fcc5c0c68b734e4f8c13db8876704bb10e0ea2e"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/dataset_analysis/class_distribution.png",
+      "bytes": 15690,
+      "sha256": "257f8ddde6c482ebe671d937b7d2109fc72942fff2913c85b331b82bc422aeee"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/dataset_analysis/duplicates.csv",
+      "bytes": 209,
+      "sha256": "34b19e15cb50483fcd35db3136906ee14595e637fdaa9faef21406bfca0a919d"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/dataset_analysis/duration_distribution.png",
+      "bytes": 15342,
+      "sha256": "4e20c02b2b026ec3969ea79d6271424c53da1677f333023bd3d2d62844e9fc89"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/dataset_analysis/recordings_per_subject.png",
+      "bytes": 12756,
+      "sha256": "f9932c5a516520d5aa6bad35704673cf1190affcd0155e8ca8f6217496a564e8"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/dataset_analysis/statistics.json",
+      "bytes": 1854,
+      "sha256": "4ac268221d3a1b7a5d1a6d1c172bc6339f33df4a1a27a06668eaa025b7875d5a"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/figures/cnn_validation_confusion_matrix.png",
+      "bytes": 24172,
+      "sha256": "c6a627d2df3f9fc7f51d6ad03276638fb160f096363ce3de35d03f1b2ff9b8a2"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/figures/final_holdout_confusion_matrix.png",
+      "bytes": 21014,
+      "sha256": "0efe11e5fb0601150d275b119d8b0fe9d636b124ec2e8500e4c9357673b0dbfe"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/metrics/cnn_metrics.json",
+      "bytes": 2822,
+      "sha256": "1702f52aabfda6a975bf54f0145fd9727c69e47f61895558d0487366c41ce959"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/metrics/cnn_validation_predictions.csv",
+      "bytes": 398,
+      "sha256": "80a473b9eede49e0fce9c275e7ce8858103e5fc551bf39b1bf7ae5483d04f7a8"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/metrics/final_holdout_metrics.json",
+      "bytes": 1181,
+      "sha256": "9b787a3af0d1b53a0657726338601e4d8b4c4ec21655032737b2f30f4b7d14eb"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/metrics/final_holdout_predictions.csv",
+      "bytes": 374,
+      "sha256": "649565dbe7528e8f009aa6b397688c18dcc28a26d95b5c36b6f21f57a6bb2d55"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/models/heart_cnn.json",
+      "bytes": 1769,
+      "sha256": "bfcd10c258c4209bc53dd55a74ca0716189659782c5cc4653303784d872601b2"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/artifacts/models/heart_cnn.keras",
+      "bytes": 353027,
+      "sha256": "3ec8caad779014bcf1114f561d1bba7bb22a8963ad7b4e1a9f4aa454f0e55702"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2000.txt",
+      "bytes": 111,
+      "sha256": "b79c5fac47856ec69536359f743e3d9d26a023892b2f872b5e0b5c8c6d81a2c0"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2000_AV.wav",
+      "bytes": 40044,
+      "sha256": "ea72cb441e57ec016df762a6463dbc6b8ed4d0fdd46808cb1cc9fb879b3b5be7"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2001.txt",
+      "bytes": 112,
+      "sha256": "13528db5a4360900c1b3358a6ec1469c69cf88977a374e79ce00bd65013001ff"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2001_AV.wav",
+      "bytes": 40044,
+      "sha256": "1630670c6db9c21122abe4d62049d30e226372aacf194d6765ef3f8607f756ba"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2002.txt",
+      "bytes": 111,
+      "sha256": "4d5e9b8c282f2d4aec917ee49c85a96e611a7ed861d6271e36083cd7f48d3821"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2002_AV.wav",
+      "bytes": 40044,
+      "sha256": "5ee347de2f0a555e2cef248173920c7116ad46d87a5c6a903fadce266331497b"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2003.txt",
+      "bytes": 112,
+      "sha256": "df30c62b6698d11e4149431d15fb2f1da00ad8eacaedfe22490d3e15e738b1e6"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2003_AV.wav",
+      "bytes": 40044,
+      "sha256": "e2aef340f6c31301519f22d419da895e0c4bb6f4a4942a4703a3773cccf199f3"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2004.txt",
+      "bytes": 111,
+      "sha256": "33ae7e741e957b2b3af237f4fc0b1fcd0a33b0e55047d796e8bb033250fa15eb"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2004_AV.wav",
+      "bytes": 40044,
+      "sha256": "7ef88a7e2d8cfd5c3f31bb98bd08cde98e01041ae4db5927bf5da379fdeb4ca1"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2005.txt",
+      "bytes": 112,
+      "sha256": "82b90f0a0705e3dbccfafc8e9e527c3f1691182dd267d30850ba504827c355f2"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2005_AV.wav",
+      "bytes": 40044,
+      "sha256": "486d6a39ad4d295fe7fab4be851ba09bd7cc00e7ab8b81b1f8d61e0b9e05a3a7"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2006.txt",
+      "bytes": 111,
+      "sha256": "0868d413cc1c511bf346680824dd5e27ccef72eb5f810cc0d3d9b17a31d04fb7"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2006_AV.wav",
+      "bytes": 40044,
+      "sha256": "9934a7c5ea5e0f4c3fef9909376222881ce28c285347bb12ffa9d7193e9d73d2"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2007.txt",
+      "bytes": 112,
+      "sha256": "333ce4e4595bc67118c8bd7254acee8d761b6ba54263f9111967e418351ed915"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2007_AV.wav",
+      "bytes": 40044,
+      "sha256": "5a62b43f5d0fc761128fca6a3dac05521bddb4a825f1d140457359cb9676a801"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2008.txt",
+      "bytes": 111,
+      "sha256": "5a33d726a9764037b8c6eed6d4d47f1a9bb5ce8ad028aca724b09af3d917cf7e"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2008_AV.wav",
+      "bytes": 40044,
+      "sha256": "4fab0b5a3aa543fead104e5b0c1f532315ce6013d6c99ed378ee990541c15774"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2009.txt",
+      "bytes": 112,
+      "sha256": "4d4fc9dd64a15a894fdcbc38c71c907207375f22346a5c9079e74879ff843151"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2009_AV.wav",
+      "bytes": 40044,
+      "sha256": "0074f898130e5d6da5024f1a90857fce7fcfef82c50c77ad53ac0ba5e9785840"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2010.txt",
+      "bytes": 111,
+      "sha256": "63d291e5f05febb13f1a762f560b8af525cad405e5fb71f370f20f425c4abe7f"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2010_AV.wav",
+      "bytes": 40044,
+      "sha256": "674ecb38e786894d5e10f4bc4a391c961fd6d51e50879231476cca5b6ebfe085"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2011.txt",
+      "bytes": 112,
+      "sha256": "3e80ebfe917ab06cc71a60bd4cb603f632646bf0bedefbe2e4938050329609b7"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2011_AV.wav",
+      "bytes": 40044,
+      "sha256": "00a97fb95219841a7ce36081fd7dc17e848ecb6d203366cae47d1ba0b9dd7345"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2012.txt",
+      "bytes": 111,
+      "sha256": "d386d9c3f548bc85efe4a60cea8c0fc372462fe851278e00640ebc1a606ca5e9"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2012_AV.wav",
+      "bytes": 40044,
+      "sha256": "baf163f130eab1475c5916ce07bf753996f4178e8ea8beba99aee101b8adbae5"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2013.txt",
+      "bytes": 112,
+      "sha256": "a7f15e09f85c693ca897ec6c7cf488c7cdc5a3df0a6a0b9d4c8f4477923f2ebd"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2013_AV.wav",
+      "bytes": 40044,
+      "sha256": "8389a89cd00d81ed2bd96219d205b9c7466625f5420d24d2e89ac6e8ef80b231"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2014.txt",
+      "bytes": 111,
+      "sha256": "8f7c123d01e8bc5550501293c343d948a29bd8cda1fce3a6a35a3bf989f98e3e"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2014_AV.wav",
+      "bytes": 40044,
+      "sha256": "e74db0c937f36160a692f1d4d9ecaf683ef991c6915043e6dda73ec9ce1c233d"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2015.txt",
+      "bytes": 112,
+      "sha256": "721e2c67e80f120d9539a6d93335cb8b177e18ea1edd199463816d7ca3890d59"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2015_AV.wav",
+      "bytes": 40044,
+      "sha256": "7099ef1c31449f49b651ae78d283094d5aebfa12ae14dd9c8f23d06ff01ccfcf"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2016.txt",
+      "bytes": 111,
+      "sha256": "19daee7d6272ca2ff71f5ea2cb6a76bfcea66a4107af48ec98773c4564189dc0"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2016_AV.wav",
+      "bytes": 40044,
+      "sha256": "fd49fe4b01dae0c587bf2e27a08018ca5087a96413fcc0d11700028f5417bfb0"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2017.txt",
+      "bytes": 112,
+      "sha256": "058ca2fed7c4aeb0202277d7bad19d2e3911cc3493a8f0e9a2b70fc29cd7fb2e"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2017_AV.wav",
+      "bytes": 40044,
+      "sha256": "245071d506aef84c6cc974b16e5430924b69e3db835b1da06762efd5c514df15"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2018.txt",
+      "bytes": 111,
+      "sha256": "88eda0bca7e5f16744d6c7776582d9b858221c150c3df56d9d24d1abe1042889"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2018_AV.wav",
+      "bytes": 40044,
+      "sha256": "0ed0f040cec3be92cb2c93b23d0b1063b56d978711f1bf37a745901fb3970d45"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2019.txt",
+      "bytes": 112,
+      "sha256": "ca1ca4415b7fedfc240c43dc730b58c4aebfe806c200742cd7daaa67bfdcb679"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2019_AV.wav",
+      "bytes": 40044,
+      "sha256": "31598483e1f7c1f448e5912d952ddca153a294ef8dcd130546b1a9c1a5b9caed"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2020.txt",
+      "bytes": 111,
+      "sha256": "2b75f0abd4345bf69fc624527e0453867ec1af230bd2284b440271084802a7fc"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2020_AV.wav",
+      "bytes": 40044,
+      "sha256": "8a16cfd7ee592677ca91b09385688364ba4ace06255c8414a8daf1abab851b28"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2021.txt",
+      "bytes": 112,
+      "sha256": "edefb1c4e64911c61e18b243fc8b321fb42e2dece5a0b7e0c7434b28738f3ef9"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2021_AV.wav",
+      "bytes": 40044,
+      "sha256": "f1ecd9c3eaa649b9897ddbb086d7c3d641b053a71f87c07db826ae8781213a42"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2022.txt",
+      "bytes": 111,
+      "sha256": "5696cddf3e66ad459fd68607b43232a8c6fbd3f5ece8e5c0e6d9663173946990"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2022_AV.wav",
+      "bytes": 40044,
+      "sha256": "5ab0e76bf0dfc1547ea906795048b13f08087874a2644db4ebcf89c728f46a04"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2023.txt",
+      "bytes": 112,
+      "sha256": "2d7f7dfbe78fe5f41183579c266c32db881f8c662c9ae9b6b5359aaa57d69a55"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/2023_AV.wav",
+      "bytes": 40044,
+      "sha256": "6f429447ecd27322b633c220f374dcf150dcede839819f301e1376baad1638e6"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2000_AV.npy",
+      "bytes": 160128,
+      "sha256": "22d0fb3df94467d98c96d178b289a6f2c959e368024ebddf958345cc56f4270c"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2001_AV.npy",
+      "bytes": 160128,
+      "sha256": "b45d7c1869a9d4d9a4b66898b5abb9d3d04bfe1de255b01c35f5d4c89d5a5d1c"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2002_AV.npy",
+      "bytes": 160128,
+      "sha256": "095b4d9c2445f3311997c9154254d6bd10d9dc03c790b572cc31f61f4e287664"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2003_AV.npy",
+      "bytes": 160128,
+      "sha256": "fe6363402cb0744cb374368a58fca2cd9f405441472e6a7fcaefea958176fbdd"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2004_AV.npy",
+      "bytes": 160128,
+      "sha256": "c12597c732696f23b838da3942c421bd5152343be6cdae19a7aa887a657c9357"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2005_AV.npy",
+      "bytes": 160128,
+      "sha256": "701560da79c47f565b36ccfe127006cac369ca389645b7c7b3c81b7b4c534649"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2006_AV.npy",
+      "bytes": 160128,
+      "sha256": "440735ed221d14cd718bb9b9e78d559dc565eea0fdf4aef98320775f19167a85"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2007_AV.npy",
+      "bytes": 160128,
+      "sha256": "b97981ba21fa2be9e6c17ae67482f2fa3942867d8f3fe1fb69fd32599a4f9c6f"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2008_AV.npy",
+      "bytes": 160128,
+      "sha256": "2fc7f5bcb0d72cb6c4753a3853d528a05c6c61f9d194f3614983c67a9b19d02d"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2009_AV.npy",
+      "bytes": 160128,
+      "sha256": "805d419bef61232ef4a85c642fb229e890501e4ecc7c0843302428a5d0de73da"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2010_AV.npy",
+      "bytes": 160128,
+      "sha256": "64328e1d272f0f2f8e9737d4b331bf24ad73841567627ae1786a78fa9f3a8935"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2011_AV.npy",
+      "bytes": 160128,
+      "sha256": "f28318ed97a92ea256e13e1ce479e164212daf8c263c05a853c224ba3a06fbf9"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2012_AV.npy",
+      "bytes": 160128,
+      "sha256": "da83e48c5cd3f579db21b958abb1de267ce6a4a78bb4b358e5193406c8b2a6c6"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2013_AV.npy",
+      "bytes": 160128,
+      "sha256": "6603c97b015549af43cde278017a98be0b8b08086b23f7308187e1c3bb409d97"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2014_AV.npy",
+      "bytes": 160128,
+      "sha256": "97bf92d8c9944c0887397a4374e5b12b69dfd3cac18fc628dc0d8c93ac589ac8"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2015_AV.npy",
+      "bytes": 160128,
+      "sha256": "7d10a00426ca9fa1189ba2a975875b0f19c0a6d6a06eeea7a5ced6766b0cd37b"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2016_AV.npy",
+      "bytes": 160128,
+      "sha256": "fbb37b6b1d8a26adad6ffc0967d32817714b8432989542a40d53efc2422101b3"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2017_AV.npy",
+      "bytes": 160128,
+      "sha256": "217dae6afdb963c259b41b316ce56c9c3c9619e0427c851591bd0d52632cbaf0"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2018_AV.npy",
+      "bytes": 160128,
+      "sha256": "c10cd545702bd2c9907f024e7202e4b6e9ec9c2cf55c79a3fbd6304c27b93f8a"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2019_AV.npy",
+      "bytes": 160128,
+      "sha256": "a1ac228b89069e87f3dacdf387b8cb8b81175aefc290166a99b4f01a02cf1106"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2020_AV.npy",
+      "bytes": 160128,
+      "sha256": "719ff2f9cdba2db15ee11cadea37e80cbd2e0a6be7cda63219dcba6baaf7a089"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2021_AV.npy",
+      "bytes": 160128,
+      "sha256": "53437bf0c41dcfc2c6c08ab8b8dc8f3e8d52c6b6073b56d2423cd58464da4890"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2022_AV.npy",
+      "bytes": 160128,
+      "sha256": "d7be7de9169f3fd4e7243cf7815b901142dd4bde9b366c71960bb2e763fe42fc"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/audio/2023_AV.npy",
+      "bytes": 160128,
+      "sha256": "48582f372fc8d5da8ac2db643ceb9384b957f3c0eee621707eb64cf5d3342b9c"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/segments.csv",
+      "bytes": 7385,
+      "sha256": "9085ae9251beb1bc684edcd23ed5298e0f36531f53b4e4a66c92bc63e6bc478f"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/data/processed/segments_provenance.json",
+      "bytes": 1018,
+      "sha256": "6a984df77dfa9ddadf0c1532492be037eaa10163ea4032a9baacb48f16ebb923"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/docs/dataset_report.md",
+      "bytes": 3554,
+      "sha256": "07f8846b626035082201a8fe494f07b97d0583f93dc36bd421049881f50f217d"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/metadata/audio_validation.csv",
+      "bytes": 4763,
+      "sha256": "bc43f61b8f6484798071cde08ddf008ba1c74c4562007e091005f55e0218fc3b"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/metadata/dataset_manifest.csv",
+      "bytes": 5745,
+      "sha256": "2685d76d55e34a51433c2f05d6f5849a10ce154e4b9c1db817968c8899c5a78d"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/metadata/holdout_lock.json",
+      "bytes": 345,
+      "sha256": "fa7dd2158045f6bec0b371a50e77af079c534c4a9b58391e6401717d02209cee"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/metadata/metadata_errors.csv",
+      "bytes": 12,
+      "sha256": "00558fa33bf6f4543fbcad78479fb2e20df69cf8cf65631c7058a38f3e617ea3"
+    },
+    {
+      "path": "raw/pytest-temp/test_cnn_end_to_end_synthetic0/metadata/preprocessing_errors.csv",
+      "bytes": 20,
+      "sha256": "fba03a11ade7d4c36a0a19e2c6e82000bd478d523369f90a59f98f66c9d95ba6"
+    },
+    {
+      "path": "raw/pytest-temp/test_corrupt_empty_nonfinite_a0/broken.wav",
+      "bytes": 9,
+      "sha256": "e23b51a40d21aad70200ec1f08c6e4883d6ca40c22b6ffbdff306c9c62c408e4"
+    },
+    {
+      "path": "raw/pytest-temp/test_corrupt_empty_nonfinite_a0/empty.wav",
+      "bytes": 44,
+      "sha256": "4f8734c5e13ac599e168cf247a51c1dd0758537ce00bf16d7fed1a3d14d07041"
+    },
+    {
+      "path": "raw/pytest-temp/test_corrupt_empty_nonfinite_a0/nan.wav",
+      "bytes": 88,
+      "sha256": "10bb230cac2ac57f80881d58b04f785292b14a8481e16443dab2094c91c91558"
+    },
+    {
+      "path": "raw/pytest-temp/test_download_atomic_and_prese0/original.txt",
+      "bytes": 21,
+      "sha256": "5f229064d0759db456df9352f881be0ca9d0debc754495c7e8c2f92f0a81e38c"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/dataset_analysis/auscultation_location.png",
+      "bytes": 16040,
+      "sha256": "e4d1d3aed73a2596f78687173fcc5c0c68b734e4f8c13db8876704bb10e0ea2e"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/dataset_analysis/class_distribution.png",
+      "bytes": 15690,
+      "sha256": "257f8ddde6c482ebe671d937b7d2109fc72942fff2913c85b331b82bc422aeee"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/dataset_analysis/duplicates.csv",
+      "bytes": 209,
+      "sha256": "34b19e15cb50483fcd35db3136906ee14595e637fdaa9faef21406bfca0a919d"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/dataset_analysis/duration_distribution.png",
+      "bytes": 15791,
+      "sha256": "e2155186352dbf00cb523643fd2ee1cfca718a18fff60ada0a39e6c839460b92"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/dataset_analysis/recordings_per_subject.png",
+      "bytes": 12756,
+      "sha256": "f9932c5a516520d5aa6bad35704673cf1190affcd0155e8ca8f6217496a564e8"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/dataset_analysis/statistics.json",
+      "bytes": 1854,
+      "sha256": "c4e1fbad1451bb8251d6d3a8a92278d203ab2a2eb0b37ed9fb5b006bb02c8d86"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/figures/final_holdout_confusion_matrix.png",
+      "bytes": 20984,
+      "sha256": "e0faf0e288aabf1844a650a64b8dc27ed0da216fe538673495640f366d6fd350"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/figures/validation_confusion_matrix.png",
+      "bytes": 23545,
+      "sha256": "38f59dcf00e7a67dee50dc557b2f919af74e62dda23487cd0a9c2f6ee8fba883"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/metrics/baseline_metrics.json",
+      "bytes": 3718,
+      "sha256": "a9a227fbd95add487bea0846643813907249c954765a3a4e4525c119a3c1df6a"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/metrics/final_holdout_metrics.json",
+      "bytes": 1181,
+      "sha256": "f624edf0ca6d006dcfc6fdbfa9641e35d09506a63e15a78dc6bdcc07d4116440"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/metrics/final_holdout_predictions.csv",
+      "bytes": 383,
+      "sha256": "ff81cb724a3165362351d5e4150c557cbbd3ac664a7e5d56ab3f61bbaacf0997"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/metrics/validation_predictions.csv",
+      "bytes": 410,
+      "sha256": "f0c52e206c15f02c5200ad5a1638d83423dd838d3f9934f43667544712d336bc"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/artifacts/models/heart_svm.joblib",
+      "bytes": 69264,
+      "sha256": "7d24f8b3bd4494458b76665377963c1e1e2c93b13ed3fdac88ac8588a1414b02"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1000.txt",
+      "bytes": 111,
+      "sha256": "66a6d16dd631c700db90271ae9ab3a8ed2e05499b774cb1c86657d1e1e3d96c3"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1000_AV.wav",
+      "bytes": 44044,
+      "sha256": "7f3fa6d8e4d88d0a2546c2a8a2569dcb03a248aaa91392c916e9504bec8ea1f9"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1001.txt",
+      "bytes": 112,
+      "sha256": "15f5a3b686983ee36102317aca5072ce7adf3e50e01f3ad7e9f13f2049ccc75f"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1001_AV.wav",
+      "bytes": 44044,
+      "sha256": "27a69ea1796f7f439becd23ad8f7dc7cc76686f7a8c0b0cd4026569017c81954"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1002.txt",
+      "bytes": 111,
+      "sha256": "de25b53fca413082af4ade5c08a2a5fcdb2de4a0a60cb6a8609183efb367b7da"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1002_AV.wav",
+      "bytes": 44044,
+      "sha256": "4cbb9d46f50ce566845f43e9201026ba824eaf45999c09dd0f742b8cf810d674"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1003.txt",
+      "bytes": 112,
+      "sha256": "ec314c2970bf52c04e6398bc38d3c87713ec830c803819a8b9acf2e293d12298"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1003_AV.wav",
+      "bytes": 44044,
+      "sha256": "17c98b2f035dd0a7d4da12d78988264f5843e1668645cafa2867712a966e8631"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1004.txt",
+      "bytes": 111,
+      "sha256": "b3f27ae014c1182c2e36566473d2256afa53685d5bce02d2657a97dc5fafa4de"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1004_AV.wav",
+      "bytes": 44044,
+      "sha256": "577781cc1d084ab46356b82fb7bce09b08fd36608bd057400df555f88f2dd771"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1005.txt",
+      "bytes": 112,
+      "sha256": "726c5bd52475cce743754827bf9e0b2d86eb0dd7211508987d319eed35870f4b"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1005_AV.wav",
+      "bytes": 44044,
+      "sha256": "434fa877b9badccf54418f5afa1850c6afd6aea572bad6799644753136067fdd"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1006.txt",
+      "bytes": 111,
+      "sha256": "7e9bf718f2c1bbd7e76cf3d93eb2189a624b6167fbe9fa7cdc528c004b3b24a3"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1006_AV.wav",
+      "bytes": 44044,
+      "sha256": "e216ed1a40eb339b82277c358b32d90dafb03a3fff7ce064209d152e7c4c5ae4"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1007.txt",
+      "bytes": 112,
+      "sha256": "b2dcde7f978bb53b8e59c09e7fd53f5a1aa73289847ea7428e029e25ed5259fe"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1007_AV.wav",
+      "bytes": 44044,
+      "sha256": "2dc0ffcf13adfb6a6ebf7be0189d8e0a7f5b4bbb7db38a9ceeee25faa855332c"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1008.txt",
+      "bytes": 111,
+      "sha256": "2d9145454ba6c6141c9e678240cbff2b692ca66728aed67710a68c96762d97fa"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1008_AV.wav",
+      "bytes": 44044,
+      "sha256": "499ced84bc540729837827c8808826d6afdfc8f49088ff2ed3dfba3c94882c55"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1009.txt",
+      "bytes": 112,
+      "sha256": "5dab665f349a235c3058bfd3a4562cc32fc82f0cd0cee81e4ee94e905dc66243"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1009_AV.wav",
+      "bytes": 44044,
+      "sha256": "763ee7263aa9db001686c3b91d4b545d2399c76bc3b318cb9f786d35c503688e"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1010.txt",
+      "bytes": 111,
+      "sha256": "8741200996cd8fdc9cfd64a15b572892812368fdd08d77a2594eb12b8b99c992"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1010_AV.wav",
+      "bytes": 44044,
+      "sha256": "e78d79d44bf4d3ef97af71d9789fc0f45cef3cff31257c35eff8d6834d215b2d"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1011.txt",
+      "bytes": 112,
+      "sha256": "b0c9241abedea5b7e6ef4a39961d56f2f84ad4ba767c2bba91f70cd3b56e5f40"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1011_AV.wav",
+      "bytes": 44044,
+      "sha256": "f4c93f5ae7ea4d0a9c380fb362a555c1ef90aae3d09a159128c973886d73a8fa"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1012.txt",
+      "bytes": 111,
+      "sha256": "f0de84ce121ccb61e8559e8e6755600193f9a01fdc51bdc05e9bac956066949a"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1012_AV.wav",
+      "bytes": 44044,
+      "sha256": "e821cc16addd0a1ee6ba14101bd4c531fc1d1a039a835918e5c9fe948597857c"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1013.txt",
+      "bytes": 112,
+      "sha256": "b9f4ed08ced3072967de3c11bc749eab6b49b0131f2c6deec9dd0e341f5727b0"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1013_AV.wav",
+      "bytes": 44044,
+      "sha256": "9ff4e7909a223f1b5bf35bd6c2c5fc9b5fd5e537356a5b6586bd4452f284cf9d"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1014.txt",
+      "bytes": 111,
+      "sha256": "721699c92b4d71d127f68c09f750d4ec438f075912e2dd644d3aafba61ee50d1"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1014_AV.wav",
+      "bytes": 44044,
+      "sha256": "eae70410ea92281f9bfbb667e74bd94db675cde9bd17f09357bf3a1c09e1affc"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1015.txt",
+      "bytes": 112,
+      "sha256": "f4de1bfddfa56cb8ae52e9d5284c0b2ecfd098763debd016cee6f5a96692ec24"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1015_AV.wav",
+      "bytes": 44044,
+      "sha256": "365b9aabc93083b4aea9c924f9fdfb90a29c2ea3bd5e7490b81056405784909c"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1016.txt",
+      "bytes": 111,
+      "sha256": "275380ba750260ff18a4d8bb2748fa482d31f47f3ef72e69a277b3fa9e163e7d"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1016_AV.wav",
+      "bytes": 44044,
+      "sha256": "ef9963265eb1f1e2cd9382dcc27375724da462bce6da3f5eb5df42eaf1ae79f6"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1017.txt",
+      "bytes": 112,
+      "sha256": "db28f48312e0db7c8b1c73bc78465827ebc3a0399ed6dae3f5e1aae356b2fe39"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1017_AV.wav",
+      "bytes": 44044,
+      "sha256": "bb2e258c446db766505f069398322cd6a431a48b34659961480806ed46a0fb32"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1018.txt",
+      "bytes": 111,
+      "sha256": "639cf0499c17d502b251b1be06241e0c7f6faf56c78cdf59eec579dfa1677727"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1018_AV.wav",
+      "bytes": 44044,
+      "sha256": "8f2ef6aa2ffea55f8c6bdc309f2568c652aa971d68baab9e1f849ebeaa72a4e0"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1019.txt",
+      "bytes": 112,
+      "sha256": "8deafad00a7e57f4ce48bba2ec39e58bf029c3865a981b193cabc71eaa784236"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1019_AV.wav",
+      "bytes": 44044,
+      "sha256": "b754470038e83845cbd595e70e1c698cd61533625c060c8635c6ec5ccb4958d1"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1020.txt",
+      "bytes": 111,
+      "sha256": "e9a77efeab390f72d2509838064898ef2a4797558e83f591a29b0ecb9ef19f0c"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1020_AV.wav",
+      "bytes": 44044,
+      "sha256": "499493afd5cf0316074167fa08c4cf8a8684925c55a340c8477ce14fe93ad3bd"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1021.txt",
+      "bytes": 112,
+      "sha256": "b55c33b0c0edf7556a61297917171616e823913bfcd7b7b6d07fefc705dcae07"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1021_AV.wav",
+      "bytes": 44044,
+      "sha256": "f698226a53fde390e2de2a621c141f9b74d116dddbcd2b00920bd8b67f386e89"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1022.txt",
+      "bytes": 111,
+      "sha256": "557eb3092e67d2324c453bd855342d9a049e47d95a025bbad926b8ff57a1ff1d"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1022_AV.wav",
+      "bytes": 44044,
+      "sha256": "ec177cbc4620ac77edf5c4c00308f123d55300759db85e0f761d3e35cf048052"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1023.txt",
+      "bytes": 112,
+      "sha256": "58cf60729f9323ed409687bb6896e5028ebcfc04b8d1764bb5d5b04573922656"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/external/circor-heart-sound/1.0.3/training_data/1023_AV.wav",
+      "bytes": 44044,
+      "sha256": "6be3e2b96dbb7fdd38d5d8b1468c5728893c89d75fe2ecb9db0a99dee02921ae"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1000_AV.npy",
+      "bytes": 176128,
+      "sha256": "67ddcac8042768be5d2a09143e0cb9e1603f40bcecc00ca4b75b3911eaf7408e"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1001_AV.npy",
+      "bytes": 176128,
+      "sha256": "fbbb1ee442621410c150092b96498ec197e6b030f1f451009e28017a7cf9c9dc"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1002_AV.npy",
+      "bytes": 176128,
+      "sha256": "feb99d77dff7ed0c6217d180e45fbf91c2c4173c225f365d99c52b8b8da2d1f6"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1003_AV.npy",
+      "bytes": 176128,
+      "sha256": "abd8668b4401a7918469ca87f7a82bd918c7841ccb23ec862d5715de6e97f98c"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1004_AV.npy",
+      "bytes": 176128,
+      "sha256": "c7916660775200c46e7f032884afd17243c2e7ead1464bf04323e5b03ae63d6e"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1005_AV.npy",
+      "bytes": 176128,
+      "sha256": "008861990bdd8c9078be307d17d3d30f91ed512b5bb87e0dde5f719752b55404"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1006_AV.npy",
+      "bytes": 176128,
+      "sha256": "45a5e0edd65ee02ea3e3c345724ef76e61a52a81dcd66b58e818661caaf95c6b"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1007_AV.npy",
+      "bytes": 176128,
+      "sha256": "a3ca8f7b3daf81a9578bd67f7b6978a68b8b821d1c58e734868e00e5075bdec8"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1008_AV.npy",
+      "bytes": 176128,
+      "sha256": "5434ec15ec60ea90db96e3f9e5f46a7550d284c708370f44d961c2f95fce0b76"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1009_AV.npy",
+      "bytes": 176128,
+      "sha256": "b14be225baf197bc0c394e04041bdf4fff843a917e2b2e4e8a508c47ddd61c6e"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1010_AV.npy",
+      "bytes": 176128,
+      "sha256": "35edbf315d6d6050c3bd91047e171469c8e462f136d6778d87255a797ca2d9f7"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1011_AV.npy",
+      "bytes": 176128,
+      "sha256": "6f59c9a9d087b31f26506fcf134bec3564bf5979d7a062c23ce926932a315c2b"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1012_AV.npy",
+      "bytes": 176128,
+      "sha256": "a02ff6a71575e478f091bc5ee84e12485edb1c22891f5d1f531b21f2090b065f"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1013_AV.npy",
+      "bytes": 176128,
+      "sha256": "db5f3bb50348e36315ef5291697b223a76ad5710a859178a5bd4083cd3dba39a"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1014_AV.npy",
+      "bytes": 176128,
+      "sha256": "cb8f0b17313fd3577ed45fa18bd788ebfddb8ba200bc91790e40dc4c9581132b"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1015_AV.npy",
+      "bytes": 176128,
+      "sha256": "225df2fa032b16524680f05b636c109f6af4791be1e458751d5e334639dc93d9"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1016_AV.npy",
+      "bytes": 176128,
+      "sha256": "542df63924dd9ce4ed8363e0354a2285067044e57004267d30011ce9a9799c3b"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1017_AV.npy",
+      "bytes": 176128,
+      "sha256": "9dd375087abd8bb9c15772adbf800a9b1650f202151b0ad7365683472d63b8b2"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1018_AV.npy",
+      "bytes": 176128,
+      "sha256": "d97de2dddfc4fac71f13f56a779975a53b8ae22fb69644bf59a431d756d9124a"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1019_AV.npy",
+      "bytes": 176128,
+      "sha256": "6158ad8eb418b0a5f3281700a18ee6d929a6563567eb9f2c94f116b79c337498"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1020_AV.npy",
+      "bytes": 176128,
+      "sha256": "76dbbfd39a41d6dc001429ffd32236e6eb1ed80e54d691625fa57a41bcba2662"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1021_AV.npy",
+      "bytes": 176128,
+      "sha256": "71351cd617688de7cc973cee3850e64caa99244ef1a519972e98fe2e04e9d3a7"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1022_AV.npy",
+      "bytes": 176128,
+      "sha256": "73597f49b68604e6765b81cb5b5a828785bfde39ad04f64b6091137542a4b947"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/audio/1023_AV.npy",
+      "bytes": 176128,
+      "sha256": "780cf316d3eb9f9246bcea43c20f43d3e7cc566581a1be2136a6eefdfd00d54b"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/features.csv",
+      "bytes": 174143,
+      "sha256": "3b3fc6f327a021d70860dd4942bb336a1f85b3b2568037d985c1241f5bc60748"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/features_provenance.json",
+      "bytes": 917,
+      "sha256": "2cd7b55a8847bbf79749079e8853fc254c23c117e40a045e09bd2f2688dc6810"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/segments.csv",
+      "bytes": 7385,
+      "sha256": "6a79ef64e926a0195834d693df9d597708f1c58b5f2022e0c9ec75c8e43126e6"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/data/processed/segments_provenance.json",
+      "bytes": 917,
+      "sha256": "725048d4b13d5ae2667b2ac4ae155e02f9d27137d39b6cd71aa4b848fd7f522e"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/docs/baseline_results.md",
+      "bytes": 5170,
+      "sha256": "a1055f345a0536551817f3611aaf1c256398d077bda38d9262960df39edfb48c"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/docs/dataset_report.md",
+      "bytes": 3554,
+      "sha256": "cc13da970fc9f141372fd122391c9698fa2cc27d5401098cce44f4762592a865"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/metadata/audio_validation.csv",
+      "bytes": 4762,
+      "sha256": "d2332fec122adc94fd12212542de176de2b8d0f1b2e4700ddee0dae710890791"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/metadata/dataset_manifest.csv",
+      "bytes": 5745,
+      "sha256": "ede10cfa0dbba2e416e23c241f1a164e536c1356ea2c5caddee2902c5208c602"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/metadata/feature_errors.csv",
+      "bytes": 20,
+      "sha256": "fba03a11ade7d4c36a0a19e2c6e82000bd478d523369f90a59f98f66c9d95ba6"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/metadata/holdout_lock.json",
+      "bytes": 345,
+      "sha256": "0bf0ced3740c514cb7d45f1991a48eb63f45da805b22635e3bb098589253a950"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/metadata/metadata_errors.csv",
+      "bytes": 12,
+      "sha256": "00558fa33bf6f4543fbcad78479fb2e20df69cf8cf65631c7058a38f3e617ea3"
+    },
+    {
+      "path": "raw/pytest-temp/test_end_to_end_synthetic0/metadata/preprocessing_errors.csv",
+      "bytes": 20,
+      "sha256": "fba03a11ade7d4c36a0a19e2c6e82000bd478d523369f90a59f98f66c9d95ba6"
+    },
+    {
+      "path": "raw/pytest-temp/test_silence_and_clipping0/clipped.wav",
+      "bytes": 16044,
+      "sha256": "1d1428a571241c1792438fe90f06cfe76fd358bd72d0d0fa90c574935a26c851"
+    },
+    {
+      "path": "README.md",
+      "bytes": 10216,
+      "sha256": "e61b5d8ded2fd96078ea4f735c1a275b50840ff1d02425f3c28e68a269978b95"
+    },
+    {
+      "path": "run_all_tests.ps1",
+      "bytes": 4907,
+      "sha256": "1f7692c1c1d2c670938065ebdbe9359de7a956d7c77ebf8373841389bcbf8f16"
+    },
+    {
+      "path": "runtime-mock-device.json",
+      "bytes": 2069,
+      "sha256": "d25458c907318d097295bb196aa0b34bc71e17300ba22036c0185574f9b5f68f"
+    },
+    {
+      "path": "runtime-web-http.json",
+      "bytes": 577,
+      "sha256": "3191500d63758dba854de4ee96f97cfcb6e6e861fdbc8eccb54213bc0183a3d1"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 3094,
+      "sha256": "59c83882df20a06ac9dcfc2bb0dd92a75d5ee155515b2d10bbd72224ec346a35"
+    }
+  ]
+}

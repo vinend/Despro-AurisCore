@@ -4,10 +4,11 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
-from .features import extract_features, extract_logmel_tensor
+from .features import extract_features
 from .io import load_audio
 from .preprocessing import preprocess
 from .segmentation import segment
+from .spectrogram import extract_spectrogram_tensor
 from .validation import inspect_audio
 
 
@@ -38,11 +39,15 @@ def screen(path: Path, model_path: Path) -> dict[str, Any]:
     if model_path.suffix == ".keras":
         tf = require_tensorflow()
         model = tf.keras.models.load_model(model_path)
-        tensors = np.stack([extract_logmel_tensor(window, config) for window in windows])[..., np.newaxis]
+        tensors = np.stack([extract_spectrogram_tensor(window, config) for window in windows])[
+            ..., np.newaxis
+        ]
         score = float(model.predict(tensors, verbose=0).reshape(-1).mean())
         threshold = float(metadata["decision_threshold"])
         return {"screening_result": "murmur present screening" if score >= threshold else "murmur absent screening",
-                "model_kind": "cnn_logmel", "score": score, "decision_threshold": threshold,
+                "model_kind": metadata.get("model_kind", "cnn_logmel"),
+                "spectrogram_type": config.get("spectrogram_type", "logmel"),
+                "score": score, "decision_threshold": threshold,
                 "confidence": None,
                 "confidence_note": "Sigmoid score is not calibrated as a clinical probability",
                 "quality": quality, "segments": len(windows), "requires_clinician_review": True,

@@ -2,7 +2,7 @@
 
 AurisCore is a university capstone cyber-physical stethoscope research prototype. The intended acquisition path is body sound → MEMS microphone/analog front-end → ESP32-S3 (mono ADC near 8 kHz) → BLE → smartphone → offline signal processing and AI → clinical decision support. Heavy AI processing belongs on the phone for the current design. Optional backend/tele-auscultation comes later.
 
-This folder contains the executable **heart-sound/PCG dataset pipeline, SVM baseline, and optional log-mel CNN in Python**. It covers dataset acquisition, validation, preprocessing, feature extraction, model training, validation-only threshold selection, saved-model inference, and a sealed final-holdout workflow. Heart-only model scope allows provenance, signal processing and participant separation to be verified before adding other modalities. Lung and abdomen classifiers, embedded firmware, live-stream inference, and production mobile integration are not implemented here.
+This folder contains the executable **heart-sound/PCG dataset pipeline, SVM baseline, and optional spectrogram CNNs in Python**. It covers dataset acquisition, validation, preprocessing, feature extraction, model training, participant-exclusive cross-validation, validation-only threshold selection, saved-model inference, and a sealed final-holdout workflow. Heart-only model scope allows provenance, signal processing and participant separation to be verified before adding other modalities. Lung and abdomen classifiers, embedded firmware, live-stream inference, and production mobile integration are not implemented here.
 
 Historical SVM run (2026-09-16): **21 tests passed**; the real CirCor pipeline completed with 22,819 windows and 349 features. Participant test sensitivity was **60.87%** (9 of 23 positive participants missed), despite 90.16% accuracy. That test result has already been inspected and is now treated as development history, not an untouched holdout. See the [engineering handoff](docs/engineering_summary.md) and [historical baseline results](docs/baseline_results.md).
 
@@ -17,6 +17,7 @@ Earlier proposals and the architecture document generator are preserved. Some hi
 ```text
 configs/heart_baseline.yaml       SVM baseline and 8 kHz signal contract
 configs/heart_cnn.yaml            Log-mel CNN training settings
+configs/heart_spectrogram_cnn.yaml Residual spectrogram CNN and augmentation settings
 src/auriscore/                    Acquisition, DSP, splits, SVM/CNN, thresholds, holdout, inference
 scripts/                          Stages, model training, holdout locking/evaluation and WAV screening
 tests/                           Unit, leakage and synthetic end-to-end tests
@@ -50,6 +51,20 @@ For CNN training, install the optional TensorFlow environment instead:
 python -m pip install -r requirements-cnn.txt
 ```
 
+To run the measured training notebook, install the notebook environment and
+launch JupyterLab:
+
+```powershell
+python -m pip install -r requirements-notebook.txt
+python -m jupyter lab notebooks/spectrogram_cnn_measured_training.ipynb
+```
+
+The notebook runs complete real-data preprocessing and training by default,
+then exports plots plus JSON and Markdown reports under
+`artifacts/notebook_report/`. Five-fold grouped cross-validation is available
+through a separate notebook flag and is off by default because it trains five
+additional models.
+
 On Linux/macOS activate with `source .venv/bin/activate`. Source-tree scripts work without package installation; `python -m pip install -e .` is optional. Direct dependencies are pinned in `requirements.txt`; `requirements-lock.txt` records the complete tested environment. To reproduce transitive versions, install with `python -m pip install -r requirements-lock.txt`.
 
 On this Windows workspace, an ignored local Python runtime is also available: replace `python` with `.runtime\python\python.exe`. This avoids requiring a system-wide installation. It is a local convenience, not a tracked dependency.
@@ -76,6 +91,17 @@ python scripts/run_pipeline.py --config configs/heart_cnn.yaml
 # Or, after preprocessing with that same configuration:
 python scripts/train_cnn.py
 ```
+
+For the improved float-spectrogram pipeline, residual CNN, training-only
+augmentation, cache/QC previews, and grouped development cross-validation:
+
+```powershell
+python scripts/run_pipeline.py --config configs/heart_spectrogram_cnn.yaml
+python scripts/cache_spectrograms.py --config configs/heart_spectrogram_cnn.yaml --previews 12
+python scripts/train_cnn_cv.py --config configs/heart_spectrogram_cnn.yaml
+```
+
+See the [spectrogram CNN implementation and experiment protocol](docs/spectrogram_cnn.md).
 
 Download uses PhysioNet's officially advertised public S3 endpoint, bounded concurrent connections, retries and published SHA-256 verification. Roughly 559 MB of source data is downloaded; allow several GB for runtime, processed audio and features. Interrupted downloads can be resumed by rerunning. Existing source files are never replaced; changed originals cause a clear failure. Manual download instructions are in [data/external/README.md](data/external/README.md). Missing data produces an actionable message and exit code 2; it does not generate invented metrics.
 
@@ -110,7 +136,7 @@ Features include 13 MFCCs, 13 delta MFCCs, 40 log-mel bands, RMS, spectral centr
 
 Before segmentation, subject IDs and Additional IDs are linked transitively. Seed 42 creates stratified 70/15/15 train/validation/test participant splits. All recordings from a linked participant stay together; inconsistent linked-visit binary labels are excluded. Automated checks fail on overlap of subjects, linked groups, recording IDs or exact file hashes across splits. Feature provenance binds each stage to the manifest and configuration; rerun upstream stages if either changes.
 
-The SVM remains an sklearn `Pipeline(StandardScaler, SVC)` comparison baseline. The CNN consumes normalized log-mel windows and uses three compact convolution blocks, participant-balanced window weights, and validation-loss early stopping. Both models aggregate recording scores into one linked-participant score. Their screening threshold is selected only on validation participants, targeting the configured sensitivity before maximizing specificity. Training never evaluates the final holdout.
+The SVM remains an sklearn `Pipeline(StandardScaler, SVC)` comparison baseline. The legacy CNN consumes normalized log-mel windows and uses three compact convolution blocks. The opt-in spectrogram CNN supports log-mel or log-STFT tensors, train-only normalization, bounded audio and spectrogram augmentation, MixUp/CutMix, a residual squeeze-and-excitation architecture, participant-balanced window weights, and validation-loss early stopping. Both models aggregate recording scores into one linked-participant score. Their screening threshold is selected only on validation participants, targeting the configured sensitivity before maximizing specificity. Training and cross-validation never evaluate the final holdout.
 
 The historical CirCor test split is marked `legacy_exposed` and cannot be relabelled as untouched by the locking command. A genuine final evaluation requires newly collected AurisCore device data or a separately governed external cohort. After its membership and source hashes are fixed, set `holdout_status: locked_unseen`, run `python scripts/lock_holdout.py --config <config>`, freeze the model and threshold, and run `python scripts/evaluate_holdout.py --config <config> --model <model>` once. The evaluator refuses changed membership and refuses to overwrite an existing final result. See the [final evaluation protocol](docs/evaluation_protocol.md).
 

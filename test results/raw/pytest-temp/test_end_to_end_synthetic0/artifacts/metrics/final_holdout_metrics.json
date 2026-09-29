@@ -1,0 +1,53 @@
+{
+  "threshold": -0.0417265129017787,
+  "recording": {
+    "accuracy": 0.5,
+    "precision": 0.5,
+    "recall_sensitivity": 1.0,
+    "specificity": 0.0,
+    "negative_predictive_value": 0.0,
+    "macro_f1": 0.3333333333333333,
+    "confusion_matrix": [
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "class_counts": {
+      "Absent": 2,
+      "Present": 2
+    }
+  },
+  "subject": {
+    "accuracy": 0.5,
+    "precision": 0.5,
+    "recall_sensitivity": 1.0,
+    "specificity": 0.0,
+    "negative_predictive_value": 0.0,
+    "macro_f1": 0.3333333333333333,
+    "confusion_matrix": [
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "class_counts": {
+      "Absent": 2,
+      "Present": 2
+    }
+  },
+  "recording_count": 4,
+  "subject_count": 4,
+  "status": "final_locked_holdout_evaluation",
+  "model_sha256": "7d24f8b3bd4494458b76665377963c1e1e2c93b13ed3fdac88ac8588a1414b02",
+  "holdout_identity_sha256": "f45ddfe0c9cd823028a62e6467042c5e6c1e3ae047c836d78a8567e2d6072002",
+  "warning": "One-time research evaluation; not evidence of clinical validity."
+}

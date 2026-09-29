@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Any
 import yaml
 
+from .spectrogram import validate_spectrogram_config
+
 
 def load_config(path: str | Path) -> dict[str, Any]:
     """Read a YAML configuration and reject invalid DSP/split parameters."""
@@ -34,4 +36,23 @@ def load_config(path: str | Path) -> dict[str, Any]:
         for field in ("cnn_batch_size", "cnn_epochs", "cnn_patience"):
             if int(config.get(field, 0)) <= 0:
                 raise ValueError(f"{field} must be positive")
+        validate_spectrogram_config(config)
+        if config.get("cnn_architecture", "compact") not in {"compact", "residual_se"}:
+            raise ValueError("cnn_architecture must be compact or residual_se")
+        for field in (
+            "augmentation_noise_probability",
+            "mixup_probability",
+            "cutmix_probability",
+        ):
+            if not 0 <= float(config.get(field, 0.0)) <= 1:
+                raise ValueError(f"{field} must be in [0, 1]")
+        if float(config.get("mixup_probability", 0.0)) + float(
+            config.get("cutmix_probability", 0.0)
+        ) > 1:
+            raise ValueError("mixup_probability + cutmix_probability must not exceed one")
+        filters = config.get("cnn_filters", [24, 48, 96])
+        if not filters or any(int(value) <= 0 for value in filters):
+            raise ValueError("cnn_filters must contain positive channel counts")
+        if int(config.get("cross_validation_folds", 5)) < 2:
+            raise ValueError("cross_validation_folds must be at least two")
     return config

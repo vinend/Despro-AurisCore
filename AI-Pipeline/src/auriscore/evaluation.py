@@ -6,7 +6,17 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import (
+    ConfusionMatrixDisplay,
+    accuracy_score,
+    average_precision_score,
+    brier_score_loss,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 
 
 def metrics(y: np.ndarray, prediction: np.ndarray) -> dict[str, Any]:
@@ -71,9 +81,22 @@ def evaluate(frame: pd.DataFrame, scores: np.ndarray, threshold: float = 0.0) ->
     """Evaluate recording and linked-participant decisions at a locked threshold."""
     predictions, participants = participant_scores(frame, scores)
     predictions["screening_result"] = np.where(predictions.score >= threshold, "murmur present screening", "murmur absent screening")
+    recording_y = (predictions.label == "Present").to_numpy().astype(int)
+    subject_y = (participants.label == "Present").to_numpy().astype(int)
+    recording_metrics = metrics(recording_y, (predictions.score >= threshold).to_numpy().astype(int))
+    subject_metrics = metrics(subject_y, (participants.score >= threshold).to_numpy().astype(int))
+    for values, y, output in (
+        (predictions.score.to_numpy(), recording_y, recording_metrics),
+        (participants.score.to_numpy(), subject_y, subject_metrics),
+    ):
+        if len(set(y)) == 2:
+            output["roc_auc"] = float(roc_auc_score(y, values))
+            output["pr_auc"] = float(average_precision_score(y, values))
+        if np.all((values >= 0) & (values <= 1)):
+            output["brier_score"] = float(brier_score_loss(y, values))
     result = {"threshold": float(threshold),
-              "recording": metrics((predictions.label == "Present").to_numpy().astype(int), (predictions.score >= threshold).to_numpy().astype(int)),
-              "subject": metrics((participants.label == "Present").to_numpy().astype(int), (participants.score >= threshold).to_numpy().astype(int)),
+              "recording": recording_metrics,
+              "subject": subject_metrics,
               "recording_count": len(predictions), "subject_count": len(participants)}
     return result, predictions
 

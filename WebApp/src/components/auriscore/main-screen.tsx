@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Stethoscope, Waves } from "lucide-react";
 
@@ -21,7 +22,11 @@ import { EXPECTED_SAMPLING_RATE } from "@/lib/auriscore/protocol";
  * area gelombang → kontrol (rekam, timer, slider BPM) → kartu hasil →
  * riwayat → footer.
  */
-export function MainScreen() {
+export function MainScreen({
+  trainingMetricsCard,
+}: {
+  trainingMetricsCard: ReactNode;
+}) {
   const stream = usePcgStream();
   const recording = useRecording();
 
@@ -92,6 +97,8 @@ export function MainScreen() {
           />
           <ResultCard phase={recording.phase} result={recording.result} />
         </div>
+
+        {trainingMetricsCard}
 
         <HistoryList entries={recording.history} />
       </main>
