@@ -27,6 +27,9 @@ def test_end_to_end_synthetic(tmp_path, config):
     result = run(tmp_path, config, synthetic=True)
     assert result["status"] == "synthetic_smoke_only"
     assert (tmp_path / "artifacts/figures/validation_confusion_matrix.png").exists()
+    experiment = tmp_path / "results" / result["experiment_id"]
+    assert (experiment / "metrics.json").exists()
+    assert (experiment / "confusion_matrix_normalized.png").exists()
     model_path = tmp_path / "artifacts/models/heart_svm.joblib"
     bundle = joblib.load(model_path)
     assert "decision_threshold" in bundle
@@ -44,6 +47,7 @@ def test_end_to_end_synthetic(tmp_path, config):
     lock_holdout(read_table(tmp_path / "metadata/dataset_manifest.csv"), locked_config, tmp_path)
     final = evaluate_svm_holdout(features, locked_config, tmp_path, model_path)
     assert final["status"] == "final_locked_holdout_evaluation"
+    assert (tmp_path / "results" / f"final-holdout-{final['holdout_identity_sha256'][:12]}" / "confusion_matrix.png").exists()
     with pytest.raises(ValueError, match="already evaluated"):
         evaluate_svm_holdout(features, locked_config, tmp_path, model_path)
     config["seed"] = 99
@@ -80,6 +84,10 @@ def test_cnn_end_to_end_synthetic(tmp_path, cnn_config):
     assert result["holdout"]["evaluated"] is False and "test" not in result
     model_path = tmp_path / "artifacts/models/heart_cnn.keras"
     assert model_path.exists() and model_path.with_suffix(".json").exists()
+    experiment = tmp_path / "results" / result["experiment_id"]
+    assert (experiment / "training_history.png").exists()
+    assert (experiment / "sample_logmel_spectrograms.png").exists()
+    assert (experiment / "sample_tensors.npz").exists()
     output = screen(folder / "2000_AV.wav", model_path)
     assert output["model_kind"] == "cnn_logmel"
     assert output["confidence"] is None and output["requires_clinician_review"]

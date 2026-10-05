@@ -2,6 +2,7 @@
 import hashlib
 import json
 import platform
+import shutil
 from pathlib import Path
 from typing import Any
 import joblib
@@ -13,6 +14,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from .evaluation import evaluate, plot_confusion, select_screening_threshold
 from .splitting import assert_no_leakage, split_summary
+from .visualization import allocate_experiment, plot_class_distribution, record_experiment
 
 
 def train_baseline(features: pd.DataFrame, config: dict[str, Any], root: Path,
@@ -35,6 +37,8 @@ def train_baseline(features: pd.DataFrame, config: dict[str, Any], root: Path,
     partitions = {name: recordings[recordings.split.eq(name)] for name in ("train", "validation")}
     if any(part.label.nunique() != 2 for part in partitions.values()):
         raise ValueError("Training and validation splits must contain both classes; collect more subjects")
+    experiment = allocate_experiment(root, str(config.get("experiment_name", "svm-baseline")))
+    plot_class_distribution(features, experiment, experiment.name)
     model = Pipeline([("scaler", StandardScaler()),
                       ("svm", SVC(C=config["svm_c"], gamma=config["svm_gamma"],
                                   class_weight=config["class_weight"], kernel="rbf", probability=False,
@@ -75,6 +79,10 @@ def train_baseline(features: pd.DataFrame, config: dict[str, Any], root: Path,
     (output / "metrics/baseline_metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     plot_confusion(result["validation"]["subject"]["confusion_matrix"], output / "figures/validation_confusion_matrix.png",
                    title="Validation participants: threshold-selected screening")
+    experiment = record_experiment(root, str(config.get("experiment_name", "svm-baseline")),
+                                   config, result, predictions, features, directory=experiment)
+    shutil.copy2(output / "models/heart_svm.joblib", experiment / "heart_svm.joblib")
+    result["experiment_id"] = experiment.name
     (root / "docs").mkdir(exist_ok=True)
     (root / "docs/baseline_results.md").write_text(
         "# Heart murmur screening baseline\n\n"

@@ -147,8 +147,15 @@ def run(root: Path, config: dict[str, Any], stage: str = "run_pipeline", downloa
         stamp(root, config, "features", verify=True)
         return train_baseline(read_table(root / "data/processed/features.csv"), config, root, synthetic=synthetic)
     if stage == "train_cnn" or (stage == "run_pipeline" and model_type == "cnn"):
-        stamp(root, config, "segments", verify=True)
-        return train_cnn(read_table(root / "data/processed/segments.csv"), config, root, synthetic=synthetic)
+        if synthetic:
+            stamp(root, config, "segments", verify=True)
+            return train_cnn(read_table(root / "data/processed/segments.csv"), config, root, synthetic=True)
+        from .experiment_queue import queue_lock, run_one
+        architecture = str(config.get("cnn_architecture", "compact")).replace("_", "-")
+        name = str(config.get("experiment_name", f"cnn-{architecture}"))
+        with queue_lock(root):
+            outcome = run_one(root, config, {"name": name, "overrides": {}})
+        return {"status": outcome, "experiment_name": name}
     return {"status": "completed", "stage": stage}
 
 

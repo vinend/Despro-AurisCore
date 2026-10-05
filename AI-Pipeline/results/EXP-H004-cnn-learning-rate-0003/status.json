@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "experiment": "EXP-H004-cnn-learning-rate-0003",
+  "current_epoch": 15,
+  "best_epoch": 7,
+  "best_val_loss": 0.6060706973075867,
+  "legacy_run": true,
+  "pid": null,
+  "updated_at": 1791106828.691437
+}

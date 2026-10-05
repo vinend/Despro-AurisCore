@@ -3,7 +3,9 @@
 .venv/
 __pycache__/
 .pytest_cache/
+pytest-cache-files*/
 *.egg-info/
+*.pyc
 AI-Pipeline/data/external/**
 AI-Pipeline/data/raw/**
 AI-Pipeline/data/interim/**
@@ -14,8 +16,13 @@ AI-Pipeline/artifacts/models/*
 !AI-Pipeline/artifacts/models/.gitkeep
 *.part
 
-# Dependencies
+
+# CUDA / local GPU tooling
+AI-Pipeline/ptxas
+
+# Dependencies and package-manager caches
 node_modules/
+.npm-cache/
 .pnp
 .pnp.*
 .yarn/*

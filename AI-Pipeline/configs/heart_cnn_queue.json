@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "base_config": "configs/heart_cnn.yaml",
+  "experiments": [
+    {"name": "cnn-compact", "overrides": {}},
+    {"name": "cnn-dropout-050", "overrides": {"cnn_dropout": 0.5}},
+    {
+      "name": "cnn-conservative-augmentation",
+      "overrides": {
+        "augmentation_enabled": true,
+        "augmentation_gain_db": 2.0,
+        "augmentation_time_shift_fraction": 0.03,
+        "augmentation_noise_probability": 0.25,
+        "augmentation_snr_db_min": 25.0,
+        "augmentation_snr_db_max": 35.0,
+        "augmentation_frequency_mask_bins": 2,
+        "augmentation_frequency_mask_count": 1,
+        "augmentation_time_mask_frames": 8,
+        "augmentation_time_mask_count": 1
+      }
+    },
+    {"name": "cnn-learning-rate-0003", "overrides": {"cnn_learning_rate": 0.0003}},
+    {"name": "cnn-residual-se", "overrides": {"cnn_architecture": "residual_se"}},
+    {
+      "name": "cnn-per-frequency-normalization",
+      "overrides": {"spectrogram_normalization": "per_frequency", "spectrogram_normalization_clip": 5.0}
+    },
+    {"name": "cnn-logmel-96", "overrides": {"n_mels": 96}}
+  ]
+}

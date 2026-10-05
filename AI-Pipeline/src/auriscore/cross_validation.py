@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 from .cnn import train_cnn
 from .evaluation import evaluate, select_screening_threshold
 from .splitting import assert_no_leakage
+from .visualization import record_experiment
 
 
 def assign_grouped_folds(
@@ -135,5 +137,11 @@ def cross_validate_cnn(
     (output / "cross_validation_metrics.json").write_text(
         json.dumps(result, indent=2), encoding="utf-8"
     )
+    report = dict(result, validation=evaluation, model_kind="cnn_spectrogram",
+                  evaluation_method="grouped_cross_validation_oof",
+                  fold_assignment_sha256=hashlib.sha256(assignments.to_csv(index=False).encode()).hexdigest())
+    experiment = record_experiment(root, str(config.get("experiment_name", "cnn-cross-validation")),
+                                   config, report, out_of_fold, development)
+    result["experiment_id"] = experiment.name
     return result
 

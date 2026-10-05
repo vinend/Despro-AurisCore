@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import platform
+import shutil
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterator
@@ -14,9 +15,14 @@ import pandas as pd
 
 from .augmentation import augment_spectrogram, augment_waveform, cutmix, mixup
 from .evaluation import evaluate, plot_confusion, select_screening_threshold
+from .experiment_runtime import (
+    atomic_json, best_record, history_dict, reconcile_history, sync_best_model,
+    training_callbacks,
+)
 from .spectrogram import extract_spectrogram_tensor, spectrogram_shape
 from .spectrogram_cache import load_or_create
 from .splitting import assert_no_leakage, split_summary
+from .visualization import allocate_experiment, plot_class_distribution, record_experiment
 
 
 META_COLUMNS = ["subject_id", "subject_group", "recording_id", "dataset_source", "label", "split", "sha256"]
@@ -90,7 +96,8 @@ def build_cnn_model(input_shape: tuple[int, int, int], config: dict[str, Any]) -
     model.compile(
         optimizer=tf.keras.optimizers.Adam(float(config.get("cnn_learning_rate", 1e-3))),
         loss=loss,
-        metrics=[
+        weighted_metrics=[
+            tf.keras.metrics.BinaryAccuracy(name="accuracy"),
             tf.keras.metrics.Recall(name="sensitivity"),
             tf.keras.metrics.Precision(name="precision"),
             tf.keras.metrics.AUC(name="roc_auc"),
@@ -217,6 +224,9 @@ def _dataset(frame: pd.DataFrame, root: Path, config: dict[str, Any],
         ),
         output_signature=signature,
     )
+    # Finite epoch boundaries ensure every window is visited exactly once.
+    # Explicit cardinality also avoids repeating the validation generator.
+    dataset = dataset.apply(tf.data.experimental.assert_cardinality(len(frame)))
     if training:
         dataset = dataset.shuffle(min(len(frame), 4096), seed=int(config["seed"]), reshuffle_each_iteration=True)
     return dataset.batch(int(config.get("cnn_batch_size", 32))).prefetch(tf.data.AUTOTUNE)
@@ -285,8 +295,9 @@ def train_cnn(
     root: Path,
     synthetic: bool = False,
     output_dir: Path | None = None,
+    experiment_dir: Path | None = None,
 ) -> dict[str, Any]:
-    """Train on windows, select participant threshold on validation, never read test scores."""
+    """Train on windows with optional persistent epoch recovery; use validation only."""
     tf = require_tensorflow()
     assert_no_leakage(segments)
     required = set(META_COLUMNS + ["processed_path", "start_sample", "valid_samples", "window_samples"])
@@ -296,6 +307,18 @@ def train_cnn(
     if any(part.empty or part.label.nunique() != 2 for part in development.values()):
         raise ValueError("CNN training and validation splits must contain both classes")
     config = prepare_spectrogram_config(development["train"], root, config)
+    experiment = experiment_dir or allocate_experiment(
+        root, str(config.get("experiment_name", f"cnn-{config.get('cnn_architecture', 'compact')}"))
+    )
+    if experiment_dir is not None:
+        experiment.mkdir(parents=True, exist_ok=True)
+        atomic_json(experiment / "config.json", config)
+        if not (experiment / "status.json").exists():
+            atomic_json(experiment / "status.json", {
+                "status": "running", "experiment": experiment.name,
+                "current_epoch": 0, "best_epoch": None, "best_val_loss": None,
+            })
+    plot_class_distribution(segments, experiment, experiment.name)
     tf.keras.utils.set_random_seed(int(config["seed"]))
     try:
         tf.config.experimental.enable_op_determinism()
@@ -303,24 +326,42 @@ def train_cnn(
         pass
     probe = next(_example_iterator(development["train"].iloc[:1], root, config, False))
     model = build_cnn_model(tuple(probe.shape), config)
-    callbacks = [
+    previous = reconcile_history(experiment) if experiment_dir is not None else pd.DataFrame()
+    if experiment_dir is not None:
+        recovered_epoch, recovered_loss, _ = best_record(previous)
+        status_file = experiment / "status.json"
+        status = json.loads(status_file.read_text(encoding="utf-8"))
+        status.update(current_epoch=len(previous), best_epoch=recovered_epoch,
+                      best_val_loss=recovered_loss)
+        atomic_json(status_file, status)
+    patience = int(config.get("cnn_patience", 8))
+    callbacks = training_callbacks(tf, experiment, patience, previous) if experiment_dir is not None else [
         tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            patience=int(config.get("cnn_patience", 8)),
-            restore_best_weights=True,
+            monitor="val_loss", patience=patience, restore_best_weights=True,
         )
     ]
     batch_size = int(config.get("cnn_batch_size", 32))
-    history = model.fit(
-        _dataset(development["train"], root, config, training=True, include_weights=True).repeat(),
-        validation_data=_dataset(development["validation"], root, config, training=False, include_weights=True).repeat(),
-        steps_per_epoch=math.ceil(len(development["train"]) / batch_size),
-        validation_steps=math.ceil(len(development["validation"]) / batch_size),
-        epochs=int(config.get("cnn_epochs", 50)),
-        callbacks=callbacks,
-        shuffle=False,
-        verbose=int(config.get("cnn_verbose", 1)),
+    _, _, prior_wait = best_record(previous)
+    already_finished = experiment_dir is not None and (
+        len(previous) >= int(config.get("cnn_epochs", 50)) or prior_wait >= patience
     )
+    if already_finished:
+        history_values = history_dict(previous)
+    else:
+        history = model.fit(
+            _dataset(development["train"], root, config, training=True, include_weights=True),
+            validation_data=_dataset(development["validation"], root, config, training=False, include_weights=True),
+            epochs=int(config.get("cnn_epochs", 50)),
+            callbacks=callbacks,
+            shuffle=False,
+            verbose=int(config.get("cnn_verbose", 1)),
+        )
+        history_values = (history_dict(reconcile_history(experiment)) if experiment_dir is not None
+                          else {name: [float(value) for value in values]
+                                for name, values in history.history.items()})
+    if experiment_dir is not None:
+        sync_best_model(experiment, reconcile_history(experiment))
+        model = tf.keras.models.load_model(experiment / "best_model.keras")
     validation_segment_scores = model.predict(
         _dataset(development["validation"], root, config, training=False, include_weights=False),
         steps=math.ceil(len(development["validation"]) / batch_size),
@@ -354,6 +395,7 @@ def train_cnn(
         "target": "subject-level murmur Absent=0 vs Present=1; Unknown excluded",
         "config": config,
         "input_shape": list(probe.shape),
+        "input_representation": "normalized float32 log-mel tensor; PNG is for inspection only",
         "decision_threshold": threshold,
         "threshold_selection": threshold_selection,
     }
@@ -361,7 +403,7 @@ def train_cnn(
     predictions.to_csv(output / "metrics/cnn_validation_predictions.csv", index=False)
     (output / "metrics/cnn_training_history.json").write_text(
         json.dumps(
-            {name: [float(value) for value in values] for name, values in history.history.items()},
+            history_values,
             indent=2,
         ),
         encoding="utf-8",
@@ -384,13 +426,15 @@ def train_cnn(
         "development_split_counts": split_summary(segments[segments.split.isin(["train", "validation"])]),
         "threshold_selection": threshold_selection,
         "validation": validation_result,
-        "training_epochs": len(history.history["loss"]),
-        "best_validation_loss": float(min(history.history["val_loss"])),
+        "training_epochs": len(history_values["loss"]),
+        "training_history": history_values,
+        "best_validation_loss": float(min(history_values["val_loss"])),
         "development_segments_table_sha256": hashlib.sha256(
             segments[segments.split.isin(["train", "validation"])].to_csv(index=False).encode()
         ).hexdigest(),
         "holdout": {"evaluated": False, "status": config.get("holdout_status", "pending_new_data")},
         "warning": "Research screening only; no clinical validity established.",
+        "validation_screening_targets_met": threshold_selection["constraints_met"],
     }
     (output / "metrics/cnn_metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     plot_confusion(
@@ -398,4 +442,14 @@ def train_cnn(
         output / "figures/cnn_validation_confusion_matrix.png",
         title="CNN validation participants: threshold-selected screening",
     )
+    experiment = record_experiment(
+        root, str(config.get("experiment_name", f"cnn-{config.get('cnn_architecture', 'compact')}")),
+        config, result, predictions, segments,
+        history=history_values,
+        examples=development["train"],
+        directory=experiment,
+    )
+    shutil.copy2(model_path, experiment / "heart_cnn.keras")
+    shutil.copy2(output / "models/heart_cnn.json", experiment / "heart_cnn.json")
+    result["experiment_id"] = experiment.name
     return result

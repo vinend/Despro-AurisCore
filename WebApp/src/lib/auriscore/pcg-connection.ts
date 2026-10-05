@@ -45,6 +45,11 @@ export function resolveDeviceUrl(): string {
   const override = new URLSearchParams(window.location.search).get("device");
   if (override) return override;
   const scheme = window.location.protocol === "https:" ? "wss:" : "ws:";
+  // Local Next dev has no gateway to forward /ws to the simulator.
+  if (window.location.protocol === "http:" &&
+      ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
+    return `${scheme}//${window.location.hostname}:${MOCK_DEVICE_PORT}`;
+  }
   return `${scheme}//${window.location.host}/ws?XTransformPort=${MOCK_DEVICE_PORT}`;
 }
 

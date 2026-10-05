@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "experiment": "EXP-H003-cnn-conservative-augmentation",
+  "current_epoch": 25,
+  "best_epoch": 17,
+  "best_val_loss": 0.5022059679031372,
+  "legacy_run": true,
+  "pid": null,
+  "updated_at": 1791106828.6870308
+}

@@ -14,6 +14,7 @@ import pandas as pd
 
 from .evaluation import evaluate, plot_confusion
 from .splitting import assert_no_leakage
+from .visualization import record_final_holdout
 
 
 IDENTITY_COLUMNS = ["subject_group", "recording_id", "sha256"]
@@ -106,13 +107,14 @@ def evaluate_svm_holdout(features: pd.DataFrame, config: dict[str, Any], root: P
         "warning": "One-time research evaluation; not evidence of clinical validity.",
     })
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     predictions.to_csv(root / "artifacts/metrics/final_holdout_predictions.csv", index=False)
     plot_confusion(
         result["subject"]["confusion_matrix"],
         root / "artifacts/figures/final_holdout_confusion_matrix.png",
         title="Final locked holdout participants",
     )
+    record_final_holdout(root, result, predictions, features)
+    output_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     return result
 
 
@@ -151,11 +153,12 @@ def evaluate_cnn_holdout(segments: pd.DataFrame, config: dict[str, Any], root: P
         "warning": "One-time research evaluation; not evidence of clinical validity.",
     })
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     predictions.to_csv(root / "artifacts/metrics/final_holdout_predictions.csv", index=False)
     plot_confusion(
         result["subject"]["confusion_matrix"],
         root / "artifacts/figures/final_holdout_confusion_matrix.png",
         title="Final locked holdout participants",
     )
+    record_final_holdout(root, result, predictions, segments)
+    output_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     return result

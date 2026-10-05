@@ -1,5 +1,6 @@
 """Configuration loading and early validation."""
 from pathlib import Path
+import math
 from typing import Any
 import yaml
 
@@ -55,4 +56,12 @@ def load_config(path: str | Path) -> dict[str, Any]:
             raise ValueError("cnn_filters must contain positive channel counts")
         if int(config.get("cross_validation_folds", 5)) < 2:
             raise ValueError("cross_validation_folds must be at least two")
+        if int(config["n_mels"]) < 8:
+            raise ValueError("CNN requires at least 8 mel bands for three pooling blocks")
+        for field in ("cnn_top_db", "cnn_learning_rate"):
+            value = float(config.get(field, 0))
+            if not math.isfinite(value) or value <= 0:
+                raise ValueError(f"{field} must be finite and positive")
+        if not 0 <= float(config.get("cnn_dropout", 0.30)) < 1:
+            raise ValueError("cnn_dropout must be in [0, 1)")
     return config

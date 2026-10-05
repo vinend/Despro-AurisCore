@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "experiment": "EXP-H006-cnn-per-frequency-normalization",
+  "current_epoch": 26,
+  "best_epoch": 18,
+  "best_val_loss": 0.4807293117046356,
+  "legacy_run": true,
+  "pid": null,
+  "updated_at": 1791139448.4037306
+}

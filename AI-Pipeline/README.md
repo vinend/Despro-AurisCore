@@ -6,7 +6,7 @@ This folder contains the executable **heart-sound/PCG dataset pipeline, SVM base
 
 Historical SVM run (2026-09-16): **21 tests passed**; the real CirCor pipeline completed with 22,819 windows and 349 features. Participant test sensitivity was **60.87%** (9 of 23 positive participants missed), despite 90.16% accuracy. That test result has already been inspected and is now treated as development history, not an untouched holdout. See the [engineering handoff](docs/engineering_summary.md) and [historical baseline results](docs/baseline_results.md).
 
-Current software verification (2026-09-19): **25 tests passed**, including synthetic end-to-end SVM and CNN training/inference. No new real-data performance claim was produced because the source audio and a fresh holdout are not present in this checkout.
+The first real-data compact CNN development run completed on 2026-10-03 using the restored local CirCor source audio. Its linked-participant validation recall was **91.67%**, positive-class F1 was **40.37%**, and specificity was **35.71%** at the validation-selected threshold. These are screening research results, not final-holdout or clinical results. See the [real CNN training report](docs/heart_cnn_real_training.md) and its saved JSON/CSV/PNG artifacts. The earlier 2026-09-19 software verification had 25 passing tests but no real CNN run at that time.
 
 Research screening only. Outputs are not confirmed diagnoses. Neither a murmur-absent screening result nor a decision margin rules out disease. Every screening result requires clinician review; no clinical validity is claimed.
 
@@ -92,6 +92,48 @@ python scripts/run_pipeline.py --config configs/heart_cnn.yaml
 python scripts/train_cnn.py
 ```
 
+### Independent Heart CNN experiment queue
+
+The canonical real-data CNN path is `configs/heart_cnn_queue.json` with one
+named experiment per directory. From `AI-Pipeline` on Windows, start it without
+keeping a Codex session open:
+
+```powershell
+.\scripts\launch_training_queue.ps1
+```
+
+The launcher prints the PID and writes `.runtime/training-queue.stdout.log`
+and `.runtime/training-queue.stderr.log`. It starts one queue process; the queue
+runs experiments sequentially and waits for pre-existing CNN trainers to exit.
+Launching the same queue again while it is active returns the existing PID.
+These commands inspect artifacts without starting training:
+
+```powershell
+.runtime\python\python.exe scripts\training_status.py
+.runtime\python\python.exe scripts\summarize_experiments.py
+.runtime\python\python.exe scripts\run_experiment_queue.py --dry-run
+```
+
+To run one queued experiment in the foreground when explicitly desired, use
+`.runtime\python\python.exe scripts\run_experiment_queue.py --only cnn-dropout-050`.
+The queue skips completed runs and resumes a managed interrupted run in its
+existing directory. Each managed experiment writes `status.json`, `history.csv`,
+`checkpoints/backup/`, per-epoch best checkpoints, `best_model.keras`, metrics,
+predictions and PNG reports. Keras `BackupAndRestore` saves model and optimizer
+state at each completed epoch; `CSVLogger` and `ModelCheckpoint` preserve the
+history and best validation-loss model. A killed epoch can be repeated, while
+completed epochs are retained. Resume preserves optimizer state but may replay
+a different shuffle/augmentation sequence after restart. Runs started before
+this checkpoint feature cannot recover their training state if interrupted.
+Use a new experiment name after changing configuration or prepared data.
+
+`scripts/run_experiment_queue.py --migrate-only` adds `status.json` and
+`best_model.keras` for already completed legacy runs without training. The
+compact status command does not parse Keras logs. The summary command prints
+completed validation metrics and regenerates `results/experiment_comparison.png`
+and `.csv` for runs with identical evaluation conditions. Neither command
+evaluates the sealed final holdout.
+
 For the improved float-spectrogram pipeline, residual CNN, training-only
 augmentation, cache/QC previews, and grouped development cross-validation:
 
@@ -144,11 +186,34 @@ The historical CirCor test split is marked `legacy_exposed` and cannot be relabe
 
 - [Dataset report](docs/dataset_report.md): measured counts, distributions, quality, missing values, duplicates and split statistics.
 - [Baseline results](docs/baseline_results.md): real evaluation status, model settings, metrics and limitations.
+- [Real Heart CNN training](docs/heart_cnn_real_training.md): restored data provenance, Python/TensorFlow environment, participant-exclusive splits, real validation metrics, and reproducible commands.
 - `metadata/dataset_manifest.csv`, `metadata/audio_validation.csv`, `metadata/*_errors.csv`.
 - `data/processed/audio/*.npy`, `segments.csv`, `features.csv`, stage provenance JSON.
 - `artifacts/dataset_analysis/`: distribution PNGs, statistics JSON and duplicates CSV.
 - `artifacts/models/heart_svm.joblib` or `heart_cnn.keras` plus `heart_cnn.json` metadata.
 - Validation metrics/predictions and validation confusion matrices. Final holdout files appear only after the explicit one-time evaluation command.
+- `results/EXP-HNNN-name/`: immutable per-run `config.json`, `metrics.json`,
+  `predictions.csv`, the saved model, and report PNGs. CNN runs additionally
+  include `history.csv`, `training_history.png`, actual tensor examples in
+  `sample_tensors.npz`, spectrogram and waveform PNGs. The training plots show
+  train/validation class counts; sealed test counts are deferred until the
+  one-time final evaluation. SVM decision margins are uncalibrated, so their
+  precision-recall plot uses margins and no ROC PNG is rendered. CNN ROC/PR
+  plots use sigmoid scores when both validation classes exist.
+- `results/experiment_comparison.png` and `.csv` appear after at least two runs
+  have matching validation participants, labels, threshold policy and method.
+  Cross-validation folds each receive a run directory; out-of-fold evaluation
+  also receives its own directory and is compared only with matching fold
+  assignments.
+- To select an improved candidate for slides, run
+  `python scripts/summarize_experiments.py --baseline EXP-H001-cnn-compact --best EXP-H00N-cnn-variant`.
+  This writes `results/summary/` only when positive-class F1 improved under
+  the same validation methodology. It copies available best-candidate plots
+  and writes `baseline_vs_best.png` plus its numerical CSV. A new selection
+  cannot replace an existing summary silently.
+- The one-time locked holdout writes count/normalized confusion matrices,
+  eligible score curves and full split class counts to
+  `results/final-holdout-<digest>/`, alongside JSON/CSV results.
 
 ```powershell
 python scripts/predict.py path/to/recording.wav

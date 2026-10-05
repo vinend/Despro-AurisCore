@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "experiment": "EXP-H002-cnn-dropout-050",
+  "current_epoch": 22,
+  "best_epoch": 14,
+  "best_val_loss": 0.5183947086334229,
+  "legacy_run": true,
+  "pid": null,
+  "updated_at": 1791106828.6821823
+}

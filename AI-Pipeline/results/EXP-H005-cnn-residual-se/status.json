@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "experiment": "EXP-H005-cnn-residual-se",
+  "current_epoch": 18,
+  "best_epoch": 10,
+  "best_val_loss": 0.5003810524940491,
+  "legacy_run": true,
+  "pid": null,
+  "updated_at": 1791139750.7756255
+}

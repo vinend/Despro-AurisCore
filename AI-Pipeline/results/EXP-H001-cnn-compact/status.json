@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "experiment": "EXP-H001-cnn-compact",
+  "current_epoch": 23,
+  "best_epoch": 15,
+  "best_val_loss": 0.5216200351715088,
+  "legacy_run": true,
+  "pid": null,
+  "updated_at": 1791106828.674382
+}

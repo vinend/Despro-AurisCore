@@ -29,8 +29,10 @@ def metrics(y: np.ndarray, prediction: np.ndarray) -> dict[str, Any]:
             "precision": float(precision_score(y, prediction, zero_division=0)),
             "recall_sensitivity": float(recall_score(y, prediction, zero_division=0)),
             "specificity": float(specificity),
+            "balanced_accuracy": float((recall_score(y, prediction, zero_division=0) + specificity) / 2),
             "negative_predictive_value": float(negative_predictive_value),
             "macro_f1": float(f1_score(y, prediction, average="macro", labels=[0, 1], zero_division=0)),
+            "f1": float(f1_score(y, prediction, zero_division=0)),
             "confusion_matrix": matrix.tolist(),
             "class_counts": {"Absent": int((y == 0).sum()), "Present": int((y == 1).sum())}}
 
@@ -108,5 +110,5 @@ def plot_confusion(matrix: list[list[int]], destination: Path,
     ConfusionMatrixDisplay(np.array(matrix), display_labels=["Absent", "Present"]).plot(ax=ax, colorbar=False)
     ax.set_title(title)
     fig.tight_layout()
-    fig.savefig(destination, dpi=140)
+    fig.savefig(destination, dpi=180)
     plt.close(fig)

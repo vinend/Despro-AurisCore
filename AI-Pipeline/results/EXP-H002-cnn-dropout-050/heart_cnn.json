@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "model_kind": "cnn_logmel",
+  "target": "subject-level murmur Absent=0 vs Present=1; Unknown excluded",
+  "config": {
+    "seed": 42,
+    "model_type": "cnn",
+    "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+    "sample_rate": 8000,
+    "signal_band_max_hz": 2000,
+    "window_seconds": 5.0,
+    "overlap": 0.5,
+    "filter_enabled": false,
+    "filter_low_hz": 20,
+    "filter_high_hz": 2000,
+    "filter_order": 2,
+    "n_fft": 512,
+    "hop_length": 128,
+    "n_mels": 40,
+    "n_mfcc": 13,
+    "feature_fmax": 2000,
+    "train_fraction": 0.7,
+    "validation_fraction": 0.15,
+    "test_fraction": 0.15,
+    "threshold_target_sensitivity": 0.9,
+    "threshold_min_specificity": 0.5,
+    "holdout_status": "pending_new_data",
+    "cnn_top_db": 80.0,
+    "cnn_batch_size": 32,
+    "cnn_epochs": 50,
+    "cnn_patience": 8,
+    "cnn_learning_rate": 0.001,
+    "cnn_dropout": 0.5,
+    "cnn_verbose": 1,
+    "experiment_name": "cnn-dropout-050"
+  },
+  "input_shape": [
+    40,
+    313,
+    1
+  ],
+  "input_representation": "normalized float32 log-mel tensor; PNG is for inspection only",
+  "decision_threshold": 0.4088456713860589,
+  "threshold_selection": {
+    "threshold": 0.4088456713860589,
+    "target_sensitivity": 0.9,
+    "minimum_specificity": 0.5,
+    "constraints_met": true,
+    "selection_unit": "linked participant mean recording score",
+    "validation_subject_metrics": {
+      "accuracy": 0.5819672131147541,
+      "precision": 0.30985915492957744,
+      "recall_sensitivity": 0.9166666666666666,
+      "specificity": 0.5,
+      "balanced_accuracy": 0.7083333333333333,
+      "negative_predictive_value": 0.9607843137254902,
+      "macro_f1": 0.5604380077711056,
+      "f1": 0.4631578947368421,
+      "confusion_matrix": [
+        [
+          49,
+          49
+        ],
+        [
+          2,
+          22
+        ]
+      ],
+      "class_counts": {
+        "Absent": 98,
+        "Present": 24
+      }
+    },
+    "candidate_count": 122
+  }
+}

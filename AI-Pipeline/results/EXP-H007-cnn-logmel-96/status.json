@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "experiment": "EXP-H007-cnn-logmel-96",
+  "current_epoch": 27,
+  "best_epoch": 19,
+  "best_val_loss": 0.5415953397750854,
+  "legacy_run": true,
+  "pid": null,
+  "updated_at": 1791139750.7766294
+}

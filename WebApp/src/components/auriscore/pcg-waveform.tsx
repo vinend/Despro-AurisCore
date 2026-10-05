@@ -16,9 +16,9 @@ interface PcgWaveformProps {
 
 /** Warna cadangan bila CSS variables tidak terbaca (nilai sama dengan tokens). */
 const FALLBACK_COLORS = {
-  stroke: "#2dd4bf",
-  grid: "rgba(148, 163, 184, 0.16)",
-  bg: "#0f172a",
+  stroke: "#83c9a4",
+  grid: "rgba(190, 214, 201, 0.12)",
+  bg: "#172b24",
 };
 
 /**
@@ -202,7 +202,7 @@ export const PcgWaveform = memo(function PcgWaveform({
       {!hasData && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-400">
-            Menunggu data dari perangkat…
+            Menunggu sinyal perangkat…
           </span>
         </div>
       )}

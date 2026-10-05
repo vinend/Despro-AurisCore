@@ -7,7 +7,16 @@ from .spectrogram import extract_spectrogram_tensor
 
 
 def extract_logmel_tensor(audio: np.ndarray, config: dict[str, Any]) -> np.ndarray:
-    """Backward-compatible alias for the configurable spectrogram frontend."""
+    """Backward-compatible log-mel frontend with input quality checks."""
+    if audio.ndim != 1 or not audio.size or not np.isfinite(audio).all():
+        raise ValueError("Log-mel extraction requires finite, nonempty mono audio")
+    top_db = float(config.get("cnn_top_db", 80.0))
+    if not np.isfinite(top_db) or top_db <= 0:
+        raise ValueError("cnn_top_db must be finite and positive")
+    # Silence has no spectral evidence. power_to_db(ref=max) would otherwise
+    # turn an all-zero spectrum into an apparently full-intensity image.
+    if np.max(np.abs(audio)) < 1e-7:
+        raise ValueError("Silent audio cannot produce a usable log-mel tensor")
     return extract_spectrogram_tensor(audio, dict(config, spectrogram_type="logmel"))
 
 

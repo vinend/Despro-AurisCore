@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: Consolas, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -121,12 +121,144 @@
   }
 }
 
-/* ===== AurisCore: token desain =====
-   TODO-FIGMA: nilai default sementara; ganti dengan token Figma saat tersedia. */
+/* Signal colors shared by the canvas and its surrounding instrument panel. */
 .pcg-scope {
-  --pcg-stroke: #2dd4bf; /* teal terang */
-  --pcg-grid: rgba(148, 163, 184, 0.16); /* abu redup */
-  --pcg-bg: #0f172a; /* latar gelap */
+  --pcg-stroke: #83c9a4;
+  --pcg-grid: rgba(190, 214, 201, 0.12);
+  --pcg-bg: #172b24;
+}
+
+/* Instrument workspace: quiet surfaces, measured spacing, one signal accent. */
+.auris-workspace {
+  --primary: #245b45;
+  --primary-foreground: #ffffff;
+  --muted: #e9ede7;
+  --border: #d8ddd5;
+  --ring: #245b45;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f4f5f0;
+  color: #26352d;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.auris-workspace button:focus-visible, .auris-workspace a:focus-visible {
+  outline: 2px solid #245b45;
+  outline-offset: 4px;
+}
+.auris-workspace button { cursor: pointer; }
+.auris-workspace button:disabled { opacity: 0.45; cursor: not-allowed; }
+.auris-header { background: #fff; border-bottom: 1px solid #d8ddd5; }
+.auris-header-inner, .auris-main, .auris-footer {
+  width: min(1160px, calc(100% - 64px));
+  margin-inline: auto;
+}
+.auris-header-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.auris-wordmark { display: flex; align-items: center; gap: 12px; font-size: 23px; font-weight: 600; letter-spacing: -0.8px; }
+.auris-wordmark svg { width: 30px; height: 30px; color: #245b45; }
+.auris-wordmark-divider { height: 22px; border-left: 1px solid #d8ddd5; margin-inline: 8px; }
+.auris-product-label { color: #6c776e; font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.auris-connection { display: inline-flex; align-items: center; gap: 8px; color: #647167; font-size: 12px; }
+.auris-connection > span { width: 7px; height: 7px; background: #a8b0a9; border-radius: 50%; }
+.auris-connection[data-state=connected] > span { background: #377551; }
+.auris-connection[data-state=disconnected] > span { background: #a84f42; }
+.auris-main { flex: 1; padding-block: 38px 32px; }
+.auris-page-heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 28px; }
+.auris-eyebrow { font-size: 10px; letter-spacing: 1.5px; font-weight: 600; color: #68766b; margin-bottom: 7px; }
+.auris-page-heading h1 { font-size: clamp(25px, 3vw, 33px); letter-spacing: -1px; font-weight: 500; line-height: 1.25; margin-bottom: 8px; }
+.auris-page-heading > div > p:last-child { color: #69736b; font-size: 13px; }
+.auris-session-label, .auris-small-mono { font-family: Consolas, monospace; font-size: 11px; color: #718076; }
+.auris-session-label { border-bottom: 1px solid #bfc9bf; padding-bottom: 5px; letter-spacing: 1px; }
+.auris-status-strip { display: grid; grid-template-columns: repeat(4, 1fr); padding-block: 20px; border-block: 1px solid #d8ddd5; margin-bottom: 26px; }
+.auris-status-strip > div { padding-inline: 24px; border-left: 1px solid #d8ddd5; }
+.auris-status-strip > div:first-child { padding-left: 0; border: 0; }
+.auris-status-strip dt { color: #69736b; font-size: 11px; margin-bottom: 5px; }
+.auris-status-strip dd { font-size: 23px; font-weight: 500; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+.auris-status-strip small { font-size: 11px; font-weight: 400; letter-spacing: 0; color: #69736b; }
+.auris-quality[data-quality=good] { color: #356849; }
+.auris-quality[data-quality=fair] { color: #866b30; }
+.auris-quality[data-quality=poor] { color: #a34737; }
+.auris-console { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+.auris-signal-panel, .auris-side-panel { background: #fff; border: 1px solid #d8ddd5; border-radius: 4px; }
+.auris-signal-panel { overflow: hidden; }
+.auris-panel-heading { padding: 22px 24px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.auris-panel-heading h2 { font-size: 18px; font-weight: 500; letter-spacing: -0.4px; }
+.auris-panel-heading .auris-eyebrow { margin-bottom: 2px; }
+.auris-locations { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 24px 22px; border-bottom: 1px solid #d8ddd5; }
+.auris-locations button { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 12px 4px; font-size: 12px; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: background 150ms; }
+.auris-locations button:hover { background: #f5f7f2; }
+.auris-locations button[aria-pressed=true] { color: #245b45; border-bottom-color: #245b45; font-weight: 600; }
+.auris-scope-heading { display: flex; justify-content: space-between; padding: 14px 20px 6px; background: #172b24; color: #dce8df; font-size: 11px; }
+.auris-scope-heading span:last-child { color: #9cac9f; }
+.auris-scope-canvas { height: 292px; background: #172b24; }
+.auris-time-axis { display: flex; justify-content: space-between; background: #172b24; color: #aabfb0; font: 10px Consolas, monospace; padding: 2px 12px 15px; }
+.auris-signal-caption { color: #69736b; font-size: 11px; padding: 14px 24px; }
+.auris-controls, .auris-result { padding: 22px; }
+.auris-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; }
+.auris-section-heading h2 { font-weight: 600; }
+.auris-section-heading > span { color: #768175; font-size: 11px; }
+.auris-timer { font-family: Consolas, monospace; font-size: 31px; letter-spacing: -1.2px; margin-top: 25px; }
+.auris-timer small { font-size: 12px; color: #8b968a; letter-spacing: 0; }
+.auris-progress { display: block; width: 100%; height: 3px; margin: 15px 0 23px; appearance: none; border: 0; background: #edf0e9; color: #245b45; }
+.auris-progress::-webkit-progress-bar { background: #edf0e9; }
+.auris-progress::-webkit-progress-value { background: #245b45; }
+.auris-progress::-moz-progress-bar { background: #245b45; }
+.auris-record-button { width: 100%; min-height: 43px; display: flex; gap: 9px; align-items: center; justify-content: center; background: #245b45; color: #fff; border-radius: 3px; font-size: 12px; font-weight: 500; }
+.auris-record-button:hover { background: #1a4935; }
+.auris-record-button[data-recording=true] { background: #984b3c; }
+.auris-record-icon { width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+.auris-stop-icon { width: 8px; height: 8px; background: #fff; }
+.auris-control-note { color: #718076; font-size: 11px; margin-top: 10px; }
+.auris-simulator-control { border-top: 1px solid #e5e9e0; margin-top: 22px; padding-top: 18px; }
+.auris-simulator-control [data-slot=slider] { margin-top: 18px; }
+.auris-slider-range { display: flex; justify-content: space-between; color: #8a9588; font: 10px Consolas, monospace; margin-top: 7px; }
+.auris-result { border-top: 1px solid #d8ddd5; background: #fbfcf8; }
+.auris-result > p { color: #788275; font-size: 11px; line-height: 1.7; }
+.auris-result > .auris-result-title { color: #364d3c; font-size: 19px; font-weight: 500; margin: 16px 0 8px; }
+.auris-result-title small { color: #8a9588; font-size: 11px; }
+.auris-result-details { font-size: 11px; margin-bottom: 12px; }
+.auris-result-details > div { display: flex; justify-content: space-between; padding-block: 3px; }
+.auris-result-details dt { color: #788275; }
+.auris-history { margin-top: 32px; }
+.auris-history-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 15px; border-bottom: 1px solid #d8ddd5; }
+.auris-history-heading h2 { font-size: 14px; font-weight: 500; }
+.auris-history-heading h2 span { color: #8a9588; font: 10px Consolas, monospace; margin-left: 12px; }
+.auris-history-heading p { color: #788275; font-size: 11px; }
+.auris-history-empty { min-height: 86px; display: flex; gap: 14px; align-items: center; color: #8a9588; font-size: 12px; }
+.auris-history-empty > span { font-size: 20px; }
+.auris-history-scroll { overflow: auto; max-height: 300px; }
+.auris-history table { width: 100%; min-width: 590px; text-align: left; border-collapse: collapse; font-size: 12px; }
+.auris-history th { color: #718076; font-size: 10px; font-weight: 400; padding-block: 12px; }
+.auris-history td { padding-block: 13px; border-top: 1px solid #e0e5da; }
+.auris-footer { display: flex; justify-content: space-between; gap: 16px; padding-block: 18px; border-top: 1px solid #d8ddd5; color: #788275; font-size: 10px; }
+@media (max-width: 900px) {
+  .auris-console { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .auris-side-panel { display: grid; grid-template-columns: 1fr 1fr; }
+  .auris-result { border-top: 0; border-left: 1px solid #d8ddd5; }
+}
+@media (max-width: 560px) {
+  .auris-header-inner, .auris-main, .auris-footer { width: calc(100% - 32px); }
+  .auris-header-inner { min-height: 65px; }
+  .auris-wordmark { font-size: 19px; gap: 8px; }
+  .auris-wordmark svg { width: 24px; }
+  .auris-product-label, .auris-wordmark-divider, .auris-session-label { display: none; }
+  .auris-connection { font-size: 10px; }
+  .auris-main { padding-top: 28px; }
+  .auris-status-strip { grid-template-columns: 1fr 1fr; row-gap: 20px; }
+  .auris-status-strip > div { padding-inline: 18px; }
+  .auris-status-strip > div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .auris-status-strip dd { font-size: 21px; }
+  .auris-panel-heading { padding: 18px 16px 14px; }
+  .auris-locations { margin-inline: 12px; }
+  .auris-locations button { font-size: 11px; gap: 4px; }
+  .auris-locations button span { font-size: 9px; }
+  .auris-scope-canvas { height: 220px; }
+  .auris-signal-caption { padding-inline: 16px; }
+  .auris-side-panel { display: block; }
+  .auris-result { border-top: 1px solid #d8ddd5; border-left: 0; }
+  .auris-history-heading, .auris-footer { flex-direction: column; gap: 5px; }
 }
 
 /* Scrollbar tipis untuk daftar riwayat yang panjang. */
