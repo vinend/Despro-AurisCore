@@ -245,7 +245,8 @@ def _estimate_frequency_statistics(
     total: np.ndarray | None = None
     squared: np.ndarray | None = None
     count = 0
-    for row in frame.to_dict("records"):
+    print(f" - Estimating per-frequency normalization statistics over {len(frame)} segments...", flush=True)
+    for idx, row in enumerate(frame.to_dict("records"), start=1):
         tensor = _window(row, root, raw_config, loader)[..., 0].astype(np.float64)
         if total is None:
             total = np.zeros(tensor.shape[0], dtype=np.float64)
@@ -255,7 +256,6 @@ def _estimate_frequency_statistics(
         total += tensor.sum(axis=1)
         squared += np.square(tensor).sum(axis=1)
         count += tensor.shape[1]
-    if total is None or squared is None or count == 0:
         raise ValueError("Cannot estimate spectrogram statistics from an empty training partition")
     mean = total / count
     variance = np.maximum(squared / count - np.square(mean), 1e-8)

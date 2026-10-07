@@ -200,12 +200,12 @@ def queue_lock(root: Path) -> Iterator[None]:
             handle.seek(0)
             if os.name == "nt":
                 msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
-            else:
-                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-
-
-def wait_for_other_trainers(interval_seconds: int = 30) -> None:
+def wait_for_other_trainers(interval_seconds: int = 5) -> None:
     """Keep the detached queue idle while a prior trainer owns the CPU."""
+    active = active_training_processes()
+    if active:
+        pids = ", ".join(f"PID {p['pid']} ({p['script']})" for p in active)
+        print(f" [Queue Notice] Waiting for existing active process: {pids} ... (run 'Stop-Process -Name python' if orphaned)", flush=True)
     while active_training_processes():
         time.sleep(interval_seconds)
 
