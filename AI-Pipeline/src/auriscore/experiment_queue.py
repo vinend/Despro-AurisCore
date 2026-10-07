@@ -279,6 +279,7 @@ def run_one(root: Path, base: dict[str, Any], item: dict[str, Any]) -> str:
     status.update(status="running", pid=os.getpid(), updated_at=time.time(),
                   request_sha256=request["sha256"], segments_sha256=segments_sha)
     atomic_json(status_file, status)
+    print(f"[{directory.name}] Starting CNN training ({config.get('cnn_epochs', 50)} max epochs, patience {config.get('cnn_patience', 8)})...", flush=True)
     started = time.perf_counter()
     try:
         from .cnn import train_cnn  # TensorFlow remains lazy until training is needed.
@@ -323,14 +324,18 @@ def run_queue(root: Path, plan: dict[str, Any], only: str | None = None) -> list
         atomic_json(queue_state, {"status": "running", "pid": os.getpid(),
                                   "current_experiment": None, "updated_at": time.time()})
         outcomes = []
+        print(f"\n======================================================================", flush=True)
+        print(f"  AurisCore AI Training Queue ({len(items)} experiment(s) scheduled)", flush=True)
+        print(f"======================================================================\n", flush=True)
         try:
-            for item in items:
+            for idx, item in enumerate(items, start=1):
+                print(f">>> [{idx}/{len(items)}] Initializing {item['name']} ...", flush=True)
                 atomic_json(queue_state, {"status": "running", "pid": os.getpid(),
                                           "current_experiment": item["name"],
                                           "updated_at": time.time()})
                 outcome = run_one(root, base, item)
                 outcomes.append(outcome)
-                print(outcome, flush=True)
+                print(f"✓ [{idx}/{len(items)}] {outcome}\n", flush=True)
             atomic_json(queue_state, {"status": "completed", "pid": None,
                                       "current_experiment": None, "updated_at": time.time()})
         except BaseException as exc:
