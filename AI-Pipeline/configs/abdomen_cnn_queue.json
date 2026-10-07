@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "base_config": "configs/abdomen_cnn.yaml",
+  "experiments": [
+    {"name": "abdomen-cnn-compact", "overrides": {"spectrogram_normalization": "minmax"}},
+    {"name": "abdomen-cnn-per-frequency-norm", "overrides": {"spectrogram_normalization": "per_frequency", "spectrogram_normalization_clip": 5.0}},
+    {"name": "abdomen-cnn-dropout-050", "overrides": {"cnn_dropout": 0.5}},
+    {
+      "name": "abdomen-cnn-conservative-augmentation",
+      "overrides": {
+        "augmentation_enabled": true,
+        "augmentation_gain_db": 2.0,
+        "augmentation_time_shift_fraction": 0.03,
+        "augmentation_noise_probability": 0.25,
+        "augmentation_snr_db_min": 25.0,
+        "augmentation_snr_db_max": 35.0,
+        "augmentation_frequency_mask_bins": 2,
+        "augmentation_frequency_mask_count": 1,
+        "augmentation_time_mask_frames": 8,
+        "augmentation_time_mask_count": 1
+      }
+    },
+    {"name": "abdomen-cnn-residual-se", "overrides": {"cnn_architecture": "residual_se"}},
+    {"name": "abdomen-cnn-learning-rate-0003", "overrides": {"cnn_learning_rate": 0.0003}}
+  ]
+}
