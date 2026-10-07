@@ -54,16 +54,22 @@ def select_screening_threshold(frame: pd.DataFrame, scores: np.ndarray,
     """Choose a participant threshold on validation data, prioritizing sensitivity."""
     _, participants = participant_scores(frame, scores)
     y = (participants.label == "Present").to_numpy().astype(int)
-    if set(y) != {0, 1}:
-        raise ValueError("Threshold selection requires both validation classes")
-    candidates = np.sort(participants.score.unique())
+    unit = "linked participant mean recording score"
+    eval_scores = participants.score.to_numpy()
+    if len(set(y)) < 2:
+        y = (frame.label == "Present").to_numpy().astype(int)
+        if len(set(y)) < 2:
+            raise ValueError("Threshold selection requires both validation classes")
+        eval_scores = np.asarray(scores, dtype=float)
+        unit = "validation window segment score"
+    candidates = np.sort(np.unique(eval_scores))
     evaluated = []
     for threshold in candidates:
-        candidate_metrics = metrics(y, (participants.score.to_numpy() >= threshold).astype(int))
+        candidate_metrics = metrics(y, (eval_scores >= threshold).astype(int))
         evaluated.append((float(threshold), candidate_metrics))
     sensitivity_candidates = [item for item in evaluated if item[1]["recall_sensitivity"] >= target_sensitivity]
     feasible = [item for item in sensitivity_candidates if item[1]["specificity"] >= min_specificity]
-    pool = feasible or sensitivity_candidates
+    pool = feasible or sensitivity_candidates or evaluated
     threshold, selected = max(
         pool,
         key=lambda item: (item[1]["specificity"], item[1]["precision"], item[0]),
@@ -73,7 +79,7 @@ def select_screening_threshold(frame: pd.DataFrame, scores: np.ndarray,
         "target_sensitivity": float(target_sensitivity),
         "minimum_specificity": float(min_specificity),
         "constraints_met": bool(feasible),
-        "selection_unit": "linked participant mean recording score",
+        "selection_unit": unit,
         "validation_subject_metrics": selected,
         "candidate_count": len(evaluated),
     }
