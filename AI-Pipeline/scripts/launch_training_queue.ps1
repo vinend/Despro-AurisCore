@@ -4,9 +4,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 $pipelineRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$pythonPath = Join-Path $pipelineRoot ".runtime/python/python.exe"
-if (-not (Test-Path -LiteralPath $pythonPath)) {
-    throw "Project Python was not found: $pythonPath"
+$venvPython = Join-Path $pipelineRoot ".venv/Scripts/python.exe"
+$runtimePython = Join-Path $pipelineRoot ".runtime/python/python.exe"
+
+if (Test-Path -LiteralPath $venvPython) {
+    $pythonPath = $venvPython
+} elseif (Test-Path -LiteralPath $runtimePython) {
+    $pythonPath = $runtimePython
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $pythonPath = (Get-Command python).Source
+} else {
+    throw "Python executable was not found. Please activate your virtual environment or install Python."
 }
 $runtimePath = Join-Path $pipelineRoot ".runtime"
 New-Item -ItemType Directory -Path $runtimePath -Force | Out-Null
