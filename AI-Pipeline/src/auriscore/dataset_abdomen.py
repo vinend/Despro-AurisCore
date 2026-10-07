@@ -209,12 +209,16 @@ def segment_abdomen_with_annotations(
                 ]
                 active_events_in_win = [e for e in window_events if e["is_active"]]
 
-                # Binary label for window
+                # Binary label for window (Present = Active Bowel Burst, Absent = Quiescent / Background)
                 win_label = "Present" if active_events_in_win else "Absent"
                 event_summary = ";".join(e["event_type"] for e in window_events) or "NONE"
 
+                row_dict = row.to_dict()
+                row_dict["label"] = win_label
+                row_dict["murmur_label"] = win_label
+
                 rows.append({
-                    **row.to_dict(),
+                    **row_dict,
                     "segment_id": f"{row['recording_id']}_{seg_idx:04d}",
                     "processed_path": dest_path.relative_to(root).as_posix(),
                     "start_sample": start,
