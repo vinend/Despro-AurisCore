@@ -245,7 +245,8 @@ def _estimate_frequency_statistics(
     total: np.ndarray | None = None
     squared: np.ndarray | None = None
     count = 0
-    print(f" - Estimating per-frequency normalization statistics over {len(frame)} segments...", flush=True)
+    total_segments = len(frame)
+    print(f"   -> Estimating per-frequency normalization over {total_segments} training segments...", flush=True)
     for idx, row in enumerate(frame.to_dict("records"), start=1):
         tensor = _window(row, root, raw_config, loader)[..., 0].astype(np.float64)
         if total is None:
@@ -256,6 +257,9 @@ def _estimate_frequency_statistics(
         total += tensor.sum(axis=1)
         squared += np.square(tensor).sum(axis=1)
         count += tensor.shape[1]
+        if idx % 500 == 0 or idx == total_segments:
+            print(f"      [{idx}/{total_segments} segments ({idx/total_segments*100:.0f}%)]", flush=True)
+    if total is None or squared is None or count == 0:
         raise ValueError("Cannot estimate spectrogram statistics from an empty training partition")
     mean = total / count
     variance = np.maximum(squared / count - np.square(mean), 1e-8)
@@ -299,6 +303,7 @@ def train_cnn(
 ) -> dict[str, Any]:
     """Train on windows with optional persistent epoch recovery; use validation only."""
     tf = require_tensorflow()
+    print(" [Fase 1/4] Validating dataset partition integrity & anti-leakage constraints...", flush=True)
     assert_no_leakage(segments)
     required = set(META_COLUMNS + ["processed_path", "start_sample", "valid_samples", "window_samples"])
     if missing := sorted(required - set(segments.columns)):
@@ -306,6 +311,7 @@ def train_cnn(
     development = {name: segments[segments.split.eq(name)].reset_index(drop=True) for name in ("train", "validation")}
     if any(part.empty or part.label.nunique() != 2 for part in development.values()):
         raise ValueError("CNN training and validation splits must contain both classes")
+    print(f" [Fase 2/4] Preparing spectrogram features (normalization: {config.get('spectrogram_normalization', 'minmax')})...", flush=True)
     config = prepare_spectrogram_config(development["train"], root, config)
     experiment = experiment_dir or allocate_experiment(
         root, str(config.get("experiment_name", f"cnn-{config.get('cnn_architecture', 'compact')}"))
@@ -325,6 +331,7 @@ def train_cnn(
     except (AttributeError, RuntimeError):
         pass
     probe = next(_example_iterator(development["train"].iloc[:1], root, config, False))
+    print(f" [Fase 3/4] Building CNN model (architecture: {config.get('cnn_architecture', 'compact')}, input_shape: {tuple(probe.shape)})...", flush=True)
     model = build_cnn_model(tuple(probe.shape), config)
     previous = reconcile_history(experiment) if experiment_dir is not None else pd.DataFrame()
     if experiment_dir is not None:
@@ -346,8 +353,11 @@ def train_cnn(
         len(previous) >= int(config.get("cnn_epochs", 50)) or prior_wait >= patience
     )
     if already_finished:
+        print(" [Notice] Model training already completed in prior run, skipping fit()...", flush=True)
         history_values = history_dict(previous)
     else:
+        print(f" [Fase 4/4] Starting training loop ({config.get('cnn_epochs', 50)} max epochs, patience {patience}, batch_size {batch_size})...", flush=True)
+        print("   -> Live Keras epoch progress bar will appear below:\n", flush=True)
         history = model.fit(
             _dataset(development["train"], root, config, training=True, include_weights=True),
             validation_data=_dataset(development["validation"], root, config, training=False, include_weights=True),

@@ -55,10 +55,19 @@ def active_training_processes() -> list[dict[str, Any]]:
     """Find independently running AurisCore trainers from process command lines."""
     if psutil is None:
         return []
+    ignore_pids = {os.getpid()}
+    try:
+        current = psutil.Process()
+        for parent in current.parents():
+            ignore_pids.add(parent.pid)
+        for child in current.children(recursive=True):
+            ignore_pids.add(child.pid)
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        pass
     found = []
     for process in psutil.process_iter(["pid", "cmdline"]):
         try:
-            if process.pid == os.getpid():
+            if process.pid in ignore_pids:
                 continue
             args = process.info["cmdline"] or []
             script = next((Path(arg).name.lower() for arg in args
@@ -72,7 +81,6 @@ def active_training_processes() -> list[dict[str, Any]]:
         except (psutil.AccessDenied, psutil.NoSuchProcess, ValueError, IndexError):
             continue
     return found
-
 
 def _best_from_metrics(metrics: dict[str, Any]) -> tuple[int | None, float | None]:
     losses = metrics.get("training_history", {}).get("val_loss", [])
@@ -193,22 +201,65 @@ def queue_lock(root: Path) -> Iterator[None]:
                 import fcntl
                 fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError as exc:
-            raise RuntimeError("A training queue is already running") from exc
+            owner_info = ""
+            queue_json = root / ".runtime" / "training-queue.json"
+            if queue_json.exists():
+                try:
+                    meta = json.loads(queue_json.read_text(encoding="utf-8"))
+                    pid = meta.get("pid")
+                    status = meta.get("status")
+                    exp = meta.get("current_experiment")
+                    owner_info = f" (recorded in .runtime: PID {pid}, status: {status}, experiment: {exp})"
+                    if pid and psutil is not None and not psutil.pid_exists(int(pid)):
+                        owner_info += " [NOTICE: This PID appears inactive; if orphaned, remove .runtime/training-queue.lock to unlock]"
+                except Exception:
+                    pass
+            raise RuntimeError(f"A training queue is already running{owner_info}") from exc
         try:
             yield
         finally:
             handle.seek(0)
             if os.name == "nt":
                 msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
-def wait_for_other_trainers(interval_seconds: int = 5) -> None:
+
+
+def wait_for_other_trainers(interval_seconds: int = 5, timeout_seconds: int | None = 60) -> None:
     """Keep the detached queue idle while a prior trainer owns the CPU."""
     active = active_training_processes()
-    if active:
-        pids = ", ".join(f"PID {p['pid']} ({p['script']})" for p in active)
-        print(f" [Queue Notice] Waiting for existing active process: {pids} ... (run 'Stop-Process -Name python' if orphaned)", flush=True)
-    while active_training_processes():
-        time.sleep(interval_seconds)
+    if not active:
+        return
+    start_time = time.time()
+    last_heartbeat = start_time
+    pids = ", ".join(f"PID {p['pid']} ({p['script']})" for p in active)
+    print(f" [Queue Notice] Waiting for existing active process: {pids} ... (run 'Stop-Process -Name python' if orphaned)", flush=True)
+    while True:
+        active = active_training_processes()
+        if not active:
+            print(" [Queue Notice] Prior active process finished. Resuming training queue...", flush=True)
+            break
+        elapsed = int(time.time() - start_time)
+        if time.time() - last_heartbeat >= 10:
+            last_heartbeat = time.time()
+            details = []
+            for p in active:
+                detail = f"PID {p['pid']} ({p['script']}"
+                if psutil is not None:
+                    try:
+                        proc = psutil.Process(p["pid"])
+                        detail += f", cpu={proc.cpu_percent():.0f}%"
+                    except Exception:
+                        pass
+                detail += ")"
+                details.append(detail)
+            print(f"   -> [Wait heartbeat {elapsed}s] Still waiting on: {', '.join(details)}", flush=True)
 
+        if timeout_seconds and elapsed >= timeout_seconds:
+            print(f"\n [WARNING] Deadlock or stall suspected: queue has been waiting for {elapsed}s on: {pids}.", flush=True)
+            print(f"   -> To kill orphaned processes: Stop-Process -Id {','.join(str(p['pid']) for p in active)} -Force", flush=True)
+            print(f"   -> Or run with --skip-wait to bypass process waiting.\n", flush=True)
+            start_time = time.time() - (timeout_seconds - 30)
+
+        time.sleep(interval_seconds)
 
 def verify_segments(root: Path, base: dict[str, Any]) -> str:
     """Verify prepared data without invalidating it for training-code edits."""
@@ -242,7 +293,7 @@ def _check_existing_config(directory: Path, request: dict[str, Any]) -> None:
             raise ValueError(f"Configuration differs from legacy experiment {directory.name}: {differences}")
 
 
-def run_one(root: Path, base: dict[str, Any], item: dict[str, Any]) -> str:
+def run_one(root: Path, base: dict[str, Any], item: dict[str, Any], skip_wait: bool = False) -> str:
     """Skip, wait for, resume, or create exactly one named CNN experiment."""
     name = item["name"]
     request_config = dict(base, **item["overrides"], experiment_name=name)
@@ -252,7 +303,8 @@ def run_one(root: Path, base: dict[str, Any], item: dict[str, Any]) -> str:
         _check_existing_config(directory, request)
         backfill_completed(directory)
         return f"skipped completed {directory.name}"
-    wait_for_other_trainers()
+    if not skip_wait:
+        wait_for_other_trainers()
     directory = find_experiment(root, name)
     if directory and is_completed(directory):
         _check_existing_config(directory, request)
@@ -319,7 +371,7 @@ def run_one(root: Path, base: dict[str, Any], item: dict[str, Any]) -> str:
         raise
 
 
-def run_queue(root: Path, plan: dict[str, Any], only: str | None = None) -> list[str]:
+def run_queue(root: Path, plan: dict[str, Any], only: str | None = None, skip_wait: bool = False) -> list[str]:
     """Run a fixed manifest sequentially in the caller process."""
     base = load_config(root / plan["base_config"])
     if base.get("model_type") != "cnn":
@@ -341,8 +393,7 @@ def run_queue(root: Path, plan: dict[str, Any], only: str | None = None) -> list
                 atomic_json(queue_state, {"status": "running", "pid": os.getpid(),
                                           "current_experiment": item["name"],
                                           "updated_at": time.time()})
-                outcome = run_one(root, base, item)
-                outcomes.append(outcome)
+                outcome = run_one(root, base, item, skip_wait=skip_wait)
                 print(f"✓ [{idx}/{len(items)}] {outcome}\n", flush=True)
             atomic_json(queue_state, {"status": "completed", "pid": None,
                                       "current_experiment": None, "updated_at": time.time()})

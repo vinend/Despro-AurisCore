@@ -6,31 +6,27 @@ The following counts are measured locally, not inferred from the full cohort des
 
 ```json
 {
-  "recordings": 3163,
-  "original_subject_ids": 942,
-  "linked_subjects": 872,
+  "recordings": 7,
+  "original_subject_ids": 5,
+  "linked_subjects": 5,
   "class_distribution_recordings": {
-    "Absent": 2391,
-    "Present": 616,
-    "Unknown": 156
+    "Present": 7
   },
   "class_distribution_subject_ids": {
-    "Absent": 695,
-    "Present": 179,
-    "Unknown": 68
+    "Present": 5
   },
   "sampling_rates": {
-    "4000": 3163
+    "48000": 7
   },
   "duration_sec": {
-    "count": 3163.0,
-    "mean": 22.87030121719886,
-    "std": 7.282948441124063,
-    "min": 5.152,
-    "25%": 19.056,
-    "50%": 21.456,
-    "75%": 29.392,
-    "max": 64.512
+    "count": 7.0,
+    "mean": 780.4834285714286,
+    "std": 497.10219493609736,
+    "min": 465.048,
+    "25%": 472.44,
+    "50%": 519.288,
+    "75%": 1013.364,
+    "max": 1507.44
   },
   "missing_fields": {
     "dataset_source": 0,
@@ -45,72 +41,51 @@ The following counts are measured locally, not inferred from the full cohort des
     "duration_sec": 0,
     "split": 0,
     "license": 0,
-    "notes": 2976,
-    "additional_id": 2691,
+    "notes": 0,
+    "additional_id": 7,
     "subject_group": 0,
     "sha256": 0,
     "quality_flag": 0
   },
   "duplicate_recordings": 0,
   "quality_flags": {
-    "ok": 3143,
-    "clipping": 20
+    "ok": 7
   },
   "channels": {
     "1": 3163
   },
   "splits": {
-    "excluded": {
-      "subjects": 71,
-      "original_subject_ids": 76,
-      "recordings": 187,
-      "recording_class_counts": {
-        "Unknown": 156,
-        "Present": 18,
-        "Absent": 13
-      },
-      "subject_class_counts": {
-        "Unknown": 67,
-        "Absent+Present": 4
-      }
-    },
     "test": {
-      "subjects": 122,
-      "original_subject_ids": 133,
-      "recordings": 458,
+      "subjects": 1,
+      "original_subject_ids": 1,
+      "recordings": 1,
       "recording_class_counts": {
-        "Absent": 367,
-        "Present": 91
+        "Present": 1
       },
       "subject_class_counts": {
-        "Absent": 99,
-        "Present": 23
+        "Present": 1
       }
     },
     "train": {
-      "subjects": 568,
-      "original_subject_ids": 601,
-      "recordings": 2070,
+      "subjects": 3,
+      "original_subject_ids": 3,
+      "recordings": 5,
       "recording_class_counts": {
-        "Absent": 1654,
-        "Present": 416
+        "Present": 5
       },
       "subject_class_counts": {
-        "Absent": 458,
-        "Present": 110
+        "Present": 3
       }
     },
     "validation": {
-      "subjects": 122,
-      "original_subject_ids": 132,
-      "recordings": 448,
+      "subjects": 1,
+      "original_subject_ids": 1,
+      "recordings": 1,
       "recording_class_counts": {
-        "Absent": 357,
-        "Present": 91
+        "Present": 1
       },
       "subject_class_counts": {
-        "Absent": 98,
-        "Present": 24
+        "Present": 1
       }
     }
   }

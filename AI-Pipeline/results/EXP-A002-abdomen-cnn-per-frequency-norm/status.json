@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "experiment": "EXP-A002-abdomen-cnn-per-frequency-norm",
+  "current_epoch": 28,
+  "best_epoch": 20,
+  "best_val_loss": 0.0611867345869541,
+  "segments_sha256": "f8b97d9490ddd06bc4060ec471bf3c2d01d4c17f7bbebc6fb54d733405c42793",
+  "request_sha256": "c88649fdc9fa9a709084c2579f87c819c37e90679b5e81eb03262007c435ada7",
+  "updated_at": 1791389723.927947,
+  "pid": null
+}

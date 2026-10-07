@@ -13,6 +13,7 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--plan", type=Path, default=Path("configs/abdomen_cnn_queue.json"))
     parser.add_argument("--only", default="abdomen-cnn-compact", help="Specific experiment name to train")
+    parser.add_argument("--skip-wait", action="store_true", help="Bypass waiting for other training processes")
     args = parser.parse_args()
 
     project = args.root.resolve()
@@ -20,7 +21,7 @@ def main() -> int:
     plan = load_plan(plan_path)
 
     print(f"Executing Abdomen training for experiment: '{args.only}' ...", flush=True)
-    run_queue(project, plan, only=args.only)
+    run_queue(project, plan, only=args.only, skip_wait=args.skip_wait)
     return 0
 
 

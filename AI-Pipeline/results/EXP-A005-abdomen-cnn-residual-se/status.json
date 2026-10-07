@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "experiment": "EXP-A005-abdomen-cnn-residual-se",
+  "current_epoch": 18,
+  "best_epoch": 10,
+  "best_val_loss": 0.0570981502532959,
+  "segments_sha256": "f8b97d9490ddd06bc4060ec471bf3c2d01d4c17f7bbebc6fb54d733405c42793",
+  "request_sha256": "5011568c14200998afe1205b46a10cae5fe095fb41d482e5653a30b1178b2e49",
+  "updated_at": 1791390186.4279783,
+  "pid": null
+}

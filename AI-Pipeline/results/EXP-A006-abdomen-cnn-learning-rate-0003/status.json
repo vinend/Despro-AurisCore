@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "experiment": "EXP-A006-abdomen-cnn-learning-rate-0003",
+  "current_epoch": 23,
+  "best_epoch": 15,
+  "best_val_loss": 0.05892314016819,
+  "segments_sha256": "f8b97d9490ddd06bc4060ec471bf3c2d01d4c17f7bbebc6fb54d733405c42793",
+  "request_sha256": "079b3a1655314734be947385ca599f11046cc68496b9d51cd3f9a7fcba135443",
+  "updated_at": 1791390310.9266443,
+  "pid": null
+}

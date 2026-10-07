@@ -84,11 +84,10 @@ def test_build_abdomen_manifest_and_splits(tmp_path: Path) -> None:
         wav_file = dataset_dir / f"record_{sub}_1.wav"
         txt_file = dataset_dir / f"record_{sub}_1.txt"
 
-        # Generate 10 seconds of synthetic audio @ 8000 Hz
+        # Generate 10 seconds of synthetic audio @ 8000 Hz with distinct subject frequencies
         t = np.linspace(0, 10, 80000, endpoint=False)
-        audio = 0.1 * np.sin(2 * np.pi * 200 * t)
+        audio = 0.1 * np.sin(2 * np.pi * (200 + i * 20) * t)
         sf.write(wav_file, audio, 8000)
-
         # Write annotation with an active sound
         txt_file.write_text("1.0\t2.5\tSB\n5.0\t6.0\tMB\n", encoding="utf-8")
 

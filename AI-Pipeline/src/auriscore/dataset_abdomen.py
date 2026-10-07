@@ -238,6 +238,7 @@ def segment_abdomen_with_annotations(
     ]
     result = pd.DataFrame(rows, columns=columns)
     result.to_csv(root / "data/processed/segments.csv", index=False)
+    (root / "metadata").mkdir(parents=True, exist_ok=True)
     pd.DataFrame(errors, columns=["recording_id", "error"]).to_csv(
         root / "metadata/preprocessing_errors.csv", index=False
     )

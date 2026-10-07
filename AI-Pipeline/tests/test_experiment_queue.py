@@ -103,3 +103,80 @@ def test_incomplete_managed_run_reuses_directory(tmp_path: Path, monkeypatch: py
     assert run_one(tmp_path, base, item) == f"completed {directory.name}"
     assert json.loads((directory / "status.json").read_text())["current_epoch"] == 3
     assert len(list((tmp_path / "results").iterdir())) == 1
+
+def test_active_training_processes_ignores_own_hierarchy(monkeypatch: pytest.MonkeyPatch) -> None:
+    from auriscore import experiment_queue
+
+    class FakeProcess:
+        def __init__(self, pid, cmdline, parents=(), children=()):
+            self.pid = pid
+            self.info = {"cmdline": cmdline}
+            self._parents = [FakeProcess(p, []) for p in parents]
+            self._children = [FakeProcess(c, []) for c in children]
+
+        def parents(self):
+            return self._parents
+
+        def children(self, recursive=True):
+            return self._children
+
+    # Current process is 200, parent launcher stub is 100, child is 300, external is 999
+    fake_current = FakeProcess(200, ["python.exe", "scripts/run_experiment_queue.py"], parents=[100], children=[300])
+    all_processes = [
+        FakeProcess(100, [r".venv\Scripts\python.exe", "scripts/run_experiment_queue.py"]),  # launcher stub
+        fake_current,  # self
+        FakeProcess(300, ["python.exe", "scripts/train_cnn.py"]),  # worker child
+        FakeProcess(999, ["python.exe", "scripts/train_cnn.py", "--name", "other-run"]),  # external trainer
+    ]
+
+    class FakePsutil:
+        def Process(self, pid=None):
+            return fake_current
+
+        def process_iter(self, attrs=None):
+            return all_processes
+
+    monkeypatch.setattr(experiment_queue, "psutil", FakePsutil())
+    monkeypatch.setattr(experiment_queue.os, "getpid", lambda: 200)
+
+    found = experiment_queue.active_training_processes()
+    # Should only find the external trainer (999), not 100 (launcher stub), 200 (self), or 300 (child)
+    assert len(found) == 1
+    assert found[0]["pid"] == 999
+    assert found[0]["name"] == "other-run"
+
+def test_wait_for_other_trainers_and_skip_wait(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture) -> None:
+    from auriscore import experiment_queue
+
+    real_wait = experiment_queue.wait_for_other_trainers
+    called = False
+    def fail_if_called(*args, **kwargs):
+        nonlocal called
+        called = True
+
+    # 1. Verify skip_wait bypasses wait_for_other_trainers in run_one
+    monkeypatch.setattr(experiment_queue, "wait_for_other_trainers", fail_if_called)
+    item = {"name": "cnn-test", "overrides": {}}
+    base = {"model_type": "cnn", "seed": 42}
+    directory = Path("nonexistent")
+    monkeypatch.setattr(experiment_queue, "find_experiment", lambda *_: directory)
+    monkeypatch.setattr(experiment_queue, "is_completed", lambda *_: True)
+    monkeypatch.setattr(experiment_queue, "_check_existing_config", lambda *_: None)
+    monkeypatch.setattr(experiment_queue, "backfill_completed", lambda *_: None)
+    experiment_queue.run_one(Path("."), base, item, skip_wait=True)
+    assert not called
+
+    # 2. Test wait_for_other_trainers prints using real_wait
+    poll_count = 0
+    def fake_active():
+        nonlocal poll_count
+        poll_count += 1
+        if poll_count >= 2:
+            return []
+        return [{"pid": 8888, "script": "train_cnn.py"}]
+
+    monkeypatch.setattr(experiment_queue, "active_training_processes", fake_active)
+    real_wait(interval_seconds=0, timeout_seconds=10)
+    captured = capsys.readouterr().out
+    assert "Waiting for existing active process: PID 8888" in captured
+    assert "Prior active process finished. Resuming training queue..." in captured

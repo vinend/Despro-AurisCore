@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "experiment": "EXP-A004-abdomen-cnn-conservative-augmentation",
+  "current_epoch": 20,
+  "best_epoch": 12,
+  "best_val_loss": 0.0574762672185897,
+  "segments_sha256": "f8b97d9490ddd06bc4060ec471bf3c2d01d4c17f7bbebc6fb54d733405c42793",
+  "request_sha256": "0f71cb9ecaf6318e9de8f5d8af33522d570f4a248b0eab79e3ab0b517301a424",
+  "updated_at": 1791389949.6411812,
+  "pid": null
+}

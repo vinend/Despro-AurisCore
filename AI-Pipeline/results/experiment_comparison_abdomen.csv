@@ -1,0 +1,7 @@
+experiment_id,f1,recall_sensitivity,precision,balanced_accuracy,accuracy,roc_auc,pr_auc
+EXP-A001-abdomen-cnn-compact,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+EXP-A002-abdomen-cnn-per-frequency-norm,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+EXP-A003-abdomen-cnn-dropout-050,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+EXP-A004-abdomen-cnn-conservative-augmentation,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+EXP-A005-abdomen-cnn-residual-se,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+EXP-A006-abdomen-cnn-learning-rate-0003,1.0,1.0,1.0,1.0,1.0,1.0,1.0

@@ -32,19 +32,15 @@ AurisCore is a digital stethoscope research prototype with three auscultation do
 * **Dataset:** Figshare Bowel Sounds 1.0 (`data/external/bowel-sounds/`, 14 files, 7 long continuous recordings, CC BY 4.0).
 * **Preprocessing:** Resampled to 8,000 Hz, 4th-order Butterworth bandpass filter $100 - 1.000\text{ Hz}$, segmented into 2,174 windows (5.0 seconds, 50% overlap).
 * **Window Labeling:** Active acoustic bursts (`SB`, `MB`, `CRS`, `HS`) $\to$ `Present` (1); Quiescent/silence intervals $\to$ `Absent` (0).
-* **Completed Model:**
-  * **`EXP-A001-abdomen-cnn-compact` (COMPLETED):**
-    * Best Validation Loss: `0.0764` (converged at Epoch 11, early stopped at Epoch 19).
-    * Validation Accuracy: `96.22%`.
-    * Validation Sensitivity: `97.19%`.
-    * Artifacts stored in `AI-Pipeline/results/EXP-A001-abdomen-cnn-compact/` (`heart_cnn.keras`, `metrics.json`, `confusion_matrix.png`, `training_history.png`, `roc_curve.png`).
-* **Remaining Queue (`configs/abdomen_cnn_queue.json`):**
-  * `[2/6]` `abdomen-cnn-per-frequency-norm`
-  * `[3/6]` `abdomen-cnn-dropout-050`
-  * `[4/6]` `abdomen-cnn-conservative-augmentation`
-  * `[5/6]` `abdomen-cnn-residual-se`
-  * `[6/6]` `abdomen-cnn-learning-rate-0003`
-
+* **Completed Experiments (`AI-Pipeline/results/`):**
+  * **`EXP-A001-abdomen-cnn-compact`:** Best Val Loss `0.0758` (Epoch 11).
+  * **`EXP-A002-abdomen-cnn-per-frequency-norm`:** Best Val Loss `0.0612` (Epoch 20).
+  * **`EXP-A003-abdomen-cnn-dropout-050`:** Best Val Loss `0.0604` (Epoch 12).
+  * **`EXP-A004-abdomen-cnn-conservative-augmentation`:** Best Val Loss `0.0575` (Epoch 12).
+  * **`EXP-A005-abdomen-cnn-residual-se` (BEST MODEL):** Best Val Loss **`0.0571`** (Epoch 10, early stop Epoch 18).
+  * **`EXP-A006-abdomen-cnn-learning-rate-0003`:** Best Val Loss `0.0589` (Epoch 15).
+* **Current Best Abdomen Model:** `EXP-A005-abdomen-cnn-residual-se` (Val Loss: **0.0571**, Rec Sensitivity: **100%**, Rec Specificity: **100%**, Rec F1: **1.0000**).
+* **Artifacts:** Stored in `AI-Pipeline/results/EXP-A00*/` along with `experiment_comparison_abdomen.csv` and `experiment_comparison_abdomen.png`.
 ---
 
 ## 3. Directory & Architecture Map

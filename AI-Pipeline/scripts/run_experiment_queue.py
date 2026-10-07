@@ -21,6 +21,7 @@ def main() -> int:
     parser.add_argument("--only", help="Run one named entry from the plan")
     parser.add_argument("--dry-run", action="store_true", help="Inspect queue without training")
     parser.add_argument("--migrate-only", action="store_true", help="Backfill legacy status without training")
+    parser.add_argument("--skip-wait", action="store_true", help="Bypass waiting for other training processes")
     args = parser.parse_args()
     root = args.root.resolve()
     plan_path = args.plan if args.plan.is_absolute() else root / args.plan
@@ -41,7 +42,7 @@ def main() -> int:
                 if args.only is None or row["name"] == args.only:
                     print(f"{row['name']}: {row['status']} ({row['experiment_id'] or '-'})")
             return 0
-        run_queue(root, plan, only=args.only)  # Prints each outcome to the detached log.
+        run_queue(root, plan, only=args.only, skip_wait=args.skip_wait)  # Prints each outcome to the detached log.
         return 0
     except (OSError, RuntimeError, ValueError, KeyError) as exc:
         parser.exit(2, f"Queue error: {exc}\n")

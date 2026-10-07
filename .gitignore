@@ -14,6 +14,8 @@ AI-Pipeline/data/processed/**
 !AI-Pipeline/data/external/README.md
 AI-Pipeline/artifacts/models/*
 !AI-Pipeline/artifacts/models/.gitkeep
+AI-Pipeline/results/*/checkpoints/
+AI-Pipeline/results/*/intermediate/
 *.part
 
 
@@ -64,6 +66,8 @@ server.log
 .zscripts/
 .claude/
 .z-ai-config/
+.gemini/
+GEMINI.md
 skills/
 .vercel/
 

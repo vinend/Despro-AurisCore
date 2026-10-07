@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "experiment": "EXP-A003-abdomen-cnn-dropout-050",
+  "current_epoch": 20,
+  "best_epoch": 12,
+  "best_val_loss": 0.0604209378361702,
+  "segments_sha256": "f8b97d9490ddd06bc4060ec471bf3c2d01d4c17f7bbebc6fb54d733405c42793",
+  "request_sha256": "15974e23bd6aef7e8c963b2006ee20f7a2ec8572793d7c88b980f53400fa1c75",
+  "updated_at": 1791389832.748887,
+  "pid": null
+}

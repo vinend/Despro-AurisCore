@@ -279,8 +279,10 @@ def record_experiment(root: Path, name: str, config: dict[str, Any], result: dic
 def update_comparison(root: Path, current: Path) -> None:
     """Compare only runs with identical participants, labels, selection policy and status."""
     current_data = json.loads((current / "metrics.json").read_text(encoding="utf-8"))
+    prefix = "EXP-A" if "abdomen" in current.name.lower() or current.name.startswith("EXP-A") else "EXP-H"
+    domain_title = "Abdomen acoustic bursts" if prefix == "EXP-A" else "Heart screening"
     rows = []
-    for path in sorted((root / "results").glob("EXP-H*/metrics.json")):
+    for path in sorted((root / "results").glob(f"{prefix}*/metrics.json")):
         if (path.parent / "request.json").exists():
             status_path = path.parent / "status.json"
             if not status_path.exists() or json.loads(status_path.read_text(encoding="utf-8")).get("status") != "completed":
@@ -288,18 +290,19 @@ def update_comparison(root: Path, current: Path) -> None:
         data = json.loads(path.read_text(encoding="utf-8"))
         if data.get("comparison_key") != current_data["comparison_key"]:
             continue
-        subject = data["validation"]["subject"]
+        metrics_source = data["validation"].get("recording") if prefix == "EXP-A" else data["validation"].get("subject", {})
         rows.append({"experiment_id": path.parent.name,
-                     "f1": subject.get("f1", subject.get("macro_f1")),
-                     "recall_sensitivity": subject["recall_sensitivity"],
-                     "precision": subject["precision"],
-                     "balanced_accuracy": subject["balanced_accuracy"],
-                     "accuracy": subject["accuracy"],
-                     "roc_auc": subject.get("roc_auc"), "pr_auc": subject.get("pr_auc")})
+                     "f1": metrics_source.get("f1", metrics_source.get("macro_f1")),
+                     "recall_sensitivity": metrics_source.get("recall_sensitivity"),
+                     "precision": metrics_source.get("precision"),
+                     "balanced_accuracy": metrics_source.get("balanced_accuracy"),
+                     "accuracy": metrics_source.get("accuracy"),
+                     "roc_auc": metrics_source.get("roc_auc"), "pr_auc": metrics_source.get("pr_auc")})
     if len(rows) < 2:
         return
     table = pd.DataFrame(rows)
-    destination = root / "results" / "experiment_comparison.csv"
+    suffix = "_abdomen" if prefix == "EXP-A" else ""
+    destination = root / "results" / f"experiment_comparison{suffix}.csv"
     table.to_csv(destination, index=False)
     fig, ax = plt.subplots(figsize=(max(9, 1.2 * len(rows) + 5), 6))
     positions = np.arange(len(rows))
@@ -308,12 +311,11 @@ def update_comparison(root: Path, current: Path) -> None:
                label={"f1": "F1", "recall_sensitivity": "Recall / sensitivity",
                       "precision": "Precision", "balanced_accuracy": "Balanced accuracy"}[name])
     ax.set_xticks(positions, table.experiment_id, rotation=30, ha="right")
-    ax.set(ylabel="Validation participant score", ylim=(0, 1.05),
-           title="Heart screening · comparable validation experiments")
+    ax.set(ylabel="Validation score", ylim=(0, 1.05),
+           title=f"{domain_title} · comparable validation experiments")
     ax.legend(ncol=2)
     ax.grid(axis="y", alpha=.2)
-    _save(fig, root / "results" / "experiment_comparison.png")
-
+    _save(fig, root / "results" / f"experiment_comparison{suffix}.png")
 
 def summarize_best(root: Path, baseline_id: str, best_id: str) -> Path:
     """Create a presentation summary only for explicitly chosen comparable runs."""

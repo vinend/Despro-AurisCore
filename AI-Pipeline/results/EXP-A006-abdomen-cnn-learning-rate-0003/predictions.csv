@@ -1,0 +1,3 @@
+subject_id,subject_group,recording_id,label,split,score,screening_result
+80524002,80524002,record_080524002_2,Absent,validation,0.5536893350737435,murmur absent screening
+80524002,80524002,record_080524002_2,Present,validation,0.9799385968219029,murmur present screening
