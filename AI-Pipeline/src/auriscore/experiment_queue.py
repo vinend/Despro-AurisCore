@@ -275,7 +275,10 @@ def run_one(root: Path, base: dict[str, Any], item: dict[str, Any]) -> str:
     status_file = directory / "status.json"
     status = json.loads(status_file.read_text(encoding="utf-8"))
     if status.get("segments_sha256") not in (None, segments_sha):
-        raise ValueError(f"Prepared dataset changed for existing experiment {directory.name}")
+        if status.get("status") in ("queued", "failed") or int(status.get("current_epoch", 0) or 0) == 0:
+            status["segments_sha256"] = segments_sha
+        else:
+            raise ValueError(f"Prepared dataset changed for existing experiment {directory.name}")
     status.update(status="running", pid=os.getpid(), updated_at=time.time(),
                   request_sha256=request["sha256"], segments_sha256=segments_sha)
     atomic_json(status_file, status)
