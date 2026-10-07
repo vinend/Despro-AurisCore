@@ -12,7 +12,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
 
-import psutil
+try:
+    import psutil
+except ImportError:  # pragma: no cover - optional dependency
+    psutil = None
 
 from .config import load_config
 from .experiment_runtime import atomic_json
@@ -50,6 +53,8 @@ def find_experiment(root: Path, name: str) -> Path | None:
 
 def active_training_processes() -> list[dict[str, Any]]:
     """Find independently running AurisCore trainers from process command lines."""
+    if psutil is None:
+        return []
     found = []
     for process in psutil.process_iter(["pid", "cmdline"]):
         try:
