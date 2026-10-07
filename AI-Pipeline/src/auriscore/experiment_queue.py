@@ -42,12 +42,11 @@ def find_experiment(root: Path, name: str) -> Path | None:
     results = root / "results"
     if not results.exists():
         return None
-    pattern = re.compile(rf"EXP-H\d+-{re.escape(slug(name))}$")
+    pattern = re.compile(rf"EXP-[A-Za-z]\d+-{re.escape(slug(name))}$")
     matches = [path for path in results.iterdir() if path.is_dir() and pattern.fullmatch(path.name)]
     if len(matches) > 1:
         raise RuntimeError(f"Duplicate directories already exist for {name}: {matches}")
     return matches[0] if matches else None
-
 
 def active_training_processes() -> list[dict[str, Any]]:
     """Find independently running AurisCore trainers from process command lines."""

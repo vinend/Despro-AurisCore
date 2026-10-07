@@ -34,18 +34,18 @@ def allocate_experiment(root: Path, name: str) -> Path:
     results = root / "results"
     results.mkdir(parents=True, exist_ok=True)
     slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "experiment"
+    prefix = "EXP-A" if "abdomen" in name.lower() else "EXP-H"
+    pattern = re.compile(rf"{re.escape(prefix)}(\d+)-")
     numbers = [int(match.group(1)) for path in results.iterdir()
-               if (match := re.match(r"EXP-H(\d+)-", path.name))]
+               if (match := pattern.match(path.name))]
     number = max(numbers, default=0) + 1
     while True:
-        directory = results / f"EXP-H{number:03d}-{slug}"
+        directory = results / f"{prefix}{number:03d}-{slug}"
         try:
             directory.mkdir()
             return directory
         except FileExistsError:
             number += 1
-
-
 def plot_history(history: dict[str, list[float]], destination: Path, experiment_id: str) -> None:
     """Plot real Keras history; omit this figure if the required series are absent."""
     required = ("loss", "val_loss", "accuracy", "val_accuracy")
