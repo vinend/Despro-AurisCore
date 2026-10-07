@@ -31,7 +31,7 @@ if ($existing) {
     exit 0
 }
 $process = Start-Process -FilePath $pythonPath `
-    -ArgumentList @("-u", $scriptPath, "--plan", $Plan) `
+    -ArgumentList @("-u", "`"$scriptPath`"", "--plan", "`"$Plan`"") `
     -WorkingDirectory $pipelineRoot -WindowStyle Hidden -PassThru `
     -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
 Write-Output "Training queue PID: $($process.Id)"
