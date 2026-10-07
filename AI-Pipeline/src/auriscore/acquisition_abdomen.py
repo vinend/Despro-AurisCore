@@ -11,8 +11,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
-from .validation import sha256
-
+def sha256_file(path: Path) -> str:
+    """Calculate SHA256 digest of a file in chunks."""
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        while chunk := stream.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
 FIGSHARE_ARTICLE_ID = "28595741"
 FIGSHARE_API_URL = f"https://api.figshare.com/v2/articles/{FIGSHARE_ARTICLE_ID}"
 LOG = logging.getLogger(__name__)
@@ -117,7 +122,7 @@ def acquire_abdomen(destination: Path, workers: int = 4, api_url: str = FIGSHARE
     for f in sorted(files, key=lambda x: x["name"]):
         file_path = destination / f["name"]
         if file_path.exists():
-            sha256_lines.append(f"{sha256(file_path)}  {f['name']}")
+            sha256_lines.append(f"{sha256_file(file_path)}  {f['name']}")
     (destination / "SHA256SUMS.txt").write_text("\n".join(sha256_lines) + "\n", encoding="utf-8")
 
     LOG.info("Acquisition complete: %d verified Abdomen files in %s", len(files), destination)
