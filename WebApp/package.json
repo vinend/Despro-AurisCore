@@ -7,7 +7,7 @@
     "build": "next build && node -e \"const fs=require('fs'); fs.cpSync('.next/static','.next/standalone/.next/static',{recursive:true}); fs.cpSync('public','.next/standalone/public',{recursive:true})\"",
     "start": "node .next/standalone/server.js",
     "lint": "eslint .",
-    "test:heart": "node --experimental-strip-types --test tests/heart-analysis.test.mjs tests/heart-audio-source.test.mjs tests/heart-stream-python.test.mjs",
+    "test:heart": "tsx --test tests/heart-analysis.test.mjs tests/heart-audio-source.test.mjs tests/heart-stream-python.test.mjs",
     "db:push": "prisma db push --accept-data-loss",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
