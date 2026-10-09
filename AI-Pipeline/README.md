@@ -4,6 +4,8 @@ AurisCore is a university capstone cyber-physical stethoscope research prototype
 
 This folder contains the executable **heart-sound/PCG dataset pipeline, SVM baseline, and optional spectrogram CNNs in Python**. It covers dataset acquisition, validation, preprocessing, feature extraction, model training, participant-exclusive cross-validation, validation-only threshold selection, saved-model inference, and a sealed final-holdout workflow. Heart-only model scope allows provenance, signal processing and participant separation to be verified before adding other modalities. Lung and abdomen classifiers, embedded firmware, live-stream inference, and production mobile integration are not implemented here.
 
+Current Heart status (2026-10-09): the CPU-only Rhythm/Cardiac Event DSP prototype emits `heart-analysis-v1` and has synthetic engineering tests; labeled-recording validation remains open. H014 is the historical frozen external-validation Murmur benchmark. H021 is the strongest TRAIN-only Murmur OOF result (117 FP, 11 FN at sensitivity 0.90), but no final deployment model exists. H022 is protocol-locked and preflight-ready; training has not started. External validation and sealed test remain closed. See [AI_PIPELINE.md](../AI_PIPELINE.md) for experiment history. The Windows WebApp demo consumes WAV and mock/WebSocket PCM through the same Heart service; physical BLE is unverified.
+
 Historical SVM run (2026-09-16): **21 tests passed**; the real CirCor pipeline completed with 22,819 windows and 349 features. Participant test sensitivity was **60.87%** (9 of 23 positive participants missed), despite 90.16% accuracy. That test result has already been inspected and is now treated as development history, not an untouched holdout. See the [engineering handoff](docs/engineering_summary.md) and [historical baseline results](docs/baseline_results.md).
 
 The first real-data compact CNN development run completed on 2026-10-03 using the restored local CirCor source audio. Its linked-participant validation recall was **91.67%**, positive-class F1 was **40.37%**, and specificity was **35.71%** at the validation-selected threshold. These are screening research results, not final-holdout or clinical results. See the [real CNN training report](docs/heart_cnn_real_training.md) and its saved JSON/CSV/PNG artifacts. The earlier 2026-09-19 software verification had 25 passing tests but no real CNN run at that time.
@@ -68,6 +70,86 @@ additional models.
 On Linux/macOS activate with `source .venv/bin/activate`. Source-tree scripts work without package installation; `python -m pip install -e .` is optional. Direct dependencies are pinned in `requirements.txt`; `requirements-lock.txt` records the complete tested environment. To reproduce transitive versions, install with `python -m pip install -r requirements-lock.txt`.
 
 On this Windows workspace, an ignored local Python runtime is also available: replace `python` with `.runtime\python\python.exe`. This avoids requiring a system-wide installation. It is a local convenience, not a tracked dependency.
+
+### WSL2 NVIDIA GPU environment
+
+The WSL2 GPU environment uses Python 3.13 and TensorFlow **2.20.0**. Install
+its dependencies with `uv pip` from the `AI-Pipeline` directory:
+
+```bash
+~/.local/bin/uv pip install --python ~/.venvs/auriscore-gpu-tf220/bin/python -r requirements-gpu-wsl.txt
+~/.local/bin/uv pip install --python ~/.venvs/auriscore-gpu-tf220/bin/python --no-deps -e .
+~/.venvs/auriscore-gpu-tf220/bin/python -c 'import tensorflow as tf; print(tf.__version__, tf.config.list_physical_devices("GPU"))'
+```
+
+`requirements-gpu-wsl.txt` pins `tensorflow[and-cuda]==2.20.0` alongside the
+Heart pipeline dependencies. The older `requirements-cnn.txt` and `cnn` /
+`notebook` extras still pin TensorFlow 2.21.0 for the historical Windows setup;
+do not install them into this WSL environment. `scripts/launch_training_queue.ps1`
+is a Windows launcher. WSL commands should use the virtual environment's
+Python directly and a distinct experiment name for any new GPU control run so
+H001–H007 remain intact.
+
+The isolated H006 GPU migration control has a read-only preflight:
+
+```bash
+~/.venvs/auriscore-gpu-tf220/bin/python scripts/train_h006_gpu_control.py
+```
+
+It compares the saved H006 configuration, development rows and participant
+membership, saved per-frequency statistics, model and compile configuration,
+and validation threshold policy. The control forces legacy non-JIT compilation
+and the original `EarlyStopping(val_loss, patience=8,
+restore_best_weights=True)` path. It does not change the managed experiment
+queue or read the sealed holdout. When explicitly authorized, launch it with
+`bash scripts/launch_h006_gpu_control.sh`; the launcher prints a PID and writes
+`.runtime/h006-gpu-control.stdout.log` and `.stderr.log`. Like original H006,
+this control is not resumable after interruption; use a new name for a retry.
+
+The H009 WSL GPU experiment uses the normal resumable managed callbacks. Its
+one-factor specification is `configs/heart_h009_gpu.json`: it copies H008's
+saved per-frequency normalization and changes only the architecture to the
+Residual-SE model used by H005. Audit without training, then launch when
+authorized:
+
+```bash
+~/.venvs/auriscore-gpu-tf220/bin/python scripts/train_h009_gpu_experiment.py
+bash scripts/launch_wsl_gpu_experiment.sh cnn-per-frequency-residual-se scripts/train_h009_gpu_experiment.py --run
+```
+
+The reusable WSL launcher uses a user `systemd` service so training survives
+the terminal session. It prints the service MainPID and writes
+`.runtime/cnn-per-frequency-residual-se.stdout.log` and `.stderr.log`.
+H009 forces non-JIT compilation to match H008's GPU control while retaining
+the managed `CSVLogger`, `ModelCheckpoint`, and `BackupAndRestore` callbacks.
+The H009 trainer reads only development rows for fitting and visualization.
+
+H010 tests one change against H008: compact-CNN dropout 0.30 to 0.50, as in
+H002. Its specification is `configs/heart_h010_gpu.json`. The default command
+audits H002, H008, the completed H009 prerequisite, development split, saved
+normalization statistics, model compilation, and GPU without training:
+
+```bash
+~/.venvs/auriscore-gpu-tf220/bin/python scripts/train_h010_gpu_experiment.py
+bash scripts/launch_wsl_gpu_experiment.sh cnn-per-frequency-dropout-050 scripts/train_h010_gpu_experiment.py --run
+```
+
+The launcher writes `.runtime/cnn-per-frequency-dropout-050.stdout.log` and
+`.stderr.log`. H010 uses the managed checkpoint path and can resume an
+interrupted incomplete run in its existing experiment directory.
+
+H011 applies the exact H003 conservative augmentation policy to H008's
+per-frequency configuration. Its specification is `configs/heart_h011_gpu.json`.
+Waveform gain/shift/noise and spectrogram masks run only for training windows;
+validation preprocessing remains unaugmented. Audit or launch it with:
+
+```bash
+~/.venvs/auriscore-gpu-tf220/bin/python scripts/train_h011_gpu_experiment.py
+bash scripts/launch_wsl_gpu_experiment.sh cnn-per-frequency-conservative-augmentation scripts/train_h011_gpu_experiment.py --run
+```
+
+The managed run writes `.runtime/cnn-per-frequency-conservative-augmentation.stdout.log`
+and `.stderr.log`, plus its own resumable `results/EXP-H011-*` directory.
 
 ## Dataset and target
 

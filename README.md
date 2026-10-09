@@ -8,7 +8,19 @@ This folder defines the working framework for the AurisCore software team.
 - Alvin — software integration / backend / AI support as needed
 
 ## Current project state
-The current AI priority is the **Heart model**. A CNN based on log-mel spectrogram input already exists and is being improved from an initial performance around 72%.
+
+The current AI priority is the **Heart model**. H014 remains the historical
+frozen external-validation Murmur benchmark. H021 is the strongest TRAIN-only
+development result, with 117 false positives and 11 false negatives at 0.90
+sensitivity among 568 participant OOF predictions; it is not a final deployment
+model. H022 is protocol-locked and preflight-ready, but training has not
+started and no H022 metrics exist. External validation and sealed test remain
+closed.
+
+The CPU Heart DSP prototype and `heart-analysis-v1` are engineering outputs
+with synthetic tests; labeled-recording validation remains open. The Windows
+WebApp demo supports WAV and mock/WebSocket PCM through the same Heart service,
+while physical BLE details remain unconfirmed.
 
 The intended software flow is:
 

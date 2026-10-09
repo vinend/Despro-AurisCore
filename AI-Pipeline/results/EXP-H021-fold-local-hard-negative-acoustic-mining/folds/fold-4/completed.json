@@ -1,0 +1,10 @@
+{
+  "C": 0.1,
+  "encoder_model_sha256": "121c8294d425faec254ad302624d9095bd6131a137d998160780073174b5fdc3",
+  "encoder_sha256": "8fbf322a70bcaaac7512b94aa147d5dd7567582e8493c435262a77af2b97d390",
+  "fold": 4,
+  "hard_negative_count": 212,
+  "hard_negative_inventory_sha256": "820f82f15e2ede3d6b5308d121320ada529a3978d9a3820701b03d0d1b08ad07",
+  "normalization_sha256": "11b762c81b65ff3bc882ecbe6cdcae99653b79f112ed8600b87b884d769bfec3",
+  "outer_predictions_sha256": "ec2f5a2698fe7491d80e40c8f7682356567131720b7a42710c8b925ca1bd6ac1"
+}

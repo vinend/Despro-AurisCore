@@ -39,7 +39,8 @@ def require_tensorflow() -> Any:
     return tf
 
 
-def build_cnn_model(input_shape: tuple[int, int, int], config: dict[str, Any]) -> Any:
+def build_cnn_model(input_shape: tuple[int, int, int], config: dict[str, Any],
+                    *, jit_compile: bool | None = None) -> Any:
     """Build either the reproducible compact baseline or a residual SE-CNN."""
     tf = require_tensorflow()
     inputs = tf.keras.Input(shape=input_shape, name="spectrogram")
@@ -93,6 +94,7 @@ def build_cnn_model(input_shape: tuple[int, int, int], config: dict[str, Any]) -
         )
     else:
         raise ValueError("cnn_loss must be binary_crossentropy or focal")
+    compile_options = {} if jit_compile is None else {"jit_compile": jit_compile}
     model.compile(
         optimizer=tf.keras.optimizers.Adam(float(config.get("cnn_learning_rate", 1e-3))),
         loss=loss,
@@ -103,6 +105,7 @@ def build_cnn_model(input_shape: tuple[int, int, int], config: dict[str, Any]) -
             tf.keras.metrics.AUC(name="roc_auc"),
             tf.keras.metrics.AUC(name="pr_auc", curve="PR"),
         ],
+        **compile_options,
     )
     return model
 
@@ -154,6 +157,7 @@ def _example_iterator(
     include_weights: bool,
     training: bool = False,
     rng: np.random.Generator | None = None,
+    recording_multiplier: dict[str, float] | None = None,
 ) -> Iterator[Any]:
     @lru_cache(maxsize=32)
     def loader(path: str) -> np.ndarray:
@@ -163,6 +167,16 @@ def _example_iterator(
         rng = np.random.default_rng(int(config["seed"]))
     records = frame.to_dict("records")
     weights = _participant_weights(frame) if include_weights else np.ones(len(frame), dtype=np.float32)
+    if recording_multiplier is not None:
+        if not include_weights:
+            raise ValueError("Recording multipliers require weighted training")
+        expected = set(frame.recording_id.astype(str))
+        if set(recording_multiplier) != expected:
+            raise ValueError("Recording multipliers must cover exactly the training recordings")
+        multipliers = np.asarray([recording_multiplier[str(row["recording_id"])] for row in records], dtype=np.float32)
+        if not np.isin(multipliers, [1.0, 2.0]).all():
+            raise ValueError("H021 recording multipliers must be exactly 1.0 or 2.0")
+        weights = weights * multipliers
     mix_probability = float(config.get("mixup_probability", 0.0))
     cut_probability = float(config.get("cutmix_probability", 0.0))
     for row_index, (row, weight) in enumerate(zip(records, weights, strict=True)):
@@ -205,7 +219,8 @@ def _example_iterator(
 
 
 def _dataset(frame: pd.DataFrame, root: Path, config: dict[str, Any],
-             training: bool, include_weights: bool) -> Any:
+             training: bool, include_weights: bool,
+             recording_multiplier: dict[str, float] | None = None) -> Any:
     tf = require_tensorflow()
     frequency_bins, time_frames = spectrogram_shape(config)
     shape = (frequency_bins, time_frames, 1)
@@ -220,7 +235,8 @@ def _dataset(frame: pd.DataFrame, root: Path, config: dict[str, Any],
     rng = np.random.default_rng(int(config["seed"]))
     dataset = tf.data.Dataset.from_generator(
         lambda: _example_iterator(
-            frame, root, config, include_weights, training=training, rng=rng
+            frame, root, config, include_weights, training=training, rng=rng,
+            recording_multiplier=recording_multiplier
         ),
         output_signature=signature,
     )
@@ -246,7 +262,7 @@ def _estimate_frequency_statistics(
     squared: np.ndarray | None = None
     count = 0
     print(f" - Estimating per-frequency normalization statistics over {len(frame)} segments...", flush=True)
-    for idx, row in enumerate(frame.to_dict("records"), start=1):
+    for row in frame.to_dict("records"):
         tensor = _window(row, root, raw_config, loader)[..., 0].astype(np.float64)
         if total is None:
             total = np.zeros(tensor.shape[0], dtype=np.float64)
@@ -256,6 +272,7 @@ def _estimate_frequency_statistics(
         total += tensor.sum(axis=1)
         squared += np.square(tensor).sum(axis=1)
         count += tensor.shape[1]
+    if total is None or squared is None or count == 0:
         raise ValueError("Cannot estimate spectrogram statistics from an empty training partition")
     mean = total / count
     variance = np.maximum(squared / count - np.square(mean), 1e-8)
@@ -296,6 +313,7 @@ def train_cnn(
     synthetic: bool = False,
     output_dir: Path | None = None,
     experiment_dir: Path | None = None,
+    jit_compile: bool | None = None,
 ) -> dict[str, Any]:
     """Train on windows with optional persistent epoch recovery; use validation only."""
     tf = require_tensorflow()
@@ -306,6 +324,18 @@ def train_cnn(
     development = {name: segments[segments.split.eq(name)].reset_index(drop=True) for name in ("train", "validation")}
     if any(part.empty or part.label.nunique() != 2 for part in development.values()):
         raise ValueError("CNN training and validation splits must contain both classes")
+    mode = config.get("positive_supervision")
+    if mode is not None:
+        from .supervision import POLICY
+        if mode != POLICY or "supervision_status" not in segments:
+            raise ValueError("Declared-site supervision requires an audited effective development frame")
+        train_status = development["train"]["supervision_status"]
+        train_labels = development["train"]["label"]
+        if (not train_status.isin(["retained_negative", "retained_positive"]).all() or
+                not train_status[train_labels.eq("Absent")].eq("retained_negative").all() or
+                not train_status[train_labels.eq("Present")].eq("retained_positive").all() or
+                not development["validation"]["supervision_status"].eq("validation_unfiltered").all()):
+            raise ValueError("Invalid H014 supervision status or filtered validation")
     config = prepare_spectrogram_config(development["train"], root, config)
     experiment = experiment_dir or allocate_experiment(
         root, str(config.get("experiment_name", f"cnn-{config.get('cnn_architecture', 'compact')}"))
@@ -325,7 +355,7 @@ def train_cnn(
     except (AttributeError, RuntimeError):
         pass
     probe = next(_example_iterator(development["train"].iloc[:1], root, config, False))
-    model = build_cnn_model(tuple(probe.shape), config)
+    model = build_cnn_model(tuple(probe.shape), config, jit_compile=jit_compile)
     previous = reconcile_history(experiment) if experiment_dir is not None else pd.DataFrame()
     if experiment_dir is not None:
         recovered_epoch, recovered_loss, _ = best_record(previous)

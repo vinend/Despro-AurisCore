@@ -1,0 +1,26 @@
+{
+  "C_grid": [
+    0.01,
+    0.1,
+    1.0,
+    10.0
+  ],
+  "embedding_dimension": 64,
+  "experiment": "EXP-H022-fold-local-hard-negative-contrastive-representation",
+  "external_validation": "closed",
+  "hard_negative_fraction": 0.2,
+  "hard_negative_multiplier": 2.0,
+  "ordinary_multiplier": 1.0,
+  "outer_folds": 5,
+  "participant_aggregation": "uniform segment->recording mean; uniform recording->participant mean",
+  "participant_classifier": "H020 StandardScaler + balanced L2 LogisticRegression",
+  "representation_loss": "hard-negative supervised contrastive",
+  "representation_loss_weight": 0.1,
+  "sealed_test": "closed",
+  "seed": 42,
+  "source_experiment": "EXP-H021-fold-local-hard-negative-acoustic-mining",
+  "stage1_fit_roles": "H015 saved fit/early_stop",
+  "stage1_max_epochs": 50,
+  "stage1_patience": 8,
+  "temperature": 0.1
+}

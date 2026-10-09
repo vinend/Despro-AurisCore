@@ -23,11 +23,7 @@ AurisCore is a digital stethoscope system with three primary auscultation domain
 
 The current development priority is **Heart first**.
 
-Current Heart AI status:
-- CNN model already exists.
-- Input representation uses log-mel spectrograms.
-- Initial performance is around 72%.
-- Current task is model and pipeline improvement.
+Current Heart status: Rhythm DSP, Cardiac Event DSP, and `heart-analysis-v1` are implemented as engineering prototypes; representative labeled-recording validation remains open. H021 is the strongest TRAIN-only Murmur development result, without a final deployment model. H022 is protocol-locked and preflight-ready but has not started training. The three-branch Heart product remains incomplete.
 
 The application is an **assistive screening system**, not a final diagnostic system.
 
@@ -263,12 +259,11 @@ For AI model changes, also require:
 
 Unless a sprint explicitly overrides it:
 
-1. Stabilize Heart AI pipeline.
-2. Improve Heart CNN evaluation performance.
-3. Lock inference input/output format.
-4. Integrate model into mobile app.
-5. Stabilize BLE data ingestion.
-6. Complete backend persistence.
-7. Implement tele-auscultation.
-8. Expand to Lung.
-9. Expand to Abdomen.
+1. Continue disciplined Murmur research and define a separately evaluated deployment candidate.
+2. Validate and stabilize the implemented Heart DSP prototypes.
+3. Complete the unified Heart result/UI path, including offline mobile integration.
+4. Confirm the firmware contract and integrate physical BLE audio.
+5. Complete session persistence and report flow.
+6. Implement tele-auscultation.
+7. Expand to Lung.
+8. Expand to Abdomen.
