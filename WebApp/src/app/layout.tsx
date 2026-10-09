@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: "AurisCore — Prototipe Stetoskop Digital",
   description:
-    "Prototipe web app AurisCore: gelombang PCG real-time via WebSocket dari mock-device (data simulasi).",
+    "Prototipe web app AurisCore: stream PCG simulasi dan analisis DSP Heart dari WAV lokal.",
   keywords: ["AurisCore", "stetoskop digital", "PCG", "WebSocket", "prototipe"],
 };
 

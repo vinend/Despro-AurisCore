@@ -1,0 +1,241 @@
+{
+  "created_at_utc": "2026-10-09T09:20:43.325900+00:00",
+  "deployment": {
+    "final_model_exists": false,
+    "predeclared_ensemble": false,
+    "reason": "Only outer-fold evaluation pipelines were produced",
+    "status": "unavailable"
+  },
+  "experiment": "EXP-H021-fold-local-hard-negative-acoustic-mining",
+  "folds": [
+    {
+      "artifacts": {
+        "completion": {
+          "bytes": 536,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/completed.json",
+          "sha256": "f95ee457514351e4aa80dcf3a74ab86b8cc5aa69cc7f89ba24dd2e513c6b8022"
+        },
+        "hard_negative_inventory": {
+          "bytes": 79653,
+          "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_1.csv",
+          "sha256": "cafd299e25d44b9a67395610e96c78a7f1e930237a3f07f2040fad92566f0e8a"
+        },
+        "normalization": {
+          "bytes": 3391,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/stage1/normalization_config.json",
+          "sha256": "0d00788e95c721b7e819e04f9cc4494eff89d077d2631b3eae9aa4e99a30427b"
+        },
+        "outer_predictions": {
+          "bytes": 4053,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/outer_predictions.csv",
+          "sha256": "77c5af59e129e5bb9f13201bbde1b415642c6c37cdb16bc1b23c362c37845a9a"
+        },
+        "scaler_logistic": {
+          "bytes": 3834,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/scaler_logistic.npz",
+          "sha256": "67982a30c2d82b730384f3fd1e2a1e517b1137b2cf013ff328fe413a48ca17bd"
+        },
+        "stage1_model": {
+          "bytes": 353201,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/stage1/best_model.keras",
+          "sha256": "67a130a0546d1003196499fabdbee690bf19c1ac4910ab352061465574da4fed"
+        }
+      },
+      "encoder_weights_sha256": "4d725eafd330a9a42e5ee7c6248f975da4c4f65ea241f42db4ba6bc56ad786c0",
+      "fold": 1,
+      "hard_negative_count": 211,
+      "selected_C": 0.1
+    },
+    {
+      "artifacts": {
+        "completion": {
+          "bytes": 536,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/completed.json",
+          "sha256": "e8d6f4e662b1545588f6182a9d819d387507548014b791c51dd6e4181c983504"
+        },
+        "hard_negative_inventory": {
+          "bytes": 79500,
+          "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_2.csv",
+          "sha256": "6faec1a0084f17e0cb6446a484763bb6c26e96096e6d1259585d07ca03e63d5a"
+        },
+        "normalization": {
+          "bytes": 3397,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/stage1/normalization_config.json",
+          "sha256": "9922d9a73c10305e17075b87b6ae8dfd41fb00d7439e268e48b9af95c9abe72b"
+        },
+        "outer_predictions": {
+          "bytes": 4030,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/outer_predictions.csv",
+          "sha256": "21c8045b1064ff40ed7fc08415b4e01ad5ed10330045758561d451fcfb0bc25a"
+        },
+        "scaler_logistic": {
+          "bytes": 3834,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/scaler_logistic.npz",
+          "sha256": "947a5772a48fcc23d8d1dbcd1f2c3abc86ac39a3f7829bb48de4155cd1935f15"
+        },
+        "stage1_model": {
+          "bytes": 353201,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/stage1/best_model.keras",
+          "sha256": "7ec8904b77e1357ea14bd1545abaa666711f8a33eb4455a4fde5b5391a1f3912"
+        }
+      },
+      "encoder_weights_sha256": "2d1f669f36a9d0b1f9903db0990d4dbdf33d0ba8e32ec9cffc5c52f2bd509da8",
+      "fold": 2,
+      "hard_negative_count": 215,
+      "selected_C": 1.0
+    },
+    {
+      "artifacts": {
+        "completion": {
+          "bytes": 536,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/completed.json",
+          "sha256": "83650df18110e1451bb4dfedec81f8e8380f6cd5d1441c69c61b8f48fdfb9c43"
+        },
+        "hard_negative_inventory": {
+          "bytes": 79477,
+          "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_3.csv",
+          "sha256": "be418e519fbb4cf5747e1c2b00af4315308558924686578cde5d83a830812312"
+        },
+        "normalization": {
+          "bytes": 3402,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/stage1/normalization_config.json",
+          "sha256": "45c2128f9ce26b9f7dcfd9af2aae1cc894d4205e1995677b7f93b8eb45c1a94e"
+        },
+        "outer_predictions": {
+          "bytes": 4026,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/outer_predictions.csv",
+          "sha256": "1704a8aaaa2b16ad8ba1bd2dde4729318e5267b4bc4a31228348af8d56307487"
+        },
+        "scaler_logistic": {
+          "bytes": 3834,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/scaler_logistic.npz",
+          "sha256": "5fdbdb2b74caa1d962c8e5ce7f1f801f7763136445ef934b10aa47b887b839d2"
+        },
+        "stage1_model": {
+          "bytes": 353201,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/stage1/best_model.keras",
+          "sha256": "1065a139dd33c146c469aabe7f68b5589c06547eaaf48fa674462d7a8d55cf97"
+        }
+      },
+      "encoder_weights_sha256": "f149340c2dc42102133cebef4eb6bd3e913e73b038bd3034c1b7f78b7e105b9b",
+      "fold": 3,
+      "hard_negative_count": 215,
+      "selected_C": 0.1
+    },
+    {
+      "artifacts": {
+        "completion": {
+          "bytes": 536,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/completed.json",
+          "sha256": "a732eeccb3e02d91b88032ad854c4bc30be8026acae61db2b724134c9668e152"
+        },
+        "hard_negative_inventory": {
+          "bytes": 80279,
+          "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_4.csv",
+          "sha256": "820f82f15e2ede3d6b5308d121320ada529a3978d9a3820701b03d0d1b08ad07"
+        },
+        "normalization": {
+          "bytes": 3401,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/stage1/normalization_config.json",
+          "sha256": "11b762c81b65ff3bc882ecbe6cdcae99653b79f112ed8600b87b884d769bfec3"
+        },
+        "outer_predictions": {
+          "bytes": 3990,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/outer_predictions.csv",
+          "sha256": "ec2f5a2698fe7491d80e40c8f7682356567131720b7a42710c8b925ca1bd6ac1"
+        },
+        "scaler_logistic": {
+          "bytes": 3834,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/scaler_logistic.npz",
+          "sha256": "be40934f21b82046dba9aa0dfd25c8cb3ecf52dd1385779703b15a551b1a5545"
+        },
+        "stage1_model": {
+          "bytes": 353201,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/stage1/best_model.keras",
+          "sha256": "121c8294d425faec254ad302624d9095bd6131a137d998160780073174b5fdc3"
+        }
+      },
+      "encoder_weights_sha256": "8fbf322a70bcaaac7512b94aa147d5dd7567582e8493c435262a77af2b97d390",
+      "fold": 4,
+      "hard_negative_count": 212,
+      "selected_C": 0.1
+    },
+    {
+      "artifacts": {
+        "completion": {
+          "bytes": 536,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/completed.json",
+          "sha256": "f917ab16a70e2bc6eb50fb7fd483da6c829d6f6d47742ae4d29f2b34cb993626"
+        },
+        "hard_negative_inventory": {
+          "bytes": 79673,
+          "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_5.csv",
+          "sha256": "0004679ab5713bd7be3fd678793bf6e09b6d67dc764513b9f7418e0c51decb42"
+        },
+        "normalization": {
+          "bytes": 3408,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/stage1/normalization_config.json",
+          "sha256": "037861a18c3598116a4b2f847012deda970268a3415ef3fe83f9bd2328550efc"
+        },
+        "outer_predictions": {
+          "bytes": 4034,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/outer_predictions.csv",
+          "sha256": "5238cf4eaa0be79418b4bbb0838a831a246aed950a04c29c0386188e80cd2100"
+        },
+        "scaler_logistic": {
+          "bytes": 3834,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/scaler_logistic.npz",
+          "sha256": "c41da6554f96d9a38eeaad92c36ae1446f45d02148d9d2e773e71ee0771bea7f"
+        },
+        "stage1_model": {
+          "bytes": 353201,
+          "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/stage1/best_model.keras",
+          "sha256": "d6eec5170cae647a4e9768a4f22907bd5163b016abee443bcdaea74bbf5acc2b"
+        }
+      },
+      "encoder_weights_sha256": "6e1111ad998db7b20350b0f7f4bf9c3ec6f60863822b8a6f86bf418c7fd7d00e",
+      "fold": 5,
+      "hard_negative_count": 208,
+      "selected_C": 1.0
+    }
+  ],
+  "frozen_files": {
+    "config.json": {
+      "bytes": 1422,
+      "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/config.json",
+      "sha256": "3b00d52eab0f7782ddff5efb8c9957309c64ddd8f9635c846d3b175de21698a0"
+    },
+    "fold_metrics.csv": {
+      "bytes": 2049,
+      "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/fold_metrics.csv",
+      "sha256": "cf8994751a90b7bdbfe71d6c301512fdb2e29a3c08c0b659a917a2d8cd0f9a74"
+    },
+    "metrics.json": {
+      "bytes": 873,
+      "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/metrics.json",
+      "sha256": "f94117c2ac1a39a57ff2f052ca0f9e31b427de40ae05ae035d0a4d668797697c"
+    },
+    "predictions_oof.csv": {
+      "bytes": 19981,
+      "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/predictions_oof.csv",
+      "sha256": "9b41bc0258d763902f311369348612c7177adac28f5e1fe77ef21540c72a16f1"
+    },
+    "protocol.json": {
+      "bytes": 3075,
+      "path": "analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/protocol.json",
+      "sha256": "fc288f92085ab8c0487a98bf6b36298e4c061fe9edc6049f33229fe0a5ee533c"
+    },
+    "status.json": {
+      "bytes": 360,
+      "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/status.json",
+      "sha256": "97d8c12669a2b245fbd7b8db65f4c43a4ad0fe723b2a03b6d3629392a67f8b01"
+    }
+  },
+  "schema_version": "h021-development-freeze-v1",
+  "source_checkout": "WSL-native ~/projects/Despro-AurisCore/AI-Pipeline (read-only audit)",
+  "threshold": {
+    "scope": "568 TRAIN outer-fold OOF participant predictions",
+    "usable_for_deployment": false,
+    "value": 0.19225345646277395
+  }
+}

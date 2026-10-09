@@ -48,6 +48,9 @@ protokol WebSocket seksi 5:
    Logika `ring_buffer` dan `pcg_connection` tetap dipisah dari React dan
    WebSocket agar mudah diuji saat dipindah ke repo kelompok; verifikasi
    digantikan uji manual browser (skrip seksi 15) yang dijalankan agent.
+   Catatan saat ini: pembatasan lingkungan historis tersebut tidak berlaku
+   untuk integrasi Heart file simulator; instruksi repositori induk dan tugas
+   integrasi mewajibkan tes terfokus tanpa GPU.
 4. Rekam dihentikan manual sebelum 10 detik → tetap diproses dengan durasi
    aktual, tidak dibatalkan (riwayat menampilkan durasi sesi aktual).
 5. Toggle hasil klasifikasi tiruan: konstanta `FORCE_ABNORMAL_RESULT` di

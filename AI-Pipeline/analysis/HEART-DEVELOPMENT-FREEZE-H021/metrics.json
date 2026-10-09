@@ -1,0 +1,35 @@
+{
+  "accuracy": 0.7746478873239436,
+  "balanced_accuracy": 0.8222707423580786,
+  "breakthrough": false,
+  "confusion_matrix": [
+    [
+      341,
+      117
+    ],
+    [
+      11,
+      99
+    ]
+  ],
+  "eligible_for_external_validation": false,
+  "experiment": "EXP-H021-fold-local-hard-negative-acoustic-mining",
+  "external_validation_opened": false,
+  "f1": 0.6073619631901841,
+  "fn": 11,
+  "fp": 117,
+  "minimum_meaningful": true,
+  "population": "568 TRAIN outer-fold OOF participants",
+  "pr_auc": 0.8302493862488574,
+  "precision": 0.4583333333333333,
+  "protocol_sha256": "fc288f92085ab8c0487a98bf6b36298e4c061fe9edc6049f33229fe0a5ee533c",
+  "roc_auc": 0.9028185788011115,
+  "sealed_test_opened": false,
+  "sensitivity": 0.9,
+  "specificity": 0.7445414847161572,
+  "strong": true,
+  "threshold": 0.19225345646277395,
+  "tn": 341,
+  "tp": 99,
+  "very_strong": true
+}
