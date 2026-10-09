@@ -1,0 +1,5 @@
+# Inference semantics
+
+H021 saved five fold-specific Stage-1 CNN checkpoints, fold-specific per-frequency normalization, and fold-specific StandardScaler/L2 LogisticRegression parameters. Each fold uses 64-dimensional segment embeddings, mean segments per recording, then mean recordings per participant. Stage-1 input is 8 kHz mono, 5-second windows with 50% overlap, 40-bin log-mel, n_fft=512, hop=128, feature_fmax=2000 Hz and fold-fit per-frequency normalization. Training-only augmentation is disabled at evaluation.
+
+No final all-TRAIN model or predeclared fold ensemble was produced. The five fold pipelines are evaluation artifacts. Choosing one or averaging them would define a new inference procedure that does not inherit the reported OOF metrics. The threshold 0.19225345646277395 belongs only to pooled OOF participant probabilities; do not apply it to a single fold, CNN sigmoid, new ensemble, or one arbitrary WAV. One-WAV H021 inference is unavailable. The Heart DSP/file demo continues with `murmur.status=unavailable`. A future deployment-model decision must be separately specified and evaluated.

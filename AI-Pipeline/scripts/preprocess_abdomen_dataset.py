@@ -26,7 +26,9 @@ def main() -> int:
     config_path = args.config if args.config.is_absolute() else root / args.config
     config = load_config(config_path)
 
-    manifest_path = root / "metadata" / "dataset_manifest.csv"
+    manifest_path = root / "metadata" / "abdomen_dataset_manifest.csv"
+    if not manifest_path.exists():
+        manifest_path = root / "metadata" / "dataset_manifest.csv"
     if not manifest_path.exists():
         raise FileNotFoundError(
             f"Manifest not found at {manifest_path}. Run python scripts/build_abdomen_manifest.py first."

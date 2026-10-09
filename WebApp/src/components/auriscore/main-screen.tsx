@@ -8,6 +8,8 @@ import { OrganModeSelector } from "./organ-mode-selector";
 import { PcgWaveform } from "./pcg-waveform";
 import { RecordingControls } from "./recording-controls";
 import { ResultCard } from "./result-card";
+import { HeartFileDemo } from "./heart-file-demo";
+import { HeartStreamDemo } from "./heart-stream-demo";
 import { usePcgStream } from "@/hooks/use-pcg-stream";
 import { useRecording } from "@/hooks/use-recording";
 import { ORGAN_MODE_LABELS } from "@/lib/auriscore/format";
@@ -76,11 +78,13 @@ export function MainScreen({
             <ResultCard phase={recording.phase} result={recording.result} />
           </aside>
         </div>
+        <HeartFileDemo />
+        <HeartStreamDemo stream={stream} disabled={busy} />
         {trainingMetricsCard}
         <HistoryList entries={recording.history} />
       </main>
       <footer className="auris-footer">
-        <p>Prototipe penelitian. Hasil pada halaman ini masih simulasi.</p>
+        <p>Prototipe penelitian. Stream perangkat simulasi; analisis WAV memakai DSP prototipe.</p>
         <span>{stream.hello ? `${stream.hello.device} · ${stream.hello.fw}` : "Perangkat belum terhubung"}</span>
       </footer>
     </div>

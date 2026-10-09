@@ -14,6 +14,7 @@ import {
   type DeviceStatusMsg,
   type HelloMsg,
   type OrganMode,
+  type PcgPacketMsg,
 } from "@/lib/auriscore/protocol";
 
 export interface PcgStream {
@@ -30,6 +31,8 @@ export interface PcgStream {
   isConnected: boolean;
   setOrganMode: (mode: OrganMode) => void;
   commitBpm: (bpm: number) => void;
+  subscribePacket: (listener: (packet: PcgPacketMsg) => void) => () => void;
+  subscribeConnection: (listener: (state: PcgConnectionState) => void) => () => void;
 }
 
 /**
@@ -50,6 +53,8 @@ export function usePcgStream(): PcgStream {
   const versionRef = useRef(0);
   const connRef = useRef<PcgConnection | null>(null);
   const modeRef = useRef<OrganMode>("mitral");
+  const packetListeners = useRef(new Set<(packet: PcgPacketMsg) => void>());
+  const connectionListeners = useRef(new Set<(state: PcgConnectionState) => void>());
 
   const [state, setState] = useState<PcgConnectionState>("connecting");
   const [hello, setHello] = useState<HelloMsg | null>(null);
@@ -69,6 +74,7 @@ export function usePcgStream(): PcgStream {
       },
       onPacket: (msg) => {
         ring.pushPacket(msg.seq, msg.samples, msg.samplingRate);
+        for (const listener of packetListeners.current) listener(msg);
         versionRef.current += 1;
         // Sinkronkan label mode dari paket (menutupi reconnect dan perubahan
         // mode yang terjadi di sisi perangkat).
@@ -87,6 +93,7 @@ export function usePcgStream(): PcgStream {
       },
       onStateChange: (next) => {
         setState(next);
+        for (const listener of connectionListeners.current) listener(next);
         if (next === "connected") {
           // Reconnect berhasil → reset penomoran urut yang diharapkan
           // (seksi 7): server memulai seq dari 0 lagi.
@@ -116,6 +123,15 @@ export function usePcgStream(): PcgStream {
     connRef.current?.setBpm(bpm);
   }, []);
 
+  const subscribePacket = useCallback((listener: (packet: PcgPacketMsg) => void) => {
+    packetListeners.current.add(listener);
+    return () => { packetListeners.current.delete(listener); };
+  }, []);
+  const subscribeConnection = useCallback((listener: (state: PcgConnectionState) => void) => {
+    connectionListeners.current.add(listener);
+    return () => { connectionListeners.current.delete(listener); };
+  }, []);
+
   const bpm = bpmDraft ?? status?.bpm ?? null;
   const isMock = hello !== null && hello.device.toLowerCase().includes("mock");
 
@@ -131,5 +147,7 @@ export function usePcgStream(): PcgStream {
     isConnected: state === "connected",
     setOrganMode,
     commitBpm,
+    subscribePacket,
+    subscribeConnection,
   };
 }

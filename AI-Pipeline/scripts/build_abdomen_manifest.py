@@ -25,7 +25,7 @@ def main() -> int:
     config = load_config(config_path)
 
     dataset_dir = root / config.get("dataset_dir", "data/external/bowel-sounds")
-    manifest_path = root / "metadata" / "dataset_manifest.csv"
+    manifest_path = root / "metadata" / "abdomen_dataset_manifest.csv"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
 
     LOG.info("Scanning dataset under %s", dataset_dir)

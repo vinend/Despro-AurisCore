@@ -221,6 +221,21 @@
 .auris-result-details { font-size: 11px; margin-bottom: 12px; }
 .auris-result-details > div { display: flex; justify-content: space-between; padding-block: 3px; }
 .auris-result-details dt { color: #788275; }
+.auris-heart-demo { margin-top: 24px; padding: 22px 24px; background: #fff; border: 1px solid #d8ddd5; border-radius: 4px; }
+.auris-heart-demo-intro { display: flex; justify-content: space-between; align-items: end; gap: 20px; }
+.auris-heart-demo-intro h2 { font-size: 18px; font-weight: 500; }
+.auris-heart-demo-intro > p { max-width: 500px; color: #667368; font-size: 12px; }
+.auris-heart-file-form { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.auris-heart-file-form label { font-size: 12px; font-weight: 600; }
+.auris-heart-file-form input { min-width: 0; max-width: 100%; font-size: 12px; }
+.auris-heart-file-form button { background: #245b45; color: #fff; padding: 10px 16px; border-radius: 3px; font-size: 12px; }
+.auris-heart-file-form button:hover { background: #1a4935; }
+.auris-heart-result { margin-top: 24px; padding-top: 20px; border-top: 1px solid #d8ddd5; }
+.auris-heart-result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 22px; margin-top: 18px; }
+.auris-heart-result-grid dt { color: #667368; font-size: 11px; }
+.auris-heart-result-grid dd { overflow-wrap: anywhere; font-size: 13px; font-weight: 500; }
+.auris-heart-warning { margin-top: 14px; color: #94483d; font-size: 12px; }
+.auris-heart-progress, .auris-heart-disclaimer { margin-top: 14px; color: #68766b; font-size: 11px; }
 .auris-history { margin-top: 32px; }
 .auris-history-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 15px; border-bottom: 1px solid #d8ddd5; }
 .auris-history-heading h2 { font-size: 14px; font-weight: 500; }
@@ -234,11 +249,16 @@
 .auris-history td { padding-block: 13px; border-top: 1px solid #e0e5da; }
 .auris-footer { display: flex; justify-content: space-between; gap: 16px; padding-block: 18px; border-top: 1px solid #d8ddd5; color: #788275; font-size: 10px; }
 @media (max-width: 900px) {
+  .auris-heart-result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .auris-heart-demo-intro { display: block; }
+  .auris-heart-demo-intro > p { margin-top: 10px; }
   .auris-console { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .auris-side-panel { display: grid; grid-template-columns: 1fr 1fr; }
   .auris-result { border-top: 0; border-left: 1px solid #d8ddd5; }
 }
 @media (max-width: 560px) {
+  .auris-heart-result-grid { grid-template-columns: 1fr; }
+  .auris-heart-demo { padding: 18px 16px; }
   .auris-header-inner, .auris-main, .auris-footer { width: calc(100% - 32px); }
   .auris-header-inner { min-height: 65px; }
   .auris-wordmark { font-size: 19px; gap: 8px; }
