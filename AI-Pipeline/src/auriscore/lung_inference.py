@@ -9,6 +9,7 @@ from .analysis_service import BackendDefinition, BackendOutput, AnalysisError
 from .lung_preprocessing import validate_config, windows
 from .lung_evaluation import merge_predictions, extract_events
 from .lung_dsp import respiratory_measurements
+from .lung_temporal import LOCALIZATION_VERSION, localize_frames
 
 FILES = {"model.keras", "normalization.npz", "config.json", "evaluation.json", "decision.json"}
 REQUIRED = {"inhalation", "exhalation", "wheeze", "rhonchi", "crackle"}
@@ -68,6 +69,8 @@ def verify_package(folder):
         if any(not isinstance(v, (int, float)) or not np.isfinite(v) or not 0 < v <= 1 or computed[k] < v for k, v in gate[label].items()):
             raise ValueError("Lung gate not met")
     post = evidence.get("postprocessing", {})
+    if evidence.get("localization_version", "lung-frame-events-v1") not in {"lung-frame-events-v1", LOCALIZATION_VERSION}:
+        raise ValueError("Unsupported Lung localization version")
     if set(post) != {"minimum_s", "merge_gap_s"} or any(not isinstance(v, (int, float)) or not np.isfinite(v) or not 0 <= v <= 2 for v in post.values()):
         raise ValueError("Exact event postprocessing required")
     with np.load(folder / "normalization.npz", allow_pickle=False) as data:
@@ -120,8 +123,11 @@ class LungInferenceBackend:
         if not len(times):
             raise ValueError("No complete frames")
         duration = len(audio) / sample_rate
-        events = extract_events(times, scores, self.config["classes"], self.evidence["thresholds"],
+        decoder = localize_frames if self.evidence.get("localization_version") == LOCALIZATION_VERSION else extract_events
+        decoded = decoder(times, scores, self.config["classes"], self.evidence["thresholds"],
                                 hop_s=self.config["hop_length"] / 8000, duration_s=duration, **self.evidence["postprocessing"])
+        # Preserve the existing lung-analysis-v1 interval schema.
+        events = [{key: event[key] for key in ("label", "start_s", "end_s")} for event in decoded]
         phases = [e for e in events if e["label"] in {"inhalation", "exhalation"}]
         measured = respiratory_measurements(phases, duration)
         missing = sorted(REQUIRED - set(self.config["classes"]))

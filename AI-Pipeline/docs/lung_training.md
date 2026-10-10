@@ -122,6 +122,56 @@ the dataset before using readiness.json.
 
 ## Activation and limits
 
+Temporal checkpoint outputs are available now through the research WAV and
+saved-development localization commands. Existing temporal checkpoints need no
+retraining to produce onset/offset candidates. See
+[Lung temporal localization](lung_localization.md) for exact Linux commands,
+frame-grid limitations and the versioned approved-package path.
+
+### Development diagnostics without another training run
+
+`scripts/diagnose_lung_development.py` audits all cached development windows,
+TRAIN-only positive weights, masks/tails, phase target overlap, label durations
+and device-specific prevalence. With `--experiment` it additionally reads saved
+development predictions and reports positive/negative score quantiles and
+histograms, phase prediction conflicts and F1 gain over an always-positive
+baseline at the already selected thresholds. It does not load a model, fit
+weights, select new thresholds or open official test labels. The experiment must
+have development-only provenance matching the cache/config/audit. Counts include
+overlapping windows, as in the development evaluator; they are not independent
+patient observations. Outputs are new files outside existing experiment folders.
+
+From AI-Pipeline on the Linux training machine:
+
+```bash
+python scripts/diagnose_lung_development.py \
+  --cache data/processed/lung/cache/fa2fc598295d3e8b71d8e34cee4ecc7c21866cb658f57367ca9aa5ff546cee14 \
+  --experiment results/EXP-L003-temporal-cnn \
+  --output artifacts/lung-launch/EXP-L003-diagnostics.json
+```
+
+Omit `--experiment` for cache-only inspection. The Windows checkout does not
+contain the Linux EXP-L003 prediction file, so its score distributions cannot
+be inferred from the pasted confusion matrices. Preserve the existing cache and
+experiment files while investigating.
+
+See [the EXP-L003 inspection](lung_diagnostics_findings.md) for measured cache
+support, baseline comparisons, phase overlaps and the proposed research sequence.
+
+Interpretation limits: the [dataset paper](https://doi.org/10.1371/journal.pone.0254134)
+describes D labels as periods containing crackles, not individual explosive
+clicks. It also permits omitting unclear sounds. The manifest's
+`annotation_coverage_verified` flag currently follows successful parsing and
+the absence of manifest problems; it is not an independent completeness review.
+Treat negative supervision inside annotated respiration as an explicit research
+assumption pending annotation review. Do not silently relabel unannotated audio.
+Independent phase sigmoids permit concurrent inhalation/exhalation predictions;
+any exclusive head needs an overlap/boundary policy established first. The
+baseline's three temporal 3-wide convolutions plus one 5-wide convolution see
+11 feature frames (224 ms including the 64-ms FFT), not the full five-second
+window. Longer temporal context is a candidate development experiment, not an
+established fix or an automatic training launch.
+
 A final package needs exact hashes for weights, normalization, configuration,
 locked-test evidence and an explicit engineering decision specifying per-class
 eligibility gates. Research models are not automatically promoted. Use

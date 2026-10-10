@@ -414,3 +414,22 @@ partial batches, and malformed/test-cache rejection. A weight-free Keras model
 evaluates three iterations without an exhaustion warning; stand-ins verify
 both trainers pass shuffle=False and consume the corrected datasets. No model
 weights are fitted by these checks and official dataset test labels stay sealed.
+
+Read-only Lung diagnostics are covered by fictional fixtures checking masked
+score distributions, always-positive F1 comparisons, concurrent phase outputs,
+invalid scores/masks/thresholds, full cache support/weights/tail counts and
+rejection of final or stale experiment provenance. No model is loaded or trained
+and official test annotation files are not read by the diagnostic command.
+The focused Lung suite passed 28 tests, including three new diagnostic tests;
+the full local cache audit also completed without fitting or test-label opening.
+
+Lung localization verification: 40 focused Lung tests passed, including 11 new
+localization tests and one package/inference version test. Checks cover scored
+WAV onset/offset output with a frozen stub, overlap averaging, padded-tail exclusion,
+adjacent-frame floating-point stability, threshold equality, gap/duration rules,
+missing-timeline separation, simultaneous classes, invalid input/quality/status,
+complete held-out prediction coverage and cache alignment, one-to-one matched
+boundary errors, version rejection and preservation of the live interval schema.
+No weights were fitted. The real Linux EXP-L003 artifact is absent locally;
+actual checkpoint localization accuracy and physical-device behavior remain
+unverified. Official dataset test annotations were not opened.

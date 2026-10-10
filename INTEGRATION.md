@@ -405,3 +405,10 @@ classes, phase/sound intervals, uncalibrated frame scores and thresholds, nullab
 respiratory metrics with a reason, analyzed duration and model version. At least
 three complete unambiguous cycles are required. The strict schema is in
 WebApp/src/lib/auriscore/lung-result.ts. Unsupported outputs never become diagnoses.
+
+Lung package evidence may freeze `localization_version` as
+`lung-frame-events-v2`; inference uses the versioned onset/offset decoder while
+preserving the existing interval schema. Missing fields retain legacy v1 rules;
+unknown decoder versions are rejected. Research-only WAV exports use the separate
+`lung-localization-research-v1` JSON schema and cannot activate production models.
+See AI-Pipeline/docs/lung_localization.md for command/output contracts.

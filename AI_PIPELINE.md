@@ -439,3 +439,22 @@ shuffling is disabled explicitly. Both development/final trainers use this path,
 and source.json records the version/policy. Existing caches and split/threshold
 rules are unchanged. Compare a fresh development experiment with the saved Linux
 baseline; no training or official-test evaluation was launched while fixing code.
+
+Development diagnostics now inspect complete caches and optionally hash-bound
+saved development predictions without fitting models or selecting thresholds.
+They report supervised class prevalence, TRAIN weights, phase overlap, tails,
+per-device support and score distributions versus always-positive baselines.
+HF D labels represent crackle-containing intervals. Successful parsing does not
+independently establish exhaustive annotation coverage; negative supervision
+inside respiratory annotations remains a research assumption requiring review.
+See AI-Pipeline/docs/lung_training.md for the Linux diagnostic command and limits.
+
+Lung temporal localization is executable for completed development checkpoints:
+`localize_lung_recording.py` exports frame scores and scored onset/offset
+candidates for a real WAV; `evaluate_lung_localization.py` reconstructs complete
+held-out recording timelines from saved predictions and reports one-to-one event
+and matched-boundary metrics. No retraining or threshold selection is performed.
+Version lung-frame-events-v2 is shared with future approved inference packages,
+whose final selection/evidence must explicitly freeze it. Legacy evidence keeps
+v1 behavior. The existing Lung API schema is unchanged and research models remain
+ineligible for live activation. See AI-Pipeline/docs/lung_localization.md.

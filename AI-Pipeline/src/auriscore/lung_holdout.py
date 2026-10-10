@@ -9,6 +9,7 @@ from .dataset_lung import assert_split_integrity, parse_labels
 from .lung_preprocessing import windows, validate_config
 from .lung_evaluation import frame_metrics, merge_predictions, extract_events, event_metrics
 from .lung_dsp import respiratory_measurements
+from .lung_temporal import LOCALIZATION_VERSION, localize_frames
 
 
 def evaluate(candidate, root, manifest, *, model_version, authorized=False):
@@ -34,6 +35,10 @@ def evaluate(candidate, root, manifest, *, model_version, authorized=False):
     if len(thresholds) != len(config["classes"]) or not np.isfinite(thresholds).all() or np.any((np.asarray(thresholds) < 0) | (np.asarray(thresholds) > 1)):
         raise ValueError("Invalid frozen thresholds")
     post = selection["postprocessing"]
+    localization_version = selection.get("localization_version", "lung-frame-events-v1")
+    if localization_version not in {"lung-frame-events-v1", LOCALIZATION_VERSION}:
+        raise ValueError("Unsupported frozen localization version")
+    decoder = localize_frames if localization_version == LOCALIZATION_VERSION else extract_events
     if set(post) != {"minimum_s", "merge_gap_s"} or any(not isinstance(v, (int, float)) or not np.isfinite(v) or not 0 <= v <= 2 for v in post.values()):
         raise ValueError("Invalid frozen postprocessing")
     if not model_version.strip():
@@ -76,7 +81,7 @@ def evaluate(candidate, root, manifest, *, model_version, authorized=False):
         _, target_mask = merge_predictions(references, **geometry)
         n = len(config["classes"])
         truth, mask = (target_mask[:, :n] > .5).astype(float), (target_mask[:, n:] > .999).astype(float)
-        predicted = extract_events(times, probability, config["classes"], thresholds, hop_s=config["hop_length"] / config["sample_rate"], duration_s=row.valid_end_s, **post)
+        predicted = decoder(times, probability, config["classes"], thresholds, hop_s=config["hop_length"] / config["sample_rate"], duration_s=row.valid_end_s, **post)
         usable_reference = [event for event in reference if event["end_s"] <= row.valid_end_s and event["label"] in config["classes"]]
         recordings.append({"recording_id": row.recording_id, "group": row.group, "device": row.device,
             "frame_metrics": frame_metrics(truth, probability, mask, thresholds),
@@ -87,7 +92,7 @@ def evaluate(candidate, root, manifest, *, model_version, authorized=False):
     result = {"evaluation_role": "locked_official_test", "model_version": model_version, "model_sha256": model_hash,
         "config_sha256": digest(candidate / "config.json"), "normalization_sha256": digest(candidate / "normalization.npz"),
         "split_sha256": digest(manifest / "recordings.csv"), "classes": config["classes"], "thresholds": thresholds,
-        "threshold_selection_role": selection["role"], "postprocessing": post, "group_disjoint": True,
+        "threshold_selection_role": selection["role"], "postprocessing": post, "localization_version": localization_version, "group_disjoint": True,
         "grouping": "shifted_recording_date", "patient_disjoint_verified": False, "deployment_eligible": False,
         "metrics": frame_metrics(np.concatenate(truths), np.concatenate(scores), np.concatenate(masks), thresholds),
         "recordings": recordings, "event_boundary_tolerance_s": .1}

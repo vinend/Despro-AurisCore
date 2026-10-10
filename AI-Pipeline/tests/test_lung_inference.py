@@ -89,3 +89,30 @@ def test_real_saved_untrained_keras_model_runs_inference_without_fitting(tmp_pat
     backend = LungInferenceBackend(folder)
     result = backend.analyze(np.sin(np.arange(8000 * 6) * .1) * .1, 8000)
     assert result.analysis["mode"] == "lung" and len(result.analysis["class_scores"]) == 6
+
+
+def test_versioned_localization_package_preserves_live_interval_schema(tmp_path, config):
+    from auriscore.lung_temporal import LOCALIZATION_VERSION
+    folder = package(tmp_path, config)
+    evidence = json.loads((folder / "evaluation.json").read_text())
+    evidence["localization_version"] = LOCALIZATION_VERSION
+    (folder / "evaluation.json").write_text(json.dumps(evidence))
+    manifest = json.loads((folder / "manifest.json").read_text())
+    manifest["files"]["evaluation.json"] = {"bytes": (folder / "evaluation.json").stat().st_size,
+                                            "sha256": digest(folder / "evaluation.json")}
+    (folder / "manifest.json").write_text(json.dumps(manifest))
+    class Model:
+        def __call__(self, x, training=False):
+            scores = np.zeros((1, x.shape[1], 6))
+            scores[:, :, 2] = .8
+            return scores
+    result = LungInferenceBackend(folder, loader=lambda _: Model()).analyze(np.sin(np.arange(8000 * 6) * .1) * .1, 8000)
+    assert len(result.analysis["sound_events"]) == 1
+    assert set(result.analysis["sound_events"][0]) == {"label", "start_s", "end_s"}
+    evidence["localization_version"] = "unknown"
+    (folder / "evaluation.json").write_text(json.dumps(evidence))
+    manifest["files"]["evaluation.json"] = {"bytes": (folder / "evaluation.json").stat().st_size,
+                                            "sha256": digest(folder / "evaluation.json")}
+    (folder / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="Unsupported Lung localization"):
+        verify_package(folder)

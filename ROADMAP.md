@@ -276,3 +276,10 @@ training shuffling/known batch cardinality are now corrected in both trainers.
 The feature cache is reusable. Next is a fresh development comparison, frozen final selection,
 one-shot holdout decision and physical/mobile validation. See
 AI-Pipeline/docs/lung_training.md.
+
+Completed Linux EXP-L003 improves some development outputs but remains
+ineligible. Read-only label/mask/weight diagnostics and explicit research WAV
+temporal localization are now implemented. Next: run saved-prediction score and
+onset/offset diagnostics on that Linux checkpoint, review annotation assumptions,
+then predeclare controlled context/task/weight comparisons before more fitting.
+The official test remains sealed. See AI-Pipeline/docs/lung_localization.md.

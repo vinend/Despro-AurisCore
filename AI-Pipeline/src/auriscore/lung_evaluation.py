@@ -58,7 +58,7 @@ def extract_events(times, scores, classes, thresholds, *, hop_s, minimum_s=.0, m
 
 def event_metrics(reference, predicted, *, onset_tolerance_s=.1, offset_tolerance_s=.1):
     """Maximum-cardinality one-to-one matching with explicit boundary tolerances."""
-    if min(onset_tolerance_s, offset_tolerance_s) < 0:
+    if not np.isfinite([onset_tolerance_s, offset_tolerance_s]).all() or min(onset_tolerance_s, offset_tolerance_s) < 0:
         raise ValueError("Nonnegative matching tolerance required")
     matches = []
     if reference and predicted:
@@ -68,6 +68,8 @@ def event_metrics(reference, predicted, *, onset_tolerance_s=.1, offset_toleranc
         matches = [(i, j) for i, j in zip(rows, columns) if valid[i, j]]
     tp, fp, fn = len(matches), len(predicted) - len(matches), len(reference) - len(matches)
     return {"tp": tp, "fp": fp, "fn": fn, "f1": 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else None,
+            "onset_mae_s": float(np.mean([abs(reference[i]["start_s"] - predicted[j]["start_s"]) for i, j in matches])) if matches else None,
+            "offset_mae_s": float(np.mean([abs(reference[i]["end_s"] - predicted[j]["end_s"]) for i, j in matches])) if matches else None,
             "duration_mae_s": float(np.mean([abs((reference[i]["end_s"] - reference[i]["start_s"])
                                 - (predicted[j]["end_s"] - predicted[j]["start_s"])) for i, j in matches])) if matches else None}
 

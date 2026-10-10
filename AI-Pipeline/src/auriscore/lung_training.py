@@ -204,6 +204,9 @@ def train_final(cache, audit_path, selection_path, output, *, authorized=False):
         raise PermissionError("Final training requires the user's explicit go-ahead")
     config, index = preflight(cache, audit_path)
     selection = json.loads(Path(selection_path).read_text())
+    from .lung_temporal import LOCALIZATION_VERSION
+    if selection.get("localization_version", "lung-frame-events-v1") not in {"lung-frame-events-v1", LOCALIZATION_VERSION}:
+        raise ValueError("Unsupported frozen localization version")
     if (selection.get("role") not in {"development_validation", "train_only_oof"}
             or selection.get("config") != config
             or selection.get("index_sha256") != digest(Path(cache) / "index.csv")

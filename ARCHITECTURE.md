@@ -385,3 +385,9 @@ handle offline data, fitting, evaluation and packages. AURISCORE_LUNG_PACKAGE
 registers an approved package; none is active yet. The WebApp records/uploads WAV
 and validates lung-analysis-v1, showing phases/events and nullable respiratory
 measurements. Transport remains organ-independent; native mobile remains pending.
+
+Lung research localization uses a shared versioned frame decoder in
+`lung_temporal.py`, separate from experiment loading/evaluation in
+`lung_localization.py`. Existing live packages select their decoder from frozen
+evaluation evidence. Research WAV commands never register a backend or change
+eligibility. See AI-Pipeline/docs/lung_localization.md.
