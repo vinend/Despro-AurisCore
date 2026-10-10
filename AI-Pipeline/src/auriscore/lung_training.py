@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import time
+from typing import Any
 import numpy as np
 import pandas as pd
 from .acquisition_lung import digest
@@ -48,6 +49,58 @@ def load_block(path):
     return x, y, mask
 
 
+INPUT_PIPELINE_VERSION = "lung-cache-dataset-v2"
+
+
+def build_dataset(cache: str | Path, rows: pd.DataFrame, mean: np.ndarray,
+                  std: np.ndarray, *, batch_size: int, training: bool,
+                  seed: int) -> Any:
+    """Stream aligned cache blocks with known batch count and TRAIN-only shuffling.
+
+    Shuffle filenames before loading tensors so a full permutation costs only
+    filename storage. Each iteration visits every supplied row exactly once,
+    including the final short batch; evaluation order remains fixed.
+    """
+    if rows.empty or type(batch_size) is not int or batch_size <= 0:
+        raise ValueError("Nonempty Lung rows and a positive integer batch size required")
+    if "split" in rows and not set(rows.split).issubset({"train", "validation"}):
+        raise ValueError("Official test/quarantine cannot enter a development dataset")
+    cache = Path(cache).resolve()
+    names = rows.file.astype(str).tolist()
+    for name in names:
+        path = (cache / name).resolve()
+        if path.parent != cache or path.suffix != ".npz":
+            raise ValueError("Unsafe Lung cache path")
+    features, truth, _ = load_block(cache / names[0])
+    mean, std = np.asarray(mean, np.float32), np.asarray(std, np.float32)
+    if (mean.shape != (features.shape[1],) or std.shape != mean.shape
+            or not np.isfinite(mean).all() or not np.isfinite(std).all() or np.any(std <= 0)):
+        raise ValueError("Invalid Lung dataset normalization")
+    feature_shape, target_shape = features.shape, truth.shape
+    import tensorflow as tf
+    dataset = tf.data.Dataset.from_tensor_slices(names)
+    if training:
+        dataset = dataset.shuffle(len(names), seed=seed, reshuffle_each_iteration=True)
+
+    def load(name):
+        x, y, mask = load_block(cache / name.decode("utf-8"))
+        if x.shape != feature_shape or y.shape != target_shape:
+            raise ValueError("Inconsistent Lung cache geometry")
+        return np.clip((x - mean) / std, -5, 5), np.concatenate([y, mask], axis=-1)
+
+    def map_block(name):
+        x, packed = tf.numpy_function(load, [name], [tf.float32, tf.float32])
+        x.set_shape(feature_shape)
+        packed.set_shape((*target_shape[:-1], target_shape[-1] * 2))
+        return x, packed
+
+    dataset = dataset.map(map_block, num_parallel_calls=1, deterministic=True)
+    dataset = dataset.batch(batch_size, drop_remainder=False)
+    batches = (len(names) + batch_size - 1) // batch_size
+    dataset = dataset.apply(tf.data.experimental.assert_cardinality(batches))
+    return dataset.prefetch(1)
+
+
 def statistics(cache, index):
     total = squares = None
     count = 0
@@ -84,7 +137,9 @@ def train(cache, audit_path, output, *, authorized=False, folds=0):
     output.mkdir(parents=True)
     (output / "status.json").write_text(json.dumps({"status": "running", "started": time.time()}))
     (output / "source.json").write_text(json.dumps({"index_sha256": digest(Path(cache) / "index.csv"),
-        "audit_sha256": digest(audit_path), "config": config, "evaluation_role": "development_only"}, indent=2))
+        "audit_sha256": digest(audit_path), "config": config, "evaluation_role": "development_only",
+        "input_pipeline_version": INPUT_PIPELINE_VERSION,
+        "shuffle_policy": "seeded_full_filename_permutation_each_training_epoch"}, indent=2))
     partitions = [(index[index.split == "train"], index[index.split == "validation"])]
     if folds:
         if folds < 2 or index.group.nunique() < folds:
@@ -95,20 +150,16 @@ def train(cache, audit_path, output, *, authorized=False, folds=0):
         for fold, (fitting, validation) in enumerate(partitions):
             tf.keras.utils.set_random_seed(config["seed"] + fold)
             mean, std, weights = statistics(cache, fitting)
-            x, y, mask = load_block(Path(cache) / fitting.iloc[0].file)
+            x, _, _ = load_block(Path(cache) / fitting.iloc[0].file)
             model = build_model(x.shape, config["classes"], positive_weights=weights, learning_rate=config["learning_rate"])
             folder = output / f"fold-{fold}"
             folder.mkdir()
             np.savez(folder / "normalization.npz", mean=mean, std=std)
-            def dataset(rows):
-                def generate():
-                    for name in rows.file:
-                        features, truth, validity = load_block(Path(cache) / name)
-                        yield np.clip((features - mean) / std, -5, 5), np.concatenate([truth, validity], axis=-1)
-                result = tf.data.Dataset.from_generator(generate, output_signature=(
-                    tf.TensorSpec(x.shape, tf.float32), tf.TensorSpec((*y.shape[:-1], y.shape[-1] * 2), tf.float32)))
-                return result.batch(config["batch_size"]).prefetch(1)
-            history = model.fit(dataset(fitting), validation_data=dataset(validation), epochs=config["epochs"],
+            training_data = build_dataset(cache, fitting, mean, std, batch_size=config["batch_size"],
+                                          training=True, seed=config["seed"] + fold)
+            validation_data = build_dataset(cache, validation, mean, std, batch_size=config["batch_size"],
+                                            training=False, seed=config["seed"] + fold)
+            history = model.fit(training_data, validation_data=validation_data, epochs=config["epochs"], shuffle=False,
                 callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=config["patience"], restore_best_weights=True),
                            tf.keras.callbacks.CSVLogger(str(folder / "history.csv")),
                            tf.keras.callbacks.ModelCheckpoint(str(folder / "best.weights.h5"), save_weights_only=True, save_best_only=True)], verbose=2)
@@ -170,19 +221,16 @@ def train_final(cache, audit_path, selection_path, output, *, authorized=False):
     import tensorflow as tf
     from .lung_models import build_model
     mean, std, weights = statistics(cache, index)
-    x, y, _ = load_block(Path(cache) / index.iloc[0].file)
+    x, _, _ = load_block(Path(cache) / index.iloc[0].file)
     tf.keras.utils.set_random_seed(config["seed"])
     model = build_model(x.shape, config["classes"], positive_weights=weights, learning_rate=config["learning_rate"])
-    def generate():
-        for name in index.file:
-            features, truth, mask = load_block(Path(cache) / name)
-            yield np.clip((features - mean) / std, -5, 5), np.concatenate([truth, mask], axis=-1)
-    dataset = tf.data.Dataset.from_generator(generate, output_signature=(tf.TensorSpec(x.shape, tf.float32),
-        tf.TensorSpec((*y.shape[:-1], y.shape[-1] * 2), tf.float32))).batch(config["batch_size"]).prefetch(1)
+    dataset = build_dataset(cache, index, mean, std, batch_size=config["batch_size"],
+                            training=True, seed=config["seed"])
     output.mkdir(parents=True)
     (output / "status.json").write_text(json.dumps({"status": "running", "model_role": "final_deployment_candidate"}))
     try:
-        model.fit(dataset, epochs=selection["epochs"], callbacks=[tf.keras.callbacks.CSVLogger(str(output / "history.csv"))], verbose=2)
+        model.fit(dataset, epochs=selection["epochs"], shuffle=False,
+                  callbacks=[tf.keras.callbacks.CSVLogger(str(output / "history.csv"))], verbose=2)
         model.save(output / "model.keras")
         np.savez(output / "normalization.npz", mean=mean, std=std)
         (output / "config.json").write_text(json.dumps(config, indent=2))
@@ -190,7 +238,9 @@ def train_final(cache, audit_path, selection_path, output, *, authorized=False):
         (output / "source.json").write_text(json.dumps({"audit_sha256": digest(audit_path),
             "index_sha256": digest(Path(cache) / "index.csv"), "selection_sha256": digest(output / "selection.json"),
             "model_role": "final_deployment_candidate", "model_sha256": digest(output / "model.keras"),
-            "config_sha256": digest(output / "config.json"), "normalization_sha256": digest(output / "normalization.npz")}, indent=2))
+            "config_sha256": digest(output / "config.json"), "normalization_sha256": digest(output / "normalization.npz"),
+            "input_pipeline_version": INPUT_PIPELINE_VERSION,
+            "shuffle_policy": "seeded_full_filename_permutation_each_training_epoch"}, indent=2))
         (output / "status.json").write_text(json.dumps({"status": "completed", "deployment_eligible": False}))
     except Exception:
         (output / "status.json").write_text(json.dumps({"status": "failed", "deployment_eligible": False}))

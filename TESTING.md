@@ -406,3 +406,11 @@ Pre-push verification after incorporating the current master packaging changes:
 spectrogram shapes now match centered/uncentered tensors, frequency-limited STFT
 and odd/even FFT sizes. Initial EXP-L001 has no saved epoch/checkpoint; its local
 status was corrected to interrupted after finding no active training process.
+
+Lung input-pipeline correction: 25 focused Lung tests passed, including six new
+tests for seeded multi-epoch permutations, complete sample coverage, packed
+target/mask alignment, stable validation order, known batch counts, retained
+partial batches, and malformed/test-cache rejection. A weight-free Keras model
+evaluates three iterations without an exhaustion warning; stand-ins verify
+both trainers pass shuffle=False and consume the corrected datasets. No model
+weights are fitted by these checks and official dataset test labels stay sealed.

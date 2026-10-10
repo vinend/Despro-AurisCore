@@ -270,8 +270,9 @@ and measured listening latency. See WebApp/docs/device-streaming.md.
 
 Data acquisition/audit, preprocessing, authorized-only training commands,
 evaluation/package checks and existing backend/UI integration are implemented.
-Official test annotations remain sealed; no Lung model/performance evidence
-exists. Development fitting is authorized; the first launch stopped during
-preparation. Next is a fresh development run, frozen final selection,
+Official test annotations remain sealed. Initial Linux EXP-L002 development
+training completed with poor reported metrics; no candidate is approved. Seeded
+training shuffling/known batch cardinality are now corrected in both trainers.
+The feature cache is reusable. Next is a fresh development comparison, frozen final selection,
 one-shot holdout decision and physical/mobile validation. See
 AI-Pipeline/docs/lung_training.md.

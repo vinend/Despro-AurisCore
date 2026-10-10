@@ -1,9 +1,11 @@
 # Lung training readiness — HF_Lung_V1
 
 Implementation date: 2026-10-10. The user authorized development training. The
-first EXP-L001 launch stopped during preparation; no epoch/checkpoint was saved.
-Preserve that attempt and use a fresh output directory for another run. No trained
-Lung weights, performance claims, deployment decision or mobile readiness exists.
+first local EXP-L001 launch stopped during preparation; no epoch/checkpoint was
+saved. The user subsequently completed EXP-L002 on a Linux GPU server. Its
+reported development metrics show weak discrimination/degenerate phase outputs;
+the candidate remains research-only. No deployment decision or mobile readiness
+exists. Preserve previous experiments and use fresh output directories.
 
 ## Data and target contract
 
@@ -35,6 +37,23 @@ Features: 8 kHz mono, 5-second windows, hop aligned to FFT frames near 50% overl
 baseline. Upsampling does not recover frequencies above the original 2 kHz
 Nyquist limit. Tails and missing supervision are masked. Normalization and
 positive weights are fitted within each training fold only.
+
+Input pipeline `lung-cache-dataset-v2` shuffles the full list of TRAIN filenames
+with a fold seed and a fresh permutation each epoch, then streams cache tensors.
+Validation remains in stable order. Targets/masks stay attached to each feature
+window; shuffling uses filename storage rather than buffering the full tensor
+cache. Dataset batch cardinality is known and asserted; the final short batch is
+retained. Both development and final fitting pass `shuffle=False` to Keras because
+the input dataset already handles training order. This removes the ignored-shuffle
+warning and unknown-cardinality end-of-data warning without infinite repetition,
+dropping samples, or suppressing runtime errors. TensorFlow informational
+rendezvous cleanup messages may still occur independently.
+
+This is an input-order correction, not evidence of improved model quality.
+Normalization, labels, split assignments, cache keys, class weights, model and
+threshold selection rules are unchanged. Existing audited caches can be reused.
+New experiment source.json records the input-pipeline version/shuffle policy;
+compare fresh development runs against EXP-L002, keeping official test sealed.
 
 ## Commands and authorization
 

@@ -2,7 +2,9 @@
 
 Date: 2026-10-10. Status: software implemented; development training authorized.
 The initial EXP-L001 launch stopped during preparation; preserve it and start a
-fresh experiment when retrying. No trained Lung checkpoint is available.
+fresh experiment when retrying. The user subsequently completed Linux EXP-L002;
+its development candidate remains research-only. Training input order/cardinality
+are corrected for a fresh comparison; existing feature caches remain reusable.
 This document authorizes no training launch or deployment. It addresses PRD
 section 7 using one dataset and the existing AI-Pipeline infrastructure.
 
@@ -218,8 +220,9 @@ must preserve official test boundaries and source attribution.
 Implementation handoff: both official splits are downloaded and inventoried;
 development preprocessing is separate from model fitting. Acquisition, labels,
 temporal targets, guarded development/final training, evaluation, package checks,
-Python worker integration and Lung UI are implemented. No Lung training or
-official-test evaluation has run and no Lung model is promoted.
+Python worker integration and Lung UI are implemented. Initial Linux development
+training completed; official-test evaluation has not run and no Lung model is
+promoted. The dataset input correction was tested without fitting model weights.
 
 The first runnable baseline shares one temporal CNN with independent sigmoid
 outputs for both tasks; class subsets permit separate experiment versions.
