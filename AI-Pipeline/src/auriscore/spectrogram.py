@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import librosa
 import numpy as np
 
 
@@ -18,11 +17,12 @@ SUPPORTED_NORMALIZATIONS = {"minmax", "none", "per_frequency"}
 
 def spectrogram_shape(config: dict[str, Any]) -> tuple[int, int]:
     """Return the deterministic frequency/time shape for one configured window."""
+    validate_spectrogram_config(config)
+    kind = str(config.get("spectrogram_type", "logmel"))
+    frequency_bins = int(config["n_mels"]) if kind == "logmel" else int(config["n_fft"]) // 2 + 1
     samples = int(round(float(config["sample_rate"]) * float(config["window_seconds"])))
-    probe = np.zeros(samples, dtype=np.float32)
-    return tuple(extract_spectrogram_tensor(probe, config).shape)
-
-
+    time_frames = 1 + int(samples // int(config["hop_length"]))
+    return (frequency_bins, time_frames)
 def validate_spectrogram_config(config: dict[str, Any]) -> None:
     """Reject feature settings that would silently produce invalid tensors."""
     kind = str(config.get("spectrogram_type", "logmel"))
@@ -45,6 +45,7 @@ def validate_spectrogram_config(config: dict[str, Any]) -> None:
 
 
 def _power_spectrogram(audio: np.ndarray, config: dict[str, Any]) -> np.ndarray:
+    import librosa
     power = np.abs(
         librosa.stft(
             audio,
@@ -107,6 +108,7 @@ def extract_spectrogram_tensor(audio: np.ndarray, config: dict[str, Any]) -> np.
     top_db = float(config.get("cnn_top_db", 80.0))
     if top_db <= 0:
         raise ValueError("cnn_top_db must be positive")
+    import librosa
     db = librosa.power_to_db(power, ref=np.max, top_db=top_db)
     tensor = _normalise(db, config)
     if tensor.ndim != 2 or not tensor.size or not np.isfinite(tensor).all():
