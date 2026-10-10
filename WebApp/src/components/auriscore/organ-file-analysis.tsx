@@ -27,7 +27,7 @@ export function OrganFileAnalysis({ mode, onBusy, disabled = false }: { mode: An
   }
   return <section className="auris-heart-demo" aria-labelledby="organ-file-heading">
     <div className="auris-heart-demo-intro"><div><p className="auris-eyebrow">REKAMAN WAV · {mode.toUpperCase()}</p>
-      <h2 id="organ-file-heading">Analisis WAV {mode === "heart" ? "jantung" : "abdomen"}</h2></div>
+      <h2 id="organ-file-heading">Analisis WAV {mode === "heart" ? "jantung" : mode === "lung" ? "paru" : "abdomen"}</h2></div>
       <p>Unggah rekaman mono untuk analisis audio. Hasil hanya ditampilkan bila analisis tersedia.</p></div>
     <form className="auris-heart-file-form" onSubmit={analyze}>
       <label htmlFor="organ-wav">Pilih WAV mono</label>

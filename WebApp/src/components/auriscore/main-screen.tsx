@@ -64,17 +64,17 @@ export function MainScreen({
         <label htmlFor="analysis-mode">Organ analisis </label>
         <select id="analysis-mode" value={analysisMode} disabled={busy} onChange={event => {
           recording.reset(); setAnalysisMode(event.target.value as AnalysisMode);
-        }}><option value="heart">Heart</option><option value="abdomen">Abdomen</option></select>
+        }}><option value="heart">Heart</option><option value="abdomen">Abdomen</option><option value="lung">Lung</option></select>
         <DeviceStatusCard status={stream.status} organMode={stream.organMode} connected={stream.isConnected} analysisMode={analysisMode} hardware={stream.isHardware} />
         <div className="auris-console">
           <section className="auris-signal-panel" aria-labelledby="signal-heading">
             <div className="auris-panel-heading">
-              <div><p className="auris-eyebrow">SINYAL LANGSUNG</p><h2 id="signal-heading">{analysisMode === "heart" ? "Fonokardiogram" : "Audio abdomen"}</h2></div>
+              <div><p className="auris-eyebrow">SINYAL LANGSUNG</p><h2 id="signal-heading">{analysisMode === "heart" ? "Fonokardiogram" : analysisMode === "lung" ? "Audio paru" : "Audio abdomen"}</h2></div>
               <span className="auris-small-mono">{stream.hello?.samplingRate ?? EXPECTED_SAMPLING_RATE} Hz · mono</span>
             </div>
             {analysisMode === "heart" && !stream.isHardware && <OrganModeSelector value={stream.organMode} onChange={stream.setOrganMode} disabled={!stream.isConnected || busy} />}
             <div className="auris-scope-heading">
-              <span>{analysisMode === "heart" ? (stream.isHardware ? "Heart · audio perangkat" : ORGAN_MODE_LABELS[stream.organMode]) : "Abdomen · gunakan sumber audio yang sesuai"}</span>
+              <span>{analysisMode === "heart" ? (stream.isHardware ? "Heart · audio perangkat" : ORGAN_MODE_LABELS[stream.organMode]) : `${analysisMode === "lung" ? "Lung" : "Abdomen"} · gunakan sumber audio yang sesuai`}</span>
               <span>{stream.isConnected ? "Streaming" : "Menunggu koneksi"}</span>
             </div>
             <div className="auris-scope-canvas"><PcgWaveform buffer={stream.ring} versionRef={stream.versionRef} /></div>
@@ -86,7 +86,7 @@ export function MainScreen({
           <aside className="auris-side-panel" aria-label="Kontrol dan hasil sesi">
             <LiveListening stream={stream} />
             <RecordingControls phase={recording.phase} elapsedMs={recording.elapsedMs} bpm={stream.bpm} isMock={!stream.isHardware && stream.isMock && analysisMode === "heart"}
-              disabled={!stream.isConnected || uploadBusy} onStart={recording.start}
+              durationMs={recording.durationMs} disabled={!stream.isConnected || uploadBusy} onStart={recording.start}
               onStop={recording.stop} onCommitBpm={stream.commitBpm} />
             <ResultCard phase={recording.phase} result={recording.result} error={recording.error} file={recording.file} />
           </aside>

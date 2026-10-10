@@ -27,8 +27,8 @@ export function createAnalysisHandler(fixedMode?: AnalysisMode, legacyHeart = fa
     } catch { return failure("Unggahan WAV tidak dapat dibaca.", 400); }
     const requested = form.get("mode");
     const mode = fixedMode ?? requested;
-    if ((mode !== "heart" && mode !== "abdomen") || (fixedMode && requested !== null && requested !== fixedMode))
-      return failure("Pilih mode Heart atau Abdomen yang sesuai.", 400);
+    if ((mode !== "heart" && mode !== "abdomen" && mode !== "lung") || (fixedMode && requested !== null && requested !== fixedMode))
+      return failure("Pilih mode Heart, Abdomen atau Lung yang sesuai.", 400);
     const file = form.get("audio");
     if (!(file instanceof File)) return failure("Pilih berkas WAV terlebih dahulu.", 400);
     if (!file.name.toLowerCase().endsWith(".wav")) return failure("Pilih berkas .wav.", 415);

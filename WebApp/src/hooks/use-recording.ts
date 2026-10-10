@@ -3,7 +3,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { PcgStream } from "./use-pcg-stream";
 import type { AnalysisMode } from "@/lib/auriscore/analysis-result";
 import { HttpOrganAnalysisService } from "@/lib/auriscore/organ-analysis-service";
-import { RecordingSession } from "@/lib/auriscore/recording-session";
+import { RecordingSession, recordingDurationMs } from "@/lib/auriscore/recording-session";
 export { RECORD_DURATION_MS } from "@/lib/auriscore/recording-session";
 export type { RecordingPhase, HistoryEntry } from "@/lib/auriscore/recording-session";
 const service = new HttpOrganAnalysisService();
@@ -16,6 +16,6 @@ export function useRecording(stream: PcgStream, mode: AnalysisMode) {
     const offConnection = subscribeConnection(state => { if (state !== "connected") session.disconnect(); });
     return () => { offPacket(); offConnection(); session.dispose(); };
   }, [session, subscribePacket, subscribeConnection]);
-  return { ...snapshot, start: () => { if (stream.isConnected) session.start(mode, stream.isMock ? "mock" : "websocket-device"); },
+  return { ...snapshot, durationMs: recordingDurationMs(mode), start: () => { if (stream.isConnected) session.start(mode, stream.isMock ? "mock" : "websocket-device"); },
     stop: () => { void session.stop(); }, reset: () => session.reset() };
 }

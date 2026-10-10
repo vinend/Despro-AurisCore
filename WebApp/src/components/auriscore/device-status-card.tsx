@@ -2,7 +2,7 @@ import { ORGAN_MODE_LABELS, QUALITY_LABELS } from "@/lib/auriscore/format";
 import type { DeviceStatusMsg, OrganMode } from "@/lib/auriscore/protocol";
 
 export function DeviceStatusCard({ status, organMode, connected, analysisMode = "heart", hardware = false }: {
-  status: DeviceStatusMsg | null; organMode: OrganMode; connected: boolean; analysisMode?: "heart" | "abdomen"; hardware?: boolean;
+  status: DeviceStatusMsg | null; organMode: OrganMode; connected: boolean; analysisMode?: "heart" | "abdomen" | "lung"; hardware?: boolean;
 }) {
   return (
     <dl className="auris-status-strip" aria-label="Status perangkat">

@@ -198,6 +198,13 @@ Exit condition:
 
 ## Milestone 10 — Lung
 
+The user selected HF_Lung_V1 as the single initial Lung dataset on 2026-10-10.
+See `LUNG_TRAINING_PLAN.md` for six proposed phases: dataset/annotation audit,
+preprocessing and aligned targets, task-specific training, grouped evaluation,
+verified package/inference, then existing backend/app integration. Planning does
+not complete these milestones or launch training. Exact released subtype labels
+and grouping limitations must be audited before setting supervised targets.
+
 - [ ] respiratory phase analysis
 - [ ] respiratory rate / durations where supported
 - [ ] I:E ratio
@@ -258,3 +265,13 @@ WAV export are implemented. ESP-IDF network source exists with an explicit PCM
 producer interface. No capture driver or physical validation exists yet. Remaining
 acceptance: hardware handoff, SDK build/flash, actual audio source, sustained stream
 and measured listening latency. See WebApp/docs/device-streaming.md.
+
+## Lung implementation progress — training held
+
+Data acquisition/audit, preprocessing, authorized-only training commands,
+evaluation/package checks and existing backend/UI integration are implemented.
+Official test annotations remain sealed; no Lung model/performance evidence
+exists. Development fitting is authorized; the first launch stopped during
+preparation. Next is a fresh development run, frozen final selection,
+one-shot holdout decision and physical/mobile validation. See
+AI-Pipeline/docs/lung_training.md.

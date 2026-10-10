@@ -46,7 +46,7 @@ const base = `http://127.0.0.1:${port}`;
 const server = spawn(process.execPath, [serverFile], { cwd: app, windowsHide: true, detached: process.platform !== "win32",
   env: { ...process.env, PORT: String(port), HOSTNAME: "127.0.0.1", NODE_ENV: "production",
     AURISCORE_PYTHON: python, AURISCORE_PIPELINE_DIR: pipeline,
-    AURISCORE_HEART_PACKAGE: "", AURISCORE_ABDOMEN_PACKAGE: "" }, stdio: ["ignore", "pipe", "pipe"] });
+    AURISCORE_HEART_PACKAGE: "", AURISCORE_ABDOMEN_PACKAGE: "", AURISCORE_LUNG_PACKAGE: "" }, stdio: ["ignore", "pipe", "pipe"] });
 let log = "", startupError;
 server.on("error", error => { startupError = error; });
 for (const stream of [server.stdout, server.stderr]) stream.on("data", part => { log = (log + part).slice(-8000); });
@@ -107,8 +107,16 @@ try {
     assert.equal(result.response.status, 503);
     assert.equal(parseOrganAnalysisResult(result.body, "abdomen").analysis, null);
   });
-  await check("silent audio rejected for both organs without fabricated branches", async () => {
-    for (const mode of ["heart", "abdomen"]) {
+  await check("Lung shared and fixed endpoints stay unavailable before approved training", async () => {
+    for (const route of ["/api/analysis", "/api/lung/analyze"]) {
+      const output = await post(route, "lung");
+      assert.equal(output.response.status, 503);
+      const body = parseOrganAnalysisResult(output.body, "lung");
+      assert.equal(body.status, "unavailable"); assert.equal(body.analysis, null);
+    }
+  });
+  await check("silent audio rejected for all organs without fabricated branches", async () => {
+    for (const mode of ["heart", "abdomen", "lung"]) {
       const result = await post("/api/analysis", mode, wav(75, true));
       assert.equal(result.response.status, 422);
       const body = parseOrganAnalysisResult(result.body, mode);
@@ -125,7 +133,7 @@ try {
   });
   await check("invalid modes, missing audio and corrupt WAV rejected", async () => {
     for (const [route, mode, data, status] of [
-      ["/api/analysis", "lung", wav(), 400], ["/api/abdomen/analyze", "heart", wav(), 400],
+      ["/api/analysis", "spleen", wav(), 400], ["/api/abdomen/analyze", "heart", wav(), 400],
       ["/api/heart/analyze", "abdomen", wav(), 400], ["/api/analysis", "heart", null, 400],
       ["/api/analysis", "heart", Buffer.from("corrupt audio"), 415],
     ]) {

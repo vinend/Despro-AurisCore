@@ -389,3 +389,20 @@ test. Audible output, mobile browsers, sustained LAN performance and physical
 acquisition have not been verified. No ESP-IDF toolchain or board is available;
 the firmware network scaffold has not been compiled or flashed. See
 `HARDWARE_TEAM_HANDOFF.md` and `WebApp/docs/device-streaming.md`.
+
+## Lung verification — 2026-10-10
+
+The existing Python suite passed 244 tests, including temporary synthetic Heart
+training smoke tests. Running those was an unintended exception to the user's
+no-training instruction. No Lung training occurred. Subsequent focused Lung,
+package and service checks passed 55 tests without fitting weights; saved-model
+checks reload random initialization only. All 37 WebApp tests and ten production
+HTTP scenarios passed with Python configured. Build, TypeScript and affected-file
+lint passed. Fictional test packages establish no model performance. Official HF
+test labels remain unopened; physical audio/mobile/model validation is pending.
+
+Pre-push verification after incorporating the current master packaging changes:
+73 focused Python tests passed without fitting model weights. Analytical
+spectrogram shapes now match centered/uncentered tensors, frequency-limited STFT
+and odd/even FFT sizes. Initial EXP-L001 has no saved epoch/checkpoint; its local
+status was corrected to interrupted after finding no active training process.

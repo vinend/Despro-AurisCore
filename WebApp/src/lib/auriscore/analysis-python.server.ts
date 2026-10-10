@@ -117,7 +117,7 @@ export function getAnalysisWorker(): AnalysisPythonWorker {
   const python = process.env.AURISCORE_PYTHON ? path.resolve(process.env.AURISCORE_PYTHON)
     : path.join(pipeline, ".runtime", "python", "python.exe");
   const script = path.join(pipeline, "scripts", "analyze_recording.py");
-  const key = JSON.stringify([pipeline, python, process.env.AURISCORE_HEART_PACKAGE ?? null, process.env.AURISCORE_ABDOMEN_PACKAGE ?? null]);
+  const key = JSON.stringify([pipeline, python, process.env.AURISCORE_HEART_PACKAGE ?? null, process.env.AURISCORE_ABDOMEN_PACKAGE ?? null, process.env.AURISCORE_LUNG_PACKAGE ?? null]);
   if (globals.auriscoreWorker?.key !== key) {
     void globals.auriscoreWorker?.worker.dispose();
     globals.auriscoreWorker = { key, worker: new AnalysisPythonWorker(python, script, { ...process.env }) };

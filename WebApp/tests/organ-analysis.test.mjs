@@ -81,7 +81,7 @@ test("PCM and WAV inputs converge on the same organ service", async () => {
 test("route dispatch and fixed endpoint mode reject mismatches", async () => {
   const handler = createAnalysisHandler(undefined, false, async (_, mode) => { assert.equal(mode, "abdomen"); return result(); });
   assert.equal((await handler(request())).status, 200);
-  assert.equal((await handler(request("lung"))).status, 400);
+  assert.equal((await handler(request("spleen"))).status, 400);
   const fixed = createAnalysisHandler("heart", true, async () => { throw Error("Must not run"); });
   assert.equal((await fixed(request())).status, 400);
   assert.equal((await handler(request("abdomen", new File(["invalid"], "record.wav")))).status, 415);
@@ -140,7 +140,8 @@ test("Abdomen result view renders acoustic windows and unavailable states", () =
   const js = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS } }).outputText;
   const module = { exports: {} };
   runInNewContext(js, { module, exports: module.exports, require: name => name.includes("analysis-result")
-    ? { analysisNotice } : name === "./heart-result-view" ? { HeartResultView: () => null } : require(name) });
+    ? { analysisNotice } : name === "./heart-result-view" ? { HeartResultView: () => null }
+    : name === "./lung-result-view" ? { LungResultView: () => null } : require(name) });
   const View = module.exports.OrganResultView;
   const html = renderToStaticMarkup(createElement(View, { result: parseOrganAnalysisResult(result()) }));
   assert.match(html, /50\.0%/); assert.match(html, /Aktivitas terdeteksi/); assert.match(html, /bukan diagnosis/);

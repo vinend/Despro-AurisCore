@@ -407,3 +407,9 @@ remain open; local network/browser execution does not establish them.
 The streaming transport is implemented independently of pins. Actual sensor
 acquisition, firmware build/flash and physical-device acceptance are pending.
 See DEVICE_STREAMING_PROTOCOL.md and WebApp/docs/device-streaming.md.
+
+Lung implementation note (2026-10-10): acquisition/training tooling and the existing
+WebApp/worker now support respiratory phases and acoustic events. No Lung model
+is trained, approved or active. Software readiness does not complete clinical,
+model or physical-device validation. Respiratory metrics remain null without
+sufficient complete detected cycles.

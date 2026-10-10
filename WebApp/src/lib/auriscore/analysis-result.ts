@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { heartAnalysisSchema } from "./heart-result.ts";
+import { lungAnalysisSchema } from "./lung-result.ts";
 
-export type AnalysisMode = "heart" | "abdomen";
+export type AnalysisMode = "heart" | "abdomen" | "lung";
 const finite = z.number().finite();
 const unit = finite.min(0).max(1);
 const quality = z.object({ valid: z.boolean(), reason: z.string().nullable() });
@@ -41,6 +42,7 @@ const fields = {
 export const organAnalysisSchema = z.discriminatedUnion("mode", [
   z.object({ ...fields, mode: z.literal("heart"), analysis: heartAnalysisSchema.nullable() }),
   z.object({ ...fields, mode: z.literal("abdomen"), analysis: abdomenAnalysisSchema.nullable() }),
+  z.object({ ...fields, mode: z.literal("lung"), analysis: lungAnalysisSchema.nullable() }),
 ]).superRefine((value, ctx) => {
   if ((!value.quality.valid && value.analysis !== null)
       || ((value.status === "error" || value.status === "unavailable") && value.analysis !== null)
@@ -52,6 +54,10 @@ export const organAnalysisSchema = z.discriminatedUnion("mode", [
       || (value.mode === "heart" && value.analysis?.murmur?.status === "available" && value.analysis.murmur.model_version !== value.model_version)
       || (value.mode === "abdomen" && value.status === "completed" && !value.analysis?.activity))
     ctx.addIssue({ code: "custom", message: "Inconsistent analysis availability" });
+  if (value.mode === "lung" && value.analysis && (value.analysis.model_version !== value.model_version
+      || (value.status === "completed" && (value.analysis.respiratory.reason !== null
+        || !["inhalation", "exhalation", "wheeze", "crackle", "rhonchi"].every(c => value.analysis!.supported_classes.some(label => label === c))))))
+    ctx.addIssue({ code: "custom", message: "Inconsistent Lung availability" });
 });
 export type OrganAnalysisResult = z.infer<typeof organAnalysisSchema>;
 export type AbdomenAnalysisResult = z.infer<typeof abdomenAnalysisSchema>;
@@ -65,7 +71,10 @@ export function analysisNotice(result: OrganAnalysisResult): string | null {
   if (!code) return null;
   if (["MODEL_UNAVAILABLE", "MODEL_NOT_AUTHORIZED"].includes(code)) return result.mode === "heart"
     ? "Analisis Murmur belum tersedia; hasil DSP Heart tetap ditampilkan."
+    : result.mode === "lung" ? "Model Lung belum tersedia; pelatihan dan persetujuan model diperlukan."
     : "Model aktivitas abdomen belum tersedia untuk digunakan.";
+  if (code === "LUNG_INSUFFICIENT_CYCLES") return "Siklus napas lengkap belum cukup. Laju napas dan I:E tidak ditampilkan.";
+  if (code === "LUNG_BRANCH_UNAVAILABLE") return "Sebagian jenis suara Lung belum didukung model ini.";
   if (["LOW_SIGNAL_QUALITY", "INVALID_AUDIO", "MURMUR_INSUFFICIENT_AUDIO", "ABDOMEN_INSUFFICIENT_AUDIO"].includes(code))
     return "Audio belum cukup untuk dianalisis. Gunakan WAV mono dengan sinyal jelas dan rekam ulang lebih lama.";
   if (code === "AUDIO_TOO_LARGE") return "Rekaman melewati batas ukuran atau durasi analisis.";

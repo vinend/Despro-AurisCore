@@ -377,3 +377,11 @@ database/media service is introduced. Gateway handles pairing, readiness, comman
 stream continuity and bounded connections; browser listening resampling is
 separate from original PCM recording. Physical acquisition/firmware validation
 remain pending. See DEVICE_STREAMING_PROTOCOL.md and WebApp/docs/device-streaming.md.
+
+## Lung implementation state
+
+Lung reuses AnalysisService and the retained Python worker. Separate Lung modules
+handle offline data, fitting, evaluation and packages. AURISCORE_LUNG_PACKAGE
+registers an approved package; none is active yet. The WebApp records/uploads WAV
+and validates lung-analysis-v1, showing phases/events and nullable respiratory
+measurements. Transport remains organ-independent; native mobile remains pending.

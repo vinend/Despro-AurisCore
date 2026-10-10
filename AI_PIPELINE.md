@@ -418,3 +418,15 @@ Heart/Abdomen. Uploaded files, captured mock audio and device audio use real
 analysis; simulator provenance remains visible. Only verified final packages
 activate model-backed output. No candidate, threshold or training decision changes
 in this phase. See WebApp/docs/organ-analysis.md for local setup and limitations.
+
+## Lung implementation — training authorization pending
+
+Pinned HF_Lung_V1 acquisition, strict labels/date-group manifests, masked temporal
+log-mel caches, guarded development/final CNN commands, development/one-shot
+holdout evaluation and package/inference integration are implemented. EXP-L*
+experiments are separate from Heart. No Lung weights have been fitted or selected.
+Test labels remain sealed; preflight never trains. Development training is now
+user-authorized; EXP-L001 stopped during preparation without a saved checkpoint.
+Use a fresh output directory when retrying. Uncertainty reports, model comparisons, eligibility
+and TFLite/physical validation follow authorized experiments. See
+AI-Pipeline/docs/lung_training.md for exact commands and limits.

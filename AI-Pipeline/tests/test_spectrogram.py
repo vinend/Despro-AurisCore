@@ -8,7 +8,7 @@ import pytest
 from auriscore.augmentation import augment_spectrogram, augment_waveform, cutmix, mixup
 from auriscore.config import load_config
 from auriscore.cross_validation import assign_grouped_folds
-from auriscore.spectrogram import extract_spectrogram_tensor
+from auriscore.spectrogram import extract_spectrogram_tensor, spectrogram_shape
 from auriscore.spectrogram_cache import build_cache_manifest
 
 
@@ -39,6 +39,17 @@ def test_logstft_respects_frequency_limits():
     frequencies = np.fft.rfftfreq(config["n_fft"], 1 / config["sample_rate"])
     expected = int(((frequencies >= 100) & (frequencies <= 1000)).sum())
     assert tensor.shape[0] == expected
+
+
+@pytest.mark.parametrize("kind", ["logmel", "logstft"])
+@pytest.mark.parametrize("center", [True, False])
+@pytest.mark.parametrize("fft", [512, 511])
+def test_analytical_shape_matches_actual_tensor(kind, center, fft):
+    config = improved_config()
+    config.update(spectrogram_type=kind, spectrogram_center=center, n_fft=fft,
+                  feature_fmin=100, feature_fmax=900)
+    audio = np.ones(round(config["sample_rate"] * config["window_seconds"]), dtype=np.float32)
+    assert spectrogram_shape(config) == extract_spectrogram_tensor(audio, config).shape
 
 
 def test_per_frequency_normalization_requires_training_statistics():

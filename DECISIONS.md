@@ -186,3 +186,14 @@ Do not treat gateway connectivity as device/audio readiness or select generated
 audio after hardware failure. Source capture remains an independent firmware
 interface; no sensor pins are invented. Native-mobile/offline/BLE goals remain
 separate gaps. See DEVICE_STREAMING_PROTOCOL.md for bounds and failure behavior.
+
+## ADR-011 — HF Lung training and existing-worker integration
+
+Accepted for user-authorized implementation, 2026-10-10. Training requires a
+further explicit go-ahead. Use pinned HF_Lung_V1 annotations, shifted-date groups
+and masked temporal sigmoid outputs. Dates do not establish patient independence;
+normalized PCM matching is not exhaustive near-duplicate verification. Keep test
+labels sealed through selection. Reuse the existing worker/envelope, require
+hash-bound approved final packages, capture Lung for 30 seconds and return null
+respiratory measurements without three complete unambiguous cycles. No disease
+classifier is introduced. See AI-Pipeline/docs/lung_training.md.

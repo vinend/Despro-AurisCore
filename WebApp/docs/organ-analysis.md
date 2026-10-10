@@ -118,3 +118,12 @@ sealed evaluation, model promotion or external deployment was performed.
 Phase 6 adds repeatable production HTTP acceptance checks (`npm run verify:integration`)
 and the [readiness report](phase6-readiness.md). The final WebApp suite has 30
 passing tests with no skips, including cancellation/idle worker recovery.
+
+## Lung extension
+
+Select Lung for WAV upload or 30-second network capture. Existing PCM transport
+and retained worker are reused. Without AURISCORE_LUNG_PACKAGE pointing to an
+approved package, real Lung analysis returns unavailable. Eligible results show
+sound events, respiratory phase timelines and nullable respiratory measurements.
+Rates/I:E require three complete unambiguous cycles. Heart controls such as BPM
+and auscultation site are hidden in Lung mode. No model is active yet.

@@ -143,7 +143,7 @@ def test_audio_limits_are_configurable_and_checked_before_inference():
 
 def test_mode_and_request_id_validation():
     service = AnalysisService()
-    for mode in ('lung', None, ['heart']):
+    for mode in ('spleen', None, ['heart']):
         assert service.analyze_pcm(audio(), 8000, mode)['errors'][0]['code'] == 'UNSUPPORTED_MODE'
     assert service.analyze_pcm(audio(), 8000, 'heart', request_id=42)['errors'][0]['code'] == 'INVALID_REQUEST'
 

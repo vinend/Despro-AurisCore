@@ -1,0 +1,27 @@
+seed: 42
+sample_rate: 8000
+window_seconds: 5.0
+overlap: 0.5
+filter_enabled: false
+filter_low_hz: 20
+filter_high_hz: 1900
+filter_order: 2
+spectrogram_type: logmel
+spectrogram_center: false
+n_fft: 512
+hop_length: 128
+n_mels: 96
+feature_fmin: 20
+feature_fmax: 1900
+cnn_top_db: 80.0
+spectrogram_normalization: none
+classes: [inhalation, exhalation, wheeze, rhonchi, stridor, crackle]
+task: events
+epochs: 50
+batch_size: 8
+patience: 8
+learning_rate: 0.001
+augmentation_gain_db: 0.0
+annotation_coverage_verified: true
+coverage_policy: annotated_respiration_and_positive_events_only
+engineering_gate: null

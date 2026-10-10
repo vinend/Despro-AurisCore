@@ -4,6 +4,7 @@ import type { AnalysisMode, OrganAnalysisResult } from "./analysis-result.ts";
 import type { OrganAnalysisService } from "./organ-analysis-service.ts";
 export type RecordingPhase = "idle" | "recording" | "processing" | "done" | "error";
 export const RECORD_DURATION_MS = 10_000;
+export function recordingDurationMs(mode: AnalysisMode) { return mode === "lung" ? 30_000 : RECORD_DURATION_MS; }
 export interface HistoryEntry { id: number; ts: number; mode: AnalysisMode; source: AudioSourceKind;
   durationMs: number; result: OrganAnalysisResult }
 export interface RecordingSnapshot { phase: RecordingPhase; elapsedMs: number; error: string | null;
@@ -37,7 +38,7 @@ export class RecordingSession {
     this.update({ phase: "recording", elapsedMs: 0, error: null, result: null, file: null });
     this.timer = setInterval(() => {
       this.update({ elapsedMs: this.receivedSamples / 8 });
-      if (Date.now() - this.lastPacketAt > 2000 || Date.now() - this.started > 15_000) {
+      if (Date.now() - this.lastPacketAt > 2000 || Date.now() - this.started > recordingDurationMs(this.mode) + 5000) {
         this.disconnect();
       }
     }, 100);
@@ -47,7 +48,7 @@ export class RecordingSession {
     this.capture.accept(packet);
     if (this.capture.error) { this.clearTimer(); this.update({ phase: "error", error: this.capture.error }); return; }
     this.receivedSamples = this.capture.telemetry().decodedSamples; this.lastPacketAt = Date.now();
-    if (this.receivedSamples >= 80_000) void this.stop();
+    if (this.receivedSamples >= recordingDurationMs(this.mode) * 8) void this.stop();
   }
   disconnect() {
     if (this.snapshot.phase !== "recording") return;

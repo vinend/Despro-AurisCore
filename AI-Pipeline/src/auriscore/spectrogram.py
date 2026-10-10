@@ -19,10 +19,18 @@ def spectrogram_shape(config: dict[str, Any]) -> tuple[int, int]:
     """Return the deterministic frequency/time shape for one configured window."""
     validate_spectrogram_config(config)
     kind = str(config.get("spectrogram_type", "logmel"))
-    frequency_bins = int(config["n_mels"]) if kind == "logmel" else int(config["n_fft"]) // 2 + 1
+    n_fft, hop = int(config["n_fft"]), int(config["hop_length"])
+    frequencies = np.fft.rfftfreq(n_fft, 1 / int(config["sample_rate"]))
+    frequency_bins = int(config["n_mels"]) if kind == "logmel" else int(np.sum(
+        (frequencies >= float(config.get("feature_fmin", 0.0))) & (frequencies <= float(config["feature_fmax"]))))
     samples = int(round(float(config["sample_rate"]) * float(config["window_seconds"])))
-    time_frames = 1 + int(samples // int(config["hop_length"]))
+    padded_samples = samples + (2 * (n_fft // 2) if config.get("spectrogram_center", True) else 0)
+    if padded_samples < n_fft:
+        raise ValueError("Window is shorter than an uncentered FFT")
+    time_frames = 1 + (padded_samples - n_fft) // hop
     return (frequency_bins, time_frames)
+
+
 def validate_spectrogram_config(config: dict[str, Any]) -> None:
     """Reject feature settings that would silently produce invalid tensors."""
     kind = str(config.get("spectrogram_type", "logmel"))

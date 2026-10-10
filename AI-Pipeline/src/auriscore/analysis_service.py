@@ -14,7 +14,7 @@ import soundfile as sf
 from .heart_result import analyze_heart
 
 SCHEMA_VERSION = "organ-analysis-v1"
-MODES = {"heart", "abdomen"}
+MODES = {"heart", "abdomen", "lung"}
 
 
 @dataclass(frozen=True)
@@ -28,17 +28,19 @@ class AudioPolicy:
     max_sample_rate: int = 192000
     heart_min_duration_s: float = 3.0
     abdomen_min_duration_s: float = 5.0
+    lung_min_duration_s: float = 5.0
     min_centered_rms: float = 1e-6
     max_clipping_ratio: float = 0.01
 
     def __post_init__(self) -> None:
         numbers = (self.max_duration_s, self.heart_min_duration_s,
-                   self.abdomen_min_duration_s, self.min_centered_rms, self.max_clipping_ratio)
+                   self.abdomen_min_duration_s, self.lung_min_duration_s, self.min_centered_rms, self.max_clipping_ratio)
         if (not all(np.isfinite(value) for value in numbers)
                 or self.max_wav_bytes <= 0 or self.max_samples <= 0
                 or not 0 < self.min_sample_rate <= self.max_sample_rate
                 or not 0 < self.heart_min_duration_s <= self.max_duration_s
                 or not 0 < self.abdomen_min_duration_s <= self.max_duration_s
+                or not 0 < self.lung_min_duration_s <= self.max_duration_s
                 or self.min_centered_rms <= 0 or not 0 <= self.max_clipping_ratio <= 1):
             raise ValueError("Invalid recorded-audio policy")
 
@@ -170,7 +172,7 @@ class AnalysisService:
         if not isinstance(result["mode"], str) or result["mode"] not in MODES:
             result["mode"] = None
             result["request_id"] = None
-            self._error(result, "UNSUPPORTED_MODE", "Choose Heart or Abdomen analysis.")
+            self._error(result, "UNSUPPORTED_MODE", "Choose Heart, Abdomen or Lung analysis.")
             return False
         request_id = result["request_id"]
         if request_id is not None and (not isinstance(request_id, str) or len(request_id) > 128):
@@ -216,7 +218,8 @@ class AnalysisService:
         duration = float(audio.size / sample_rate)
         rms = float(np.sqrt(np.mean((audio - audio.mean()) ** 2)))
         clipping = float(np.mean(np.abs(audio) >= 0.999))
-        minimum = self.policy.heart_min_duration_s if mode == "heart" else self.policy.abdomen_min_duration_s
+        minimum = {"heart": self.policy.heart_min_duration_s, "abdomen": self.policy.abdomen_min_duration_s,
+                   "lung": self.policy.lung_min_duration_s}[mode]
         reason = ("signal_too_short" if duration < minimum else
                   "silent_signal" if rms < self.policy.min_centered_rms else
                   "clipped_signal" if clipping > self.policy.max_clipping_ratio else None)

@@ -1,5 +1,6 @@
 import { analysisNotice, type OrganAnalysisResult } from "@/lib/auriscore/analysis-result";
 import { HeartResultView } from "./heart-result-view";
+import { LungResultView } from "./lung-result-view";
 
 export function OrganResultView({ result }: { result: OrganAnalysisResult }) {
   const notice = analysisNotice(result);
@@ -7,6 +8,8 @@ export function OrganResultView({ result }: { result: OrganAnalysisResult }) {
     {notice && <p className="auris-heart-warning" role="status">{notice}</p>}
     {result.analysis && <HeartResultView result={result.analysis} />}
   </>;
+  if (result.mode === "lung") return <>{notice && <p role="status" className="auris-heart-warning">{notice}</p>}
+    {result.analysis && <LungResultView result={result.analysis} />}</>;
   const activity = result.analysis?.activity;
   return <div className="auris-heart-result" aria-label="Hasil analisis Abdomen">
     <h3>Hasil Abdomen</h3>

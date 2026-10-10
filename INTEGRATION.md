@@ -392,3 +392,16 @@ exact header, queue/timeout limits, error states and source provenance. Legacy
 mock JSON v1 is retained; its mirrored quality enum adds unknown for the normalized
 physical-source boundary (no fabricated quality measurement). Physical capture
 needs the acquisition driver and bench verification. Model activation is unchanged.
+
+## Lung recorded-audio contract
+
+POST /api/analysis with mode=lung, or /api/lung/analyze with multipart audio WAV.
+The organ-analysis-v1 envelope adds Lung and nullable lung-analysis-v1 output;
+Heart/Abdomen shapes are preserved. Older strict mode validators need updating.
+AURISCORE_LUNG_PACKAGE selects a verified package. Missing packages return HTTP503
+unavailable with analysis=null. Minimum Lung audio is five seconds, capture is
+30 seconds and API maximum remains 120 seconds. The result contains supported
+classes, phase/sound intervals, uncalibrated frame scores and thresholds, nullable
+respiratory metrics with a reason, analyzed duration and model version. At least
+three complete unambiguous cycles are required. The strict schema is in
+WebApp/src/lib/auriscore/lung-result.ts. Unsupported outputs never become diagnoses.

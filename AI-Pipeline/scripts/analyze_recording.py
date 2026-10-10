@@ -34,7 +34,9 @@ def main() -> None:
     source.add_argument("--wav", type=Path)
     source.add_argument("--stdin", action="store_true", help="Read WAV bytes from standard input")
     source.add_argument("--serve", action="store_true", help="Read one JSON request and write one response per line")
-    parser.add_argument("--mode", choices=["heart", "abdomen"])
+    parser.add_argument("--mode", choices=["heart", "abdomen", "lung"])
+    parser.add_argument("--lung-package", type=Path, default=os.environ.get("AURISCORE_LUNG_PACKAGE") or None,
+                        help="Verified final Lung package; no training is performed")
     parser.add_argument("--heart-package", type=Path, default=os.environ.get("AURISCORE_HEART_PACKAGE") or None,
                         help="Verified Heart deployment package; audit candidates are rejected")
     parser.add_argument("--abdomen-package", type=Path, default=os.environ.get("AURISCORE_ABDOMEN_PACKAGE") or None,
@@ -50,6 +52,9 @@ def main() -> None:
         if args.abdomen_package:
             from auriscore.abdomen_inference import abdomen_backend_definition
             definitions.append(abdomen_backend_definition(args.abdomen_package))
+        if args.lung_package:
+            from auriscore.lung_inference import lung_backend_definition
+            definitions.append(lung_backend_definition(args.lung_package))
         service = AnalysisService(backends=definitions)
     except (OSError, ValueError, TypeError, KeyError):
         parser.exit(2, "Deployment package is missing, ineligible or invalid.\n")
