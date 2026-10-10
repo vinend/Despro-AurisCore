@@ -15,6 +15,7 @@ export const QUALITY_LABELS: Record<QualityFlag, string> = {
   good: "Baik",
   fair: "Cukup",
   poor: "Buruk",
+  unknown: "Belum diukur",
 };
 
 /** Contoh: "7,3 dtk" / "10,0 dtk". */

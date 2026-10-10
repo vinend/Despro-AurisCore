@@ -25,3 +25,11 @@ Source of truth for the **mock only**: `WebApp/mini-services/mock-device/protoco
 `BleAudioSource` provides connect/disconnect/start/stop/state/error and accepts an **injected firmware-specific transport plus packet decoder**. It cannot connect to a physical device until the UUIDs, notification layout, sample encoding/endianness, and start/stop commands above are confirmed and implemented. Its fake-transport unit test is a software boundary test, not hardware validation. The current WebApp UI captures the existing WebSocket/mock stream only; a physical BLE connection control is pending the firmware contract.
 
 Murmur AI is optional. The Python Heart DSP route currently returns `murmur.status: unavailable`; the rhythm and cardiac-event branches remain usable. Invalid audio returns explicit quality failure instead of invented BPM/events. These are prototype screening outputs requiring validation.
+
+## Current Wi-Fi implementation
+
+The user selects Wi-Fi for the WebApp; v2 device-gateway transport and browser
+integration are now implemented. This supersedes the mock-only WebSocket status
+above, without claiming BLE implementation. Pin mapping is outside the network
+module. See DEVICE_STREAMING_PROTOCOL.md, HARDWARE_TEAM_HANDOFF.md and
+WebApp/docs/device-streaming.md. Actual capture/firmware/bench acceptance is pending.

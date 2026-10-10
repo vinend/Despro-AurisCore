@@ -395,3 +395,15 @@ Heart is not product-complete until:
 A change to supported organs, required Heart branches, required outputs, claim level, offline requirement, major user flow, patient/session/report capability, or tele-auscultation requirement requires PRD review/update.
 
 A coding agent may propose such a change but must not silently implement it as already approved.
+
+## Current device transport clarification - 2026-10-10
+
+The user selects ESP32-S3 Wi-Fi/WebSocket for the current WebApp integration.
+The current path is sensor acquisition -> ESP32 network publisher -> local device
+gateway -> WebApp waveform/listening/recording -> existing local Python analysis.
+The BLE/native-mobile diagrams above describe the earlier target and do not
+define this Wi-Fi implementation. Offline smartphone analysis and other PRD goals
+remain open; local network/browser execution does not establish them.
+The streaming transport is implemented independently of pins. Actual sensor
+acquisition, firmware build/flash and physical-device acceptance are pending.
+See DEVICE_STREAMING_PROTOCOL.md and WebApp/docs/device-streaming.md.

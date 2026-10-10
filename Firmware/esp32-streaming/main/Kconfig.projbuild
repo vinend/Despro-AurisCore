@@ -1,0 +1,17 @@
+menu "AurisCore Wi-Fi network"
+config AURISCORE_AP_SSID
+    string "ESP32 access-point SSID"
+    default "AurisCore-Stethoscope"
+config AURISCORE_AP_PASSWORD
+    string "Access-point password (8+ characters, local sdkconfig only)"
+    default ""
+config AURISCORE_GATEWAY_URI
+    string "Laptop gateway WebSocket URI (ws://LAN-IP:8082/device or wss://...)"
+    default ""
+config AURISCORE_PAIRING_TOKEN
+    string "Gateway pairing token (16+ characters, local sdkconfig only)"
+    default ""
+config AURISCORE_DEVICE_ID
+    string "Device identity"
+    default "AurisCore-ESP32S3"
+endmenu

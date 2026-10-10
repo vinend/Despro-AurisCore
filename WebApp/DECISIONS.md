@@ -87,3 +87,14 @@ dan dicatat di bagian ini. Jangan membuat monorepo atau paket bersama.
 - Timer sintesis terkunci wall-clock (bukan `setInterval` murni) agar bebas
   drift jam jangka panjang.
 - Persistensi riwayat rekaman (non-goal pekan ini, cukup dalam memori).
+
+## Wi-Fi device integration - 2026-10-10
+
+User confirms Wi-Fi network transport. Dedicated device-gateway mini-service
+accepts v2 binary hardware/engineering publishers and one paired browser.
+The legacy v1 mock remains distinct. Mirror quality enums add unknown; physical
+BPM/battery/quality are not fabricated. v2 wire codec lives separately in
+src/lib/auriscore/device-protocol.ts; no monorepo/shared package was introduced.
+Live AudioWorklet listening is implemented with bounded resampling buffers.
+Recording now auto-stops at 80,000 received samples with a separate stall watchdog.
+See docs/device-streaming.md; physical firmware acquisition/build/flash is pending.

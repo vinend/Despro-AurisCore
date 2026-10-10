@@ -90,3 +90,9 @@ WebApp/prisma/*.db-journal
 
 # Generated local integration evidence (synthetic audio only)
 WebApp/artifacts/
+
+# ESP-IDF local configuration contains credentials; toolchain/build artifacts
+Firmware/**/sdkconfig
+Firmware/**/sdkconfig.old
+Firmware/**/managed_components/
+Firmware/**/dependencies.lock

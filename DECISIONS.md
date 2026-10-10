@@ -174,3 +174,15 @@ Reason:
 
 Consequences:
 ```
+
+## ADR-010 - ESP32 Wi-Fi publisher and local device gateway
+
+Status: accepted for the user-requested WebApp implementation, 2026-10-10.
+The user explicitly selects Wi-Fi network integration. ESP32 and browser are
+WebSocket clients of a dedicated device gateway alongside the existing backend.
+An ESP32-hosted Wi-Fi AP does not imply an ESP32-hosted WebSocket server.
+Use v2 binary PCM plus JSON controls; retain the JSON mock v1 explicitly.
+Do not treat gateway connectivity as device/audio readiness or select generated
+audio after hardware failure. Source capture remains an independent firmware
+interface; no sensor pins are invented. Native-mobile/offline/BLE goals remain
+separate gaps. See DEVICE_STREAMING_PROTOCOL.md for bounds and failure behavior.

@@ -366,3 +366,26 @@ evidence to `WebApp/artifacts/phase6-http.json`. See
 `WebApp/docs/phase6-readiness.md` for scope, commands and model activation gaps.
 Phase 5 browser evidence remains applicable: phase 6 changes verification/docs only.
 No clinical/model performance evaluation or model promotion was performed.
+
+## Wi-Fi streaming verification (2026-10-10)
+
+33 WebApp tests and 3 gateway tests passed with no skips. The network test sends
+200 real WebSocket binary frames through the gateway and browser decoder, then
+checks all 80,000 samples in the ten-second WAV byte for byte. Additional checks
+cover authentication/origin rejection, missing frames, overflow, stalled sources,
+recording watchdogs and bounded AudioWorklet resampling without source mutation.
+Independent TypeScript checking and linting of affected streaming files passed.
+The final production build and all nine production HTTP integration scenarios
+also passed. A first rebuild was blocked by the running test server's Windows
+directory lock; stopping that test server allowed the rebuild to complete.
+
+Production browser verification exercised the explicit engineering publisher:
+streaming waveform, synthetic provenance, listening activation/deactivation,
+automatic ten-second recording, WAV playback/download control and the existing
+Heart API returning 75 BPM with unavailable Murmur. No browser console warnings
+or errors were observed. The in-app browser did not report a download event, so
+the download itself was not verified there; WAV bytes are covered by the network
+test. Audible output, mobile browsers, sustained LAN performance and physical
+acquisition have not been verified. No ESP-IDF toolchain or board is available;
+the firmware network scaffold has not been compiled or flashed. See
+`HARDWARE_TEAM_HANDOFF.md` and `WebApp/docs/device-streaming.md`.

@@ -250,3 +250,11 @@ physical BLE, native-mobile offline execution and Abdomen event DSP remain gaps.
 Phase 6 completes integrated engineering verification and readiness handoff.
 See `WebApp/docs/phase6-readiness.md`; this does not complete model eligibility,
 physical BLE, native offline execution or the full Heart/Abdomen PRD.
+
+## Wi-Fi streaming implementation progress
+
+Protocol/gateway/browser decoding, live listening, sample-clock recording and
+WAV export are implemented. ESP-IDF network source exists with an explicit PCM
+producer interface. No capture driver or physical validation exists yet. Remaining
+acceptance: hardware handoff, SDK build/flash, actual audio source, sustained stream
+and measured listening latency. See WebApp/docs/device-streaming.md.

@@ -19,6 +19,8 @@ export class RecordingSession {
   private source: AudioSourceKind = "websocket-device";
   private started = 0;
   private sequence = 0;
+  private receivedSamples = 0;
+  private lastPacketAt = 0;
   constructor(private readonly service: OrganAnalysisService) {}
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
@@ -31,17 +33,21 @@ export class RecordingSession {
     if (["recording", "processing"].includes(this.snapshot.phase)) return;
     this.generation++;
     this.mode = mode; this.source = source; this.started = Date.now();
-    this.capture.start();
+    this.capture.start(); this.receivedSamples = 0; this.lastPacketAt = Date.now();
     this.update({ phase: "recording", elapsedMs: 0, error: null, result: null, file: null });
     this.timer = setInterval(() => {
-      this.update({ elapsedMs: Math.min(Date.now() - this.started, RECORD_DURATION_MS) });
-      if (Date.now() - this.started >= RECORD_DURATION_MS) void this.stop();
+      this.update({ elapsedMs: this.receivedSamples / 8 });
+      if (Date.now() - this.lastPacketAt > 2000 || Date.now() - this.started > 15_000) {
+        this.disconnect();
+      }
     }, 100);
   }
   accept(packet: unknown) {
     if (this.snapshot.phase !== "recording") return;
     this.capture.accept(packet);
-    if (this.capture.error) { this.clearTimer(); this.update({ phase: "error", error: this.capture.error }); }
+    if (this.capture.error) { this.clearTimer(); this.update({ phase: "error", error: this.capture.error }); return; }
+    this.receivedSamples = this.capture.telemetry().decodedSamples; this.lastPacketAt = Date.now();
+    if (this.receivedSamples >= 80_000) void this.stop();
   }
   disconnect() {
     if (this.snapshot.phase !== "recording") return;

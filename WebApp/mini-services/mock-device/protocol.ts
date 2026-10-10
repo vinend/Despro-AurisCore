@@ -22,7 +22,7 @@ export const STATUS_INTERVAL_MS = 1000;
 export const ORGAN_MODES = ['mitral', 'aortic', 'pulmonic', 'tricuspid'] as const;
 export type OrganMode = (typeof ORGAN_MODES)[number];
 
-export const QUALITY_FLAGS = ['good', 'fair', 'poor'] as const;
+export const QUALITY_FLAGS = ['good', 'fair', 'poor', 'unknown'] as const;
 export type QualityFlag = (typeof QUALITY_FLAGS)[number];
 
 export const BPM_MIN = 60;

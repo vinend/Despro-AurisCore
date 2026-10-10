@@ -13,7 +13,7 @@ export const SAMPLES_PER_PACKET = 400;
 export const ORGAN_MODES = ["mitral", "aortic", "pulmonic", "tricuspid"] as const;
 export type OrganMode = (typeof ORGAN_MODES)[number];
 
-export const QUALITY_FLAGS = ["good", "fair", "poor"] as const;
+export const QUALITY_FLAGS = ["good", "fair", "poor", "unknown"] as const;
 export type QualityFlag = (typeof QUALITY_FLAGS)[number];
 
 /** Server → klien. Dikirim sekali saat koneksi terbuka. */

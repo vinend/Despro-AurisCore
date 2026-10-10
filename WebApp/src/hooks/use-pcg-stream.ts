@@ -7,6 +7,7 @@ import {
   resolveDeviceUrl,
   type PcgConnectionState,
 } from "@/lib/auriscore/pcg-connection";
+import { DeviceConnection } from "@/lib/auriscore/device-connection";
 import { RingBuffer } from "@/lib/auriscore/ring-buffer";
 import {
   EXPECTED_SAMPLING_RATE,
@@ -29,6 +30,8 @@ export interface PcgStream {
   bpm: number | null;
   isMock: boolean;
   isConnected: boolean;
+  isHardware: boolean;
+  error: string | null;
   setOrganMode: (mode: OrganMode) => void;
   commitBpm: (bpm: number) => void;
   subscribePacket: (listener: (packet: PcgPacketMsg) => void) => () => void;
@@ -43,7 +46,9 @@ export interface PcgStream {
  * seluruh pohon UI. Render React hanya terjadi saat status (1 dtk), mode,
  * atau state koneksi berubah.
  */
-export function usePcgStream(): PcgStream {
+export function usePcgStream(settings: { source: "mock" | "hardware"; url: string; token: string } = { source: "mock", url: "", token: "" }): PcgStream {
+  const { source, url, token } = settings;
+  const [error, setError] = useState<string | null>(null);
   // Buffer gelombang dibuat sekali per komponen lewat lazy state initializer
   // (bukan ref) agar tidak ada akses ref saat render.
   const [ring] = useState(
@@ -51,7 +56,7 @@ export function usePcgStream(): PcgStream {
   );
 
   const versionRef = useRef(0);
-  const connRef = useRef<PcgConnection | null>(null);
+  const connRef = useRef<PcgConnection | DeviceConnection | null>(null);
   const modeRef = useRef<OrganMode>("mitral");
   const packetListeners = useRef(new Set<(packet: PcgPacketMsg) => void>());
   const connectionListeners = useRef(new Set<(state: PcgConnectionState) => void>());
@@ -63,16 +68,17 @@ export function usePcgStream(): PcgStream {
   const [bpmDraft, setBpmDraft] = useState<number | null>(null);
 
   useEffect(() => {
-    const connection = new PcgConnection(resolveDeviceUrl(), {
-      onHello: (msg) => {
+    const handlers = {
+      onHello: (msg: HelloMsg) => {
+        setError(null);
         setHello(msg);
-        if (msg.protocol !== PROTOCOL_VERSION) {
+        if (source === "mock" && msg.protocol !== PROTOCOL_VERSION) {
           console.warn(
             `[pcg] versi protokol perangkat ${msg.protocol} tidak sama dengan aplikasi ${PROTOCOL_VERSION}`
           );
         }
       },
-      onPacket: (msg) => {
+      onPacket: (msg: PcgPacketMsg) => {
         ring.pushPacket(msg.seq, msg.samples, msg.samplingRate);
         for (const listener of packetListeners.current) listener(msg);
         versionRef.current += 1;
@@ -83,15 +89,16 @@ export function usePcgStream(): PcgStream {
           setOrganModeState(msg.organMode);
         }
       },
-      onStatus: (msg) => setStatus(msg),
-      onModeAck: (msg) => {
+      onStatus: (msg: DeviceStatusMsg) => setStatus(msg),
+      onModeAck: (msg: { organMode: OrganMode }) => {
         // Spesifikasi seksi 9: setelah mode_ack diterima, kosongkan buffer
         // gelombang dan perbarui label.
         ring.clear();
         modeRef.current = msg.organMode;
         setOrganModeState(msg.organMode);
       },
-      onStateChange: (next) => {
+      onStateChange: (next: PcgConnectionState) => {
+        if (next === "connecting") { setHello(null); setStatus(null); setError(null); }
         setState(next);
         for (const listener of connectionListeners.current) listener(next);
         if (next === "connected") {
@@ -103,7 +110,11 @@ export function usePcgStream(): PcgStream {
           setHello(null);
         }
       },
-    });
+      onError: (message: string) => setError(message),
+    };
+    ring.clear(); ring.resetSequence();
+    const connection = source === "hardware" ? new DeviceConnection({ url, token }, handlers)
+      : new PcgConnection(resolveDeviceUrl(), handlers);
 
     connRef.current = connection;
     connection.connect();
@@ -112,7 +123,7 @@ export function usePcgStream(): PcgStream {
       connection.close();
       connRef.current = null;
     };
-  }, [ring]);
+  }, [ring, source, url, token]);
 
   const setOrganMode = useCallback((mode: OrganMode) => {
     connRef.current?.setMode(mode);
@@ -145,6 +156,8 @@ export function usePcgStream(): PcgStream {
     bpm,
     isMock,
     isConnected: state === "connected",
+    isHardware: source === "hardware",
+    error,
     setOrganMode,
     commitBpm,
     subscribePacket,

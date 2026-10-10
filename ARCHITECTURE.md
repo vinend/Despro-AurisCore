@@ -366,3 +366,14 @@ in-memory analysis history. A retained Python JSONL worker per Node process is
 shared across existing/new endpoints; model instances survive individual HTTP
 requests. Browser execution still requires the local Python backend and does not
 establish native mobile offline inference. See WebApp/docs/organ-analysis.md.
+
+## Current Wi-Fi device integration (2026-10-10)
+
+The earlier BLE/mobile overview is an eventual target, not the current web
+transport. The selected prototype uses ESP32 Wi-Fi publisher -> device-gateway
+mini-service -> browser PCM dispatcher -> waveform/listening/recording. Completed
+WAV recordings reuse /api/analysis and the retained Python service. No audio
+database/media service is introduced. Gateway handles pairing, readiness, commands,
+stream continuity and bounded connections; browser listening resampling is
+separate from original PCM recording. Physical acquisition/firmware validation
+remain pending. See DEVICE_STREAMING_PROTOCOL.md and WebApp/docs/device-streaming.md.

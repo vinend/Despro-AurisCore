@@ -381,3 +381,14 @@ responses remain renderable. Actual multipart body, WAV and worker output sizes
 are bounded. Correlation IDs isolate queued requests; timeout/cancellation clears
 the active process tree. The firmware protocol and physical BLE contract remain
 unchanged. See WebApp/docs/organ-analysis.md for fields/lifecycle details.
+
+## Wi-Fi physical device software contract (2026-10-10)
+
+User-selected Wi-Fi/WebSocket now supplements the earlier BLE target. v2 uses
+/device publisher and /browser controller routes with explicit pairing, 8 kHz
+mono PCM16 little-endian in 832-byte binary frames, JSON handshake/acknowledged
+commands and sample-clock continuity. See DEVICE_STREAMING_PROTOCOL.md for the
+exact header, queue/timeout limits, error states and source provenance. Legacy
+mock JSON v1 is retained; its mirrored quality enum adds unknown for the normalized
+physical-source boundary (no fabricated quality measurement). Physical capture
+needs the acquisition driver and bench verification. Model activation is unchanged.
