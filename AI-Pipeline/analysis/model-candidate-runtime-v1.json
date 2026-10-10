@@ -1,0 +1,2014 @@
+{
+  "schema_version": "model-audit-v1",
+  "candidates": [
+    {
+      "experiment_id": "EXP-A001-abdomen-cnn-compact",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.9959740042686462,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Legacy metadata uses Heart/murmur names; normalized package target is bowel_sound_activity.",
+        "Window activity threshold must not be reused for recording means without evaluation.",
+        "Validation contains fewer than two independent participants.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "abdomen",
+      "target": "bowel_sound_activity",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.9661952314082156,
+      "threshold_unit": "validation window segment score",
+      "validation_subjects": 1,
+      "validation_summary": {
+        "accuracy": 1.0,
+        "precision": 0.0,
+        "recall_sensitivity": 0.0,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5,
+        "negative_predictive_value": 1.0,
+        "macro_f1": 0.5,
+        "f1": 0.0,
+        "confusion_matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "class_counts": {
+          "Absent": 1,
+          "Present": 0
+        },
+        "brier_score": 0.6372659522054249
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/bowel-sounds",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 1000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": true,
+        "filter_low_hz": 100,
+        "filter_high_hz": 1000,
+        "filter_order": 4,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 1000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "spectrogram_normalization": "minmax",
+        "spectrogram_normalization_clip": 5.0,
+        "experiment_name": "abdomen-cnn-compact"
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "f0d7e3200ac32ce03caf5e151af9647336c336ba8f65d15136e41158654fe391",
+          "bytes": 352683
+        },
+        "heart_cnn.json": {
+          "sha256": "e84f7de4e8873e77d218f59b323b20d3ae52c8374b51ebc2abe9f7213cbaf02e",
+          "bytes": 2029
+        },
+        "metrics.json": {
+          "sha256": "d566229244818838c3e4096999ff7f9913dbe5ad109b34b6e9f24f82da0c8f6d",
+          "bytes": 9994
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-A002-abdomen-cnn-per-frequency-norm",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.9999793767929077,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Legacy metadata uses Heart/murmur names; normalized package target is bowel_sound_activity.",
+        "Window activity threshold must not be reused for recording means without evaluation.",
+        "Validation contains fewer than two independent participants.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "abdomen",
+      "target": "bowel_sound_activity",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.9726605987113514,
+      "threshold_unit": "validation window segment score",
+      "validation_subjects": 1,
+      "validation_summary": {
+        "accuracy": 1.0,
+        "precision": 0.0,
+        "recall_sensitivity": 0.0,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5,
+        "negative_predictive_value": 1.0,
+        "macro_f1": 0.5,
+        "f1": 0.0,
+        "confusion_matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "class_counts": {
+          "Absent": 1,
+          "Present": 0
+        },
+        "brier_score": 0.4638369781237619
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/bowel-sounds",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 1000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": true,
+        "filter_low_hz": 100,
+        "filter_high_hz": 1000,
+        "filter_order": 4,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 1000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "spectrogram_normalization": "per_frequency",
+        "spectrogram_normalization_clip": 5.0,
+        "experiment_name": "abdomen-cnn-per-frequency-norm",
+        "spectrogram_frequency_mean": [
+          -71.95193497840114,
+          -57.61150140862973,
+          -41.2970804577351,
+          -32.892252950788006,
+          -29.195578391276058,
+          -28.711735691724552,
+          -28.172412646890255,
+          -30.14558005523956,
+          -30.59126212121408,
+          -31.83094848961195,
+          -31.921601312631267,
+          -32.753835293144874,
+          -33.35523310230884,
+          -33.46616136572421,
+          -34.3117706860164,
+          -32.948598546655894,
+          -33.60009212913566,
+          -33.724030141578154,
+          -35.3205139743721,
+          -36.01026094395387,
+          -36.411631032726106,
+          -36.84287642782469,
+          -36.810340480351826,
+          -38.12286284262712,
+          -38.12808105335356,
+          -39.08819528135752,
+          -38.903500547249614,
+          -39.335746772951914,
+          -38.79345409479917,
+          -38.734843395528515,
+          -39.930099634997724,
+          -39.77806464251088,
+          -41.41625329234739,
+          -41.14612609826289,
+          -41.834276613852225,
+          -42.111772589023374,
+          -43.26205871762714,
+          -44.02603566750007,
+          -44.825961991716696,
+          -46.603819187637825
+        ],
+        "spectrogram_frequency_std": [
+          8.504358109778545,
+          12.852755854988574,
+          13.513228900658595,
+          13.49885183865722,
+          13.103106264092503,
+          12.60811095407593,
+          11.967775031952474,
+          11.768887803957185,
+          11.69400800857484,
+          11.73255394672531,
+          11.834679505730916,
+          12.011987044207363,
+          12.18852995907033,
+          12.295552155290206,
+          12.423205114729026,
+          13.093149142015541,
+          13.856758192219065,
+          13.595662897585182,
+          13.335759362224834,
+          13.03963951709537,
+          13.138875416110515,
+          13.263783266748021,
+          13.29184475455534,
+          13.395594762899636,
+          13.450826379352044,
+          13.654680079126988,
+          13.645992864728935,
+          13.701101725382374,
+          13.820692099661075,
+          13.938534930610187,
+          13.920611673328501,
+          13.982810901844557,
+          14.18316399622026,
+          14.210707371417998,
+          14.22775332590776,
+          14.297026431416947,
+          14.405007179999034,
+          14.428863924652816,
+          14.362226896341147,
+          14.35404226453539
+        ],
+        "spectrogram_statistics_training_frames": 563713
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "5388b0f91b6c37e6a653f08b390a7bae0647df55441568436071876c56ef788f",
+          "bytes": 352683
+        },
+        "heart_cnn.json": {
+          "sha256": "fcb1148da5aac0209d7bab7f57f6d4814f1e6bee0573109985858b6012469264",
+          "bytes": 4353
+        },
+        "metrics.json": {
+          "sha256": "8dd56b17112621f48ea3a8bcb56b787074796f253bd9e60c6c0f6928c8099b6b",
+          "bytes": 13003
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-A003-abdomen-cnn-dropout-050",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.9999972581863403,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Legacy metadata uses Heart/murmur names; normalized package target is bowel_sound_activity.",
+        "Window activity threshold must not be reused for recording means without evaluation.",
+        "Validation contains fewer than two independent participants.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "abdomen",
+      "target": "bowel_sound_activity",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.9716470691930043,
+      "threshold_unit": "validation window segment score",
+      "validation_subjects": 1,
+      "validation_summary": {
+        "accuracy": 1.0,
+        "precision": 0.0,
+        "recall_sensitivity": 0.0,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5,
+        "negative_predictive_value": 1.0,
+        "macro_f1": 0.5,
+        "f1": 0.0,
+        "confusion_matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "class_counts": {
+          "Absent": 1,
+          "Present": 0
+        },
+        "brier_score": 0.45570853982626447
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/bowel-sounds",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 1000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": true,
+        "filter_low_hz": 100,
+        "filter_high_hz": 1000,
+        "filter_order": 4,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 1000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.5,
+        "cnn_verbose": 1,
+        "spectrogram_normalization": "per_frequency",
+        "spectrogram_normalization_clip": 5.0,
+        "experiment_name": "abdomen-cnn-dropout-050",
+        "spectrogram_frequency_mean": [
+          -71.95193497840114,
+          -57.61150140862973,
+          -41.2970804577351,
+          -32.892252950788006,
+          -29.195578391276058,
+          -28.711735691724552,
+          -28.172412646890255,
+          -30.14558005523956,
+          -30.59126212121408,
+          -31.83094848961195,
+          -31.921601312631267,
+          -32.753835293144874,
+          -33.35523310230884,
+          -33.46616136572421,
+          -34.3117706860164,
+          -32.948598546655894,
+          -33.60009212913566,
+          -33.724030141578154,
+          -35.3205139743721,
+          -36.01026094395387,
+          -36.411631032726106,
+          -36.84287642782469,
+          -36.810340480351826,
+          -38.12286284262712,
+          -38.12808105335356,
+          -39.08819528135752,
+          -38.903500547249614,
+          -39.335746772951914,
+          -38.79345409479917,
+          -38.734843395528515,
+          -39.930099634997724,
+          -39.77806464251088,
+          -41.41625329234739,
+          -41.14612609826289,
+          -41.834276613852225,
+          -42.111772589023374,
+          -43.26205871762714,
+          -44.02603566750007,
+          -44.825961991716696,
+          -46.603819187637825
+        ],
+        "spectrogram_frequency_std": [
+          8.504358109778545,
+          12.852755854988574,
+          13.513228900658595,
+          13.49885183865722,
+          13.103106264092503,
+          12.60811095407593,
+          11.967775031952474,
+          11.768887803957185,
+          11.69400800857484,
+          11.73255394672531,
+          11.834679505730916,
+          12.011987044207363,
+          12.18852995907033,
+          12.295552155290206,
+          12.423205114729026,
+          13.093149142015541,
+          13.856758192219065,
+          13.595662897585182,
+          13.335759362224834,
+          13.03963951709537,
+          13.138875416110515,
+          13.263783266748021,
+          13.29184475455534,
+          13.395594762899636,
+          13.450826379352044,
+          13.654680079126988,
+          13.645992864728935,
+          13.701101725382374,
+          13.820692099661075,
+          13.938534930610187,
+          13.920611673328501,
+          13.982810901844557,
+          14.18316399622026,
+          14.210707371417998,
+          14.22775332590776,
+          14.297026431416947,
+          14.405007179999034,
+          14.428863924652816,
+          14.362226896341147,
+          14.35404226453539
+        ],
+        "spectrogram_statistics_training_frames": 563713
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "25cc92f9371af2fb37657a19de53a3af165a68472eace8ad9c0b2f8558578a8e",
+          "bytes": 352721
+        },
+        "heart_cnn.json": {
+          "sha256": "10235e06236197e80c6dd2899ac4eb66bfe7baa0446c973b93884e9dc2a44cb3",
+          "bytes": 4346
+        },
+        "metrics.json": {
+          "sha256": "652a81a92b0d8cffd7e84a96fc572c37963f4209d827429be86265dae1bdc314",
+          "bytes": 10498
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-A004-abdomen-cnn-conservative-augmentation",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.9999606013298035,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Legacy metadata uses Heart/murmur names; normalized package target is bowel_sound_activity.",
+        "Window activity threshold must not be reused for recording means without evaluation.",
+        "Validation contains fewer than two independent participants.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "abdomen",
+      "target": "bowel_sound_activity",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.9751300820976161,
+      "threshold_unit": "validation window segment score",
+      "validation_subjects": 1,
+      "validation_summary": {
+        "accuracy": 1.0,
+        "precision": 0.0,
+        "recall_sensitivity": 0.0,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5,
+        "negative_predictive_value": 1.0,
+        "macro_f1": 0.5,
+        "f1": 0.0,
+        "confusion_matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "class_counts": {
+          "Absent": 1,
+          "Present": 0
+        },
+        "brier_score": 0.4647707630740254
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/bowel-sounds",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 1000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": true,
+        "filter_low_hz": 100,
+        "filter_high_hz": 1000,
+        "filter_order": 4,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 1000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "spectrogram_normalization": "per_frequency",
+        "spectrogram_normalization_clip": 5.0,
+        "augmentation_enabled": true,
+        "augmentation_gain_db": 2.0,
+        "augmentation_time_shift_fraction": 0.03,
+        "augmentation_noise_probability": 0.25,
+        "augmentation_snr_db_min": 25.0,
+        "augmentation_snr_db_max": 35.0,
+        "augmentation_frequency_mask_bins": 2,
+        "augmentation_frequency_mask_count": 1,
+        "augmentation_time_mask_frames": 8,
+        "augmentation_time_mask_count": 1,
+        "experiment_name": "abdomen-cnn-conservative-augmentation",
+        "spectrogram_frequency_mean": [
+          -71.95193497840114,
+          -57.61150140862973,
+          -41.2970804577351,
+          -32.892252950788006,
+          -29.195578391276058,
+          -28.711735691724552,
+          -28.172412646890255,
+          -30.14558005523956,
+          -30.59126212121408,
+          -31.83094848961195,
+          -31.921601312631267,
+          -32.753835293144874,
+          -33.35523310230884,
+          -33.46616136572421,
+          -34.3117706860164,
+          -32.948598546655894,
+          -33.60009212913566,
+          -33.724030141578154,
+          -35.3205139743721,
+          -36.01026094395387,
+          -36.411631032726106,
+          -36.84287642782469,
+          -36.810340480351826,
+          -38.12286284262712,
+          -38.12808105335356,
+          -39.08819528135752,
+          -38.903500547249614,
+          -39.335746772951914,
+          -38.79345409479917,
+          -38.734843395528515,
+          -39.930099634997724,
+          -39.77806464251088,
+          -41.41625329234739,
+          -41.14612609826289,
+          -41.834276613852225,
+          -42.111772589023374,
+          -43.26205871762714,
+          -44.02603566750007,
+          -44.825961991716696,
+          -46.603819187637825
+        ],
+        "spectrogram_frequency_std": [
+          8.504358109778545,
+          12.852755854988574,
+          13.513228900658595,
+          13.49885183865722,
+          13.103106264092503,
+          12.60811095407593,
+          11.967775031952474,
+          11.768887803957185,
+          11.69400800857484,
+          11.73255394672531,
+          11.834679505730916,
+          12.011987044207363,
+          12.18852995907033,
+          12.295552155290206,
+          12.423205114729026,
+          13.093149142015541,
+          13.856758192219065,
+          13.595662897585182,
+          13.335759362224834,
+          13.03963951709537,
+          13.138875416110515,
+          13.263783266748021,
+          13.29184475455534,
+          13.395594762899636,
+          13.450826379352044,
+          13.654680079126988,
+          13.645992864728935,
+          13.701101725382374,
+          13.820692099661075,
+          13.938534930610187,
+          13.920611673328501,
+          13.982810901844557,
+          14.18316399622026,
+          14.210707371417998,
+          14.22775332590776,
+          14.297026431416947,
+          14.405007179999034,
+          14.428863924652816,
+          14.362226896341147,
+          14.35404226453539
+        ],
+        "spectrogram_statistics_training_frames": 563713
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "613592e1fbabbab6241e6b1f576156b86c175c95e50f8de1bb34a6b158e01082",
+          "bytes": 352721
+        },
+        "heart_cnn.json": {
+          "sha256": "73f0ea03b4add5dce7dd6864441c313e52a692db99e754bf5d451b483fc20d0b",
+          "bytes": 4767
+        },
+        "metrics.json": {
+          "sha256": "e87489b3dd62eb259ab4ececfaf38731ab8536d1eb0a3da4fcec103330d64b6f",
+          "bytes": 10549
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-A005-abdomen-cnn-residual-se",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 1.0,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Legacy metadata uses Heart/murmur names; normalized package target is bowel_sound_activity.",
+        "Window activity threshold must not be reused for recording means without evaluation.",
+        "Validation contains fewer than two independent participants.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "abdomen",
+      "target": "bowel_sound_activity",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.9812712690301155,
+      "threshold_unit": "validation window segment score",
+      "validation_subjects": 1,
+      "validation_summary": {
+        "accuracy": 1.0,
+        "precision": 0.0,
+        "recall_sensitivity": 0.0,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5,
+        "negative_predictive_value": 1.0,
+        "macro_f1": 0.5,
+        "f1": 0.0,
+        "confusion_matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "class_counts": {
+          "Absent": 1,
+          "Present": 0
+        },
+        "brier_score": 0.5044956577299538
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/bowel-sounds",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 1000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": true,
+        "filter_low_hz": 100,
+        "filter_high_hz": 1000,
+        "filter_order": 4,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 1000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "spectrogram_normalization": "per_frequency",
+        "spectrogram_normalization_clip": 5.0,
+        "cnn_architecture": "residual_se",
+        "experiment_name": "abdomen-cnn-residual-se",
+        "spectrogram_frequency_mean": [
+          -71.95193497840114,
+          -57.61150140862973,
+          -41.2970804577351,
+          -32.892252950788006,
+          -29.195578391276058,
+          -28.711735691724552,
+          -28.172412646890255,
+          -30.14558005523956,
+          -30.59126212121408,
+          -31.83094848961195,
+          -31.921601312631267,
+          -32.753835293144874,
+          -33.35523310230884,
+          -33.46616136572421,
+          -34.3117706860164,
+          -32.948598546655894,
+          -33.60009212913566,
+          -33.724030141578154,
+          -35.3205139743721,
+          -36.01026094395387,
+          -36.411631032726106,
+          -36.84287642782469,
+          -36.810340480351826,
+          -38.12286284262712,
+          -38.12808105335356,
+          -39.08819528135752,
+          -38.903500547249614,
+          -39.335746772951914,
+          -38.79345409479917,
+          -38.734843395528515,
+          -39.930099634997724,
+          -39.77806464251088,
+          -41.41625329234739,
+          -41.14612609826289,
+          -41.834276613852225,
+          -42.111772589023374,
+          -43.26205871762714,
+          -44.02603566750007,
+          -44.825961991716696,
+          -46.603819187637825
+        ],
+        "spectrogram_frequency_std": [
+          8.504358109778545,
+          12.852755854988574,
+          13.513228900658595,
+          13.49885183865722,
+          13.103106264092503,
+          12.60811095407593,
+          11.967775031952474,
+          11.768887803957185,
+          11.69400800857484,
+          11.73255394672531,
+          11.834679505730916,
+          12.011987044207363,
+          12.18852995907033,
+          12.295552155290206,
+          12.423205114729026,
+          13.093149142015541,
+          13.856758192219065,
+          13.595662897585182,
+          13.335759362224834,
+          13.03963951709537,
+          13.138875416110515,
+          13.263783266748021,
+          13.29184475455534,
+          13.395594762899636,
+          13.450826379352044,
+          13.654680079126988,
+          13.645992864728935,
+          13.701101725382374,
+          13.820692099661075,
+          13.938534930610187,
+          13.920611673328501,
+          13.982810901844557,
+          14.18316399622026,
+          14.210707371417998,
+          14.22775332590776,
+          14.297026431416947,
+          14.405007179999034,
+          14.428863924652816,
+          14.362226896341147,
+          14.35404226453539
+        ],
+        "spectrogram_statistics_training_frames": 563713
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "0f29c1cc9f140f9b254d482aec6e3bf3157d8586e22fb4407ea06b493f2a3efa",
+          "bytes": 580840
+        },
+        "heart_cnn.json": {
+          "sha256": "64c9b3ff5d8f4439c0bc3ada3b1c4d6ad9abda1856a8cc66033d6867d0622f7a",
+          "bytes": 4391
+        },
+        "metrics.json": {
+          "sha256": "56ab0eebd5e4e8b782aa74f4cb17236798ab5a777880d377eb04ae12048e63d7",
+          "bytes": 9912
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-A006-abdomen-cnn-learning-rate-0003",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.9999970197677612,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Legacy metadata uses Heart/murmur names; normalized package target is bowel_sound_activity.",
+        "Window activity threshold must not be reused for recording means without evaluation.",
+        "Validation contains fewer than two independent participants.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "abdomen",
+      "target": "bowel_sound_activity",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.9799385968219029,
+      "threshold_unit": "validation window segment score",
+      "validation_subjects": 1,
+      "validation_summary": {
+        "accuracy": 1.0,
+        "precision": 0.0,
+        "recall_sensitivity": 0.0,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5,
+        "negative_predictive_value": 1.0,
+        "macro_f1": 0.5,
+        "f1": 0.0,
+        "confusion_matrix": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "class_counts": {
+          "Absent": 1,
+          "Present": 0
+        },
+        "brier_score": 0.5880036583726295
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/bowel-sounds",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 1000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": true,
+        "filter_low_hz": 100,
+        "filter_high_hz": 1000,
+        "filter_order": 4,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 1000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.0003,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "spectrogram_normalization": "per_frequency",
+        "spectrogram_normalization_clip": 5.0,
+        "experiment_name": "abdomen-cnn-learning-rate-0003",
+        "spectrogram_frequency_mean": [
+          -71.95193497840114,
+          -57.61150140862973,
+          -41.2970804577351,
+          -32.892252950788006,
+          -29.195578391276058,
+          -28.711735691724552,
+          -28.172412646890255,
+          -30.14558005523956,
+          -30.59126212121408,
+          -31.83094848961195,
+          -31.921601312631267,
+          -32.753835293144874,
+          -33.35523310230884,
+          -33.46616136572421,
+          -34.3117706860164,
+          -32.948598546655894,
+          -33.60009212913566,
+          -33.724030141578154,
+          -35.3205139743721,
+          -36.01026094395387,
+          -36.411631032726106,
+          -36.84287642782469,
+          -36.810340480351826,
+          -38.12286284262712,
+          -38.12808105335356,
+          -39.08819528135752,
+          -38.903500547249614,
+          -39.335746772951914,
+          -38.79345409479917,
+          -38.734843395528515,
+          -39.930099634997724,
+          -39.77806464251088,
+          -41.41625329234739,
+          -41.14612609826289,
+          -41.834276613852225,
+          -42.111772589023374,
+          -43.26205871762714,
+          -44.02603566750007,
+          -44.825961991716696,
+          -46.603819187637825
+        ],
+        "spectrogram_frequency_std": [
+          8.504358109778545,
+          12.852755854988574,
+          13.513228900658595,
+          13.49885183865722,
+          13.103106264092503,
+          12.60811095407593,
+          11.967775031952474,
+          11.768887803957185,
+          11.69400800857484,
+          11.73255394672531,
+          11.834679505730916,
+          12.011987044207363,
+          12.18852995907033,
+          12.295552155290206,
+          12.423205114729026,
+          13.093149142015541,
+          13.856758192219065,
+          13.595662897585182,
+          13.335759362224834,
+          13.03963951709537,
+          13.138875416110515,
+          13.263783266748021,
+          13.29184475455534,
+          13.395594762899636,
+          13.450826379352044,
+          13.654680079126988,
+          13.645992864728935,
+          13.701101725382374,
+          13.820692099661075,
+          13.938534930610187,
+          13.920611673328501,
+          13.982810901844557,
+          14.18316399622026,
+          14.210707371417998,
+          14.22775332590776,
+          14.297026431416947,
+          14.405007179999034,
+          14.428863924652816,
+          14.362226896341147,
+          14.35404226453539
+        ],
+        "spectrogram_statistics_training_frames": 563713
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "b2dd969dcb0bf9d549644e96c8bce55a23b2e6cfcbd138e7b8f89eb7f2ec10a2",
+          "bytes": 352757
+        },
+        "heart_cnn.json": {
+          "sha256": "b8204a2ea33ccae2ddb8c252e8885c506ac8c3ccf6f88b2a2239e110223ec852",
+          "bytes": 4354
+        },
+        "metrics.json": {
+          "sha256": "bc67e442e4f6b144e686f83019520ee85f3a59eaa5d1be7ed70296f55efdbd84",
+          "bytes": 11507
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-H001-cnn-compact",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.19144119322299957,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Participant-selected threshold does not establish a single-WAV decision rule.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "heart",
+      "target": "murmur_presence",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.3122656103223562,
+      "threshold_unit": "linked participant mean recording score",
+      "validation_subjects": 122,
+      "validation_summary": {
+        "accuracy": 0.4672131147540984,
+        "precision": 0.25882352941176473,
+        "recall_sensitivity": 0.9166666666666666,
+        "specificity": 0.35714285714285715,
+        "balanced_accuracy": 0.6369047619047619,
+        "negative_predictive_value": 0.9459459459459459,
+        "macro_f1": 0.46109412164458036,
+        "f1": 0.4036697247706422,
+        "confusion_matrix": [
+          [
+            35,
+            63
+          ],
+          [
+            2,
+            22
+          ]
+        ],
+        "class_counts": {
+          "Absent": 98,
+          "Present": 24
+        },
+        "roc_auc": 0.8282312925170068,
+        "pr_auc": 0.7125036798562308,
+        "brier_score": 0.1771535524334386
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 2000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": false,
+        "filter_low_hz": 20,
+        "filter_high_hz": 2000,
+        "filter_order": 2,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 2000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "6a8bec63065c6abf3ccc2bdf0c4ee1ffe37d38c632aaa43728002938fd2e10a8",
+          "bytes": 353173
+        },
+        "heart_cnn.json": {
+          "sha256": "79eb2c07be6b4366d7792ed73a4f314de205bdbce83a6889b7f9b71ca3967534",
+          "bytes": 2045
+        },
+        "metrics.json": {
+          "sha256": "35fe10a46543dd752d4f3053c4958d80b6c69cfc89d6589eabc7a1f3a2179618",
+          "bytes": 18292
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-H002-cnn-dropout-050",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.9918551445007324,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Participant-selected threshold does not establish a single-WAV decision rule.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "heart",
+      "target": "murmur_presence",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.4088456713860589,
+      "threshold_unit": "linked participant mean recording score",
+      "validation_subjects": 122,
+      "validation_summary": {
+        "accuracy": 0.5819672131147541,
+        "precision": 0.30985915492957744,
+        "recall_sensitivity": 0.9166666666666666,
+        "specificity": 0.5,
+        "balanced_accuracy": 0.7083333333333333,
+        "negative_predictive_value": 0.9607843137254902,
+        "macro_f1": 0.5604380077711056,
+        "f1": 0.4631578947368421,
+        "confusion_matrix": [
+          [
+            49,
+            49
+          ],
+          [
+            2,
+            22
+          ]
+        ],
+        "class_counts": {
+          "Absent": 98,
+          "Present": 24
+        },
+        "roc_auc": 0.852891156462585,
+        "pr_auc": 0.7461761566253808,
+        "brier_score": 0.18910511545149486
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 2000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": false,
+        "filter_low_hz": 20,
+        "filter_high_hz": 2000,
+        "filter_order": 2,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 2000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.5,
+        "cnn_verbose": 1,
+        "experiment_name": "cnn-dropout-050"
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "0838875da5ab51a1868415925ac8c5382f7a3090eec705176fe724f8d856ab4c",
+          "bytes": 353173
+        },
+        "heart_cnn.json": {
+          "sha256": "fbd93a806288be6e511a66c9da7f82e050f749c0da7b88b753836f65a153d163",
+          "bytes": 2070
+        },
+        "metrics.json": {
+          "sha256": "83ba71e81f58945a82dd8cbc63f2e3f22d8ab6218f588f140b8fbc1398fa7922",
+          "bytes": 17962
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-H003-cnn-conservative-augmentation",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.20036807656288147,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Participant-selected threshold does not establish a single-WAV decision rule.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "heart",
+      "target": "murmur_presence",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.3174295385057727,
+      "threshold_unit": "linked participant mean recording score",
+      "validation_subjects": 122,
+      "validation_summary": {
+        "accuracy": 0.5409836065573771,
+        "precision": 0.2894736842105263,
+        "recall_sensitivity": 0.9166666666666666,
+        "specificity": 0.4489795918367347,
+        "balanced_accuracy": 0.6828231292517006,
+        "negative_predictive_value": 0.9565217391304348,
+        "macro_f1": 0.5255555555555556,
+        "f1": 0.44,
+        "confusion_matrix": [
+          [
+            44,
+            54
+          ],
+          [
+            2,
+            22
+          ]
+        ],
+        "class_counts": {
+          "Absent": 98,
+          "Present": 24
+        },
+        "roc_auc": 0.8422619047619048,
+        "pr_auc": 0.7461442577019364,
+        "brier_score": 0.14858881775641802
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 2000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": false,
+        "filter_low_hz": 20,
+        "filter_high_hz": 2000,
+        "filter_order": 2,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 2000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "experiment_name": "cnn-conservative-augmentation",
+        "augmentation_enabled": true,
+        "augmentation_gain_db": 2.0,
+        "augmentation_time_shift_fraction": 0.03,
+        "augmentation_noise_probability": 0.25,
+        "augmentation_snr_db_min": 25.0,
+        "augmentation_snr_db_max": 35.0,
+        "augmentation_frequency_mask_bins": 2,
+        "augmentation_frequency_mask_count": 1,
+        "augmentation_time_mask_frames": 8,
+        "augmentation_time_mask_count": 1
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "fe67b22209941cc71e152d3a047b5729541e051b43b3767a08f7facb22270178",
+          "bytes": 353173
+        },
+        "heart_cnn.json": {
+          "sha256": "9f6358c2722745bbdd5b70a4a4c54752db3a174777156fe35e0a6ca69630d036",
+          "bytes": 2492
+        },
+        "metrics.json": {
+          "sha256": "8d0ec5b18da8a068e4e935ff85feff60a36df5be9679307b43f49f3012d97f41",
+          "bytes": 18933
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-H004-cnn-learning-rate-0003",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.35670268535614014,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Participant-selected threshold does not establish a single-WAV decision rule.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "heart",
+      "target": "murmur_presence",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.34373325042248876,
+      "threshold_unit": "linked participant mean recording score",
+      "validation_subjects": 122,
+      "validation_summary": {
+        "accuracy": 0.3442622950819672,
+        "precision": 0.22549019607843138,
+        "recall_sensitivity": 0.9583333333333334,
+        "specificity": 0.19387755102040816,
+        "balanced_accuracy": 0.5761054421768708,
+        "negative_predictive_value": 0.95,
+        "macro_f1": 0.3435566316922249,
+        "f1": 0.36507936507936506,
+        "confusion_matrix": [
+          [
+            19,
+            79
+          ],
+          [
+            1,
+            23
+          ]
+        ],
+        "class_counts": {
+          "Absent": 98,
+          "Present": 24
+        },
+        "roc_auc": 0.7206632653061225,
+        "pr_auc": 0.5726095120951293,
+        "brier_score": 0.20618896146887286
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 2000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": false,
+        "filter_low_hz": 20,
+        "filter_high_hz": 2000,
+        "filter_order": 2,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 2000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.0003,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "experiment_name": "cnn-learning-rate-0003"
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "70d99e8604343d4c951711b9b59771c28786a1dd908de1ca2f1a8f879f92768c",
+          "bytes": 353173
+        },
+        "heart_cnn.json": {
+          "sha256": "c8d8f2b37121e00bbf3083add0f8cead602c77da31f9f28a97c2676bf325a079",
+          "bytes": 2084
+        },
+        "metrics.json": {
+          "sha256": "83497c13e211de3497e064478aca99d7f74d8c7664e8e646a90dae7c440dd0a3",
+          "bytes": 15724
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-H005-cnn-residual-se",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.999451220035553,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Participant-selected threshold does not establish a single-WAV decision rule.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "heart",
+      "target": "murmur_presence",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.28146288186932605,
+      "threshold_unit": "linked participant mean recording score",
+      "validation_subjects": 122,
+      "validation_summary": {
+        "accuracy": 0.5245901639344263,
+        "precision": 0.28205128205128205,
+        "recall_sensitivity": 0.9166666666666666,
+        "specificity": 0.42857142857142855,
+        "balanced_accuracy": 0.6726190476190476,
+        "negative_predictive_value": 0.9545454545454546,
+        "macro_f1": 0.5114609223971278,
+        "f1": 0.43137254901960786,
+        "confusion_matrix": [
+          [
+            42,
+            56
+          ],
+          [
+            2,
+            22
+          ]
+        ],
+        "class_counts": {
+          "Absent": 98,
+          "Present": 24
+        },
+        "roc_auc": 0.8715986394557822,
+        "pr_auc": 0.8054557825972519,
+        "brier_score": 0.1361524540271393
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 2000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": false,
+        "filter_low_hz": 20,
+        "filter_high_hz": 2000,
+        "filter_order": 2,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 2000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "experiment_name": "cnn-residual-se",
+        "cnn_architecture": "residual_se"
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "e4c6bcb1f8a896871d51e2f071741d0adceec60e6b0ece3cb9f5913d4ee0c0d0",
+          "bytes": 582265
+        },
+        "heart_cnn.json": {
+          "sha256": "2324ca604f313074f340f9391b80eb99bebec7ada3dd7260e3080802e6628cd8",
+          "bytes": 2135
+        },
+        "metrics.json": {
+          "sha256": "33b3821ef795b18cb11361c3194fbfba0843c7f017afa3311eafd3791c170a12",
+          "bytes": 16716
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-H006-cnn-per-frequency-normalization",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          40,
+          313,
+          1
+        ],
+        "synthetic_score": 0.9104065895080566,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Participant-selected threshold does not establish a single-WAV decision rule.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "heart",
+      "target": "murmur_presence",
+      "input_shape": [
+        40,
+        313,
+        1
+      ],
+      "decision_threshold": 0.3573168460279703,
+      "threshold_unit": "linked participant mean recording score",
+      "validation_subjects": 122,
+      "validation_summary": {
+        "accuracy": 0.7540983606557377,
+        "precision": 0.44,
+        "recall_sensitivity": 0.9166666666666666,
+        "specificity": 0.7142857142857143,
+        "balanced_accuracy": 0.8154761904761905,
+        "negative_predictive_value": 0.9722222222222222,
+        "macro_f1": 0.7090620031796502,
+        "f1": 0.5945945945945946,
+        "confusion_matrix": [
+          [
+            70,
+            28
+          ],
+          [
+            2,
+            22
+          ]
+        ],
+        "class_counts": {
+          "Absent": 98,
+          "Present": 24
+        },
+        "roc_auc": 0.8852040816326531,
+        "pr_auc": 0.7792887229113727,
+        "brier_score": 0.11823781642601099
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 2000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": false,
+        "filter_low_hz": 20,
+        "filter_high_hz": 2000,
+        "filter_order": 2,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 40,
+        "n_mfcc": 13,
+        "feature_fmax": 2000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "experiment_name": "cnn-per-frequency-normalization",
+        "spectrogram_normalization": "per_frequency",
+        "spectrogram_normalization_clip": 5.0,
+        "spectrogram_frequency_mean": [
+          -23.66409790370833,
+          -25.613842019743245,
+          -28.50908993269631,
+          -30.889591964402214,
+          -32.331989617668135,
+          -33.93633638809966,
+          -35.16933789581931,
+          -36.22930886889423,
+          -37.29135805798317,
+          -37.75651990574851,
+          -38.34846153321915,
+          -38.637268591082226,
+          -38.678367522984225,
+          -39.014399720059835,
+          -38.98747730011773,
+          -39.313002240154944,
+          -39.73548374335604,
+          -39.893874922776185,
+          -40.21555507977404,
+          -40.464768381779045,
+          -41.972594621001726,
+          -42.99372360574513,
+          -43.527831013377984,
+          -44.413658107699554,
+          -44.997386130769556,
+          -45.596070859218585,
+          -46.147720472567,
+          -46.65400845030527,
+          -47.01485525237898,
+          -47.25497307609837,
+          -47.45791777624451,
+          -47.88222454936996,
+          -48.36857928840845,
+          -49.03281837133365,
+          -49.46497416698827,
+          -50.54768365727157,
+          -54.837634126490414,
+          -58.69449450343942,
+          -63.29179144560183,
+          -68.32346044478686
+        ],
+        "spectrogram_frequency_std": [
+          9.780221803604018,
+          10.352908752682202,
+          10.355757853190413,
+          10.382534427399046,
+          10.553340131479883,
+          10.755999546938337,
+          10.915439656702773,
+          11.013148703933005,
+          11.034488276121206,
+          10.969677163345148,
+          10.837028217263356,
+          10.684106823726578,
+          10.638693852224753,
+          10.559394204616058,
+          10.394843664768933,
+          10.33286026549085,
+          10.33038939655378,
+          10.289268458890183,
+          9.923672721922589,
+          9.764182525953752,
+          10.250096101243566,
+          10.29062666578521,
+          10.301733549249512,
+          10.296851270249377,
+          10.246492706876378,
+          10.20728140382038,
+          10.167078421977827,
+          10.114520351204181,
+          10.081778717405022,
+          10.023319780669146,
+          9.96533882784491,
+          9.932619845540879,
+          9.890517013016272,
+          9.809142884809235,
+          9.37265405059665,
+          9.090617634015024,
+          9.610073493700947,
+          9.600814648386947,
+          9.436308778255563,
+          8.883301867448438
+        ],
+        "spectrogram_statistics_training_frames": 4993602
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "9fc4a256d05ada437893bc96a2d612e5e88bb5b6d931facfe1ba974b3a7d34d7",
+          "bytes": 353173
+        },
+        "heart_cnn.json": {
+          "sha256": "81e9f6335a38fe5f7df009f67102fa6c066c4936069eb186b0cac2bf459b029e",
+          "bytes": 4478
+        },
+        "metrics.json": {
+          "sha256": "9b99b63c598e10546b42ca3c8f441d22ea424c07089bf56b200bc9b00e46ec35",
+          "bytes": 19289
+        }
+      }
+    },
+    {
+      "experiment_id": "EXP-H007-cnn-logmel-96",
+      "structural_valid": true,
+      "runtime": {
+        "status": "passed",
+        "input_shape": [
+          1,
+          96,
+          313,
+          1
+        ],
+        "synthetic_score": 0.21218040585517883,
+        "note": "Loadability check only; no performance or calibration claim."
+      },
+      "deployment_eligible": false,
+      "errors": [],
+      "warnings": [
+        "Participant-selected threshold does not establish a single-WAV decision rule.",
+        "No frozen deployment decision exists; candidate package is not production-authorized."
+      ],
+      "mode": "heart",
+      "target": "murmur_presence",
+      "input_shape": [
+        96,
+        313,
+        1
+      ],
+      "decision_threshold": 0.312151698903604,
+      "threshold_unit": "linked participant mean recording score",
+      "validation_subjects": 122,
+      "validation_summary": {
+        "accuracy": 0.4180327868852459,
+        "precision": 0.24175824175824176,
+        "recall_sensitivity": 0.9166666666666666,
+        "specificity": 0.29591836734693877,
+        "balanced_accuracy": 0.6062925170068028,
+        "negative_predictive_value": 0.9354838709677419,
+        "macro_f1": 0.41611054937647457,
+        "f1": 0.3826086956521739,
+        "confusion_matrix": [
+          [
+            29,
+            69
+          ],
+          [
+            2,
+            22
+          ]
+        ],
+        "class_counts": {
+          "Absent": 98,
+          "Present": 24
+        },
+        "roc_auc": 0.8099489795918366,
+        "pr_auc": 0.7045678860657516,
+        "brier_score": 0.16782385145622097
+      },
+      "preprocessing": {
+        "seed": 42,
+        "model_type": "cnn",
+        "dataset_dir": "data/external/circor-heart-sound/1.0.3",
+        "sample_rate": 8000,
+        "signal_band_max_hz": 2000,
+        "window_seconds": 5.0,
+        "overlap": 0.5,
+        "filter_enabled": false,
+        "filter_low_hz": 20,
+        "filter_high_hz": 2000,
+        "filter_order": 2,
+        "n_fft": 512,
+        "hop_length": 128,
+        "n_mels": 96,
+        "n_mfcc": 13,
+        "feature_fmax": 2000,
+        "train_fraction": 0.7,
+        "validation_fraction": 0.15,
+        "test_fraction": 0.15,
+        "threshold_target_sensitivity": 0.9,
+        "threshold_min_specificity": 0.5,
+        "holdout_status": "pending_new_data",
+        "cnn_top_db": 80.0,
+        "cnn_batch_size": 32,
+        "cnn_epochs": 50,
+        "cnn_patience": 8,
+        "cnn_learning_rate": 0.001,
+        "cnn_dropout": 0.3,
+        "cnn_verbose": 1,
+        "experiment_name": "cnn-logmel-96"
+      },
+      "artifacts": {
+        "heart_cnn.keras": {
+          "sha256": "0d29f7d158870345c9c8eaa75fb5f7e5125b0d83e2f97913931d5374158e7a31",
+          "bytes": 353174
+        },
+        "heart_cnn.json": {
+          "sha256": "f7fb784bedae7f2c925ec887846c0eae9dd414b7de5fc2cb95c9eb855204ecf4",
+          "bytes": 2084
+        },
+        "metrics.json": {
+          "sha256": "56cc00c49794bde9583711ea2674b563e6b1919f8af569cdaf7dc7b692f8b2f7",
+          "bytes": 19602
+        }
+      }
+    }
+  ],
+  "h021": {
+    "deployment": {
+      "final_model_exists": false,
+      "predeclared_ensemble": false,
+      "reason": "Only outer-fold evaluation pipelines were produced",
+      "status": "unavailable"
+    },
+    "manifest_sha256": "a7f589acb04954416b774c0e2f157c3ea580f4a9ead6879f182a53f533bd6cde",
+    "fold_artifacts": [
+      {
+        "fold": 1,
+        "role": "stage1_model",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/stage1/best_model.keras",
+        "status": "missing"
+      },
+      {
+        "fold": 1,
+        "role": "normalization",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/stage1/normalization_config.json",
+        "status": "missing"
+      },
+      {
+        "fold": 1,
+        "role": "scaler_logistic",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/scaler_logistic.npz",
+        "status": "missing"
+      },
+      {
+        "fold": 2,
+        "role": "stage1_model",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/stage1/best_model.keras",
+        "status": "missing"
+      },
+      {
+        "fold": 2,
+        "role": "normalization",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/stage1/normalization_config.json",
+        "status": "missing"
+      },
+      {
+        "fold": 2,
+        "role": "scaler_logistic",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/scaler_logistic.npz",
+        "status": "missing"
+      },
+      {
+        "fold": 3,
+        "role": "stage1_model",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/stage1/best_model.keras",
+        "status": "missing"
+      },
+      {
+        "fold": 3,
+        "role": "normalization",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/stage1/normalization_config.json",
+        "status": "missing"
+      },
+      {
+        "fold": 3,
+        "role": "scaler_logistic",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/scaler_logistic.npz",
+        "status": "missing"
+      },
+      {
+        "fold": 4,
+        "role": "stage1_model",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/stage1/best_model.keras",
+        "status": "missing"
+      },
+      {
+        "fold": 4,
+        "role": "normalization",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/stage1/normalization_config.json",
+        "status": "missing"
+      },
+      {
+        "fold": 4,
+        "role": "scaler_logistic",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/scaler_logistic.npz",
+        "status": "missing"
+      },
+      {
+        "fold": 5,
+        "role": "stage1_model",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/stage1/best_model.keras",
+        "status": "missing"
+      },
+      {
+        "fold": 5,
+        "role": "normalization",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/stage1/normalization_config.json",
+        "status": "missing"
+      },
+      {
+        "fold": 5,
+        "role": "scaler_logistic",
+        "path": "results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/scaler_logistic.npz",
+        "status": "missing"
+      }
+    ]
+  },
+  "selection": {
+    "heart": {
+      "deployment_model": null,
+      "reason": "H021 is evaluation-only; older CNNs have no validated deployment rule."
+    },
+    "abdomen": {
+      "engineering_candidate": "EXP-A005-abdomen-cnn-residual-se",
+      "deployment_model": null,
+      "reason": "A005 is a preliminary candidate, not a validated production selection."
+    }
+  }
+}

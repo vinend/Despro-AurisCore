@@ -23,13 +23,16 @@ export function HeartResultView({ result }: { result: HeartAnalysisResult }) {
           <div><dt>S4</dt><dd>{display.s4}</dd></div>
           <div><dt>Murmur</dt><dd>{display.murmur}</dd></div>
           {murmur?.status === "available" && <>
-            <div><dt>Probabilitas model Murmur</dt><dd>{(murmur.probability * 100).toFixed(1)}%</dd></div>
+            <div><dt>{murmur.probability_is_calibrated === false ? "Skor model Murmur" : "Probabilitas model Murmur"}</dt>
+              <dd>{murmur.probability_is_calibrated === false ? murmur.probability.toFixed(3) : `${(murmur.probability * 100).toFixed(1)}%`}</dd></div>
             <div><dt>Ambang model</dt><dd>{murmur.threshold.toFixed(3)}</dd></div>
             <div><dt>Versi model</dt><dd>{murmur.model_version}</dd></div>
           </>}
           <div><dt>Versi DSP</dt><dd>{display.algorithmVersion}</dd></div>
         </>}
       </dl>
+      {murmur?.status === "available" && murmur.probability_is_calibrated === false &&
+        <p>Skor model belum dikalibrasi sebagai probabilitas.</p>}
       {display.reason && <p className="auris-heart-warning" role="alert">{display.reason}</p>}
       {result.quality.valid && result.cardiac_events?.status === "insufficient_evidence" &&
         <p className="auris-heart-warning">Kandidat S1/S2 belum cukup untuk menghitung BPM atau interval.</p>}

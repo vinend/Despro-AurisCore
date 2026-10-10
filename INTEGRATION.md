@@ -18,6 +18,14 @@ Product-required outputs come from `PRD.md`.
 
 ## 2. Research artifact interface
 
+The preparatory `model-candidate-v1` package contains a normalized `manifest.json`,
+`model.keras`, `source_metadata.json`, and `source_metrics.json`. Its manifest
+records mode, acoustic target, source experiment, preprocessing, input shape,
+threshold value/selection unit, runtime audit status, and file SHA-256/byte counts.
+It always has `deployment_eligible: false` and no authorized inference rule.
+This is an artifact-audit contract, not a live analysis response or model registry.
+See `AI-Pipeline/docs/model_candidate_audit.md` for commands and limitations.
+
 Heart AI experiments use immutable directories such as:
 
 ```text
@@ -74,6 +82,15 @@ Mobile must detect at least:
 ---
 
 ## 4. Mobile -> Analysis
+
+Step 2 introduces `organ-analysis-v1` for the shared Python recorded-audio service.
+PCM inputs declare mode (`heart|abdomen`), sample rate, mono samples, encoding
+(`float|int16`) and optional request ID. WAV bytes are accepted through the same
+boundary. Responses include request ID, mode, source, status, quality, backend/
+model versions, nested organ analysis, and structured component errors. Missing
+or ineligible models remain unavailable. The current WebApp endpoint still uses
+`heart-analysis-v1`; no existing client schema is replaced in this step.
+See `AI-Pipeline/docs/analysis_service.md` for the complete contract and worker.
 
 Stable logical input:
 
@@ -271,6 +288,16 @@ Lung result should eventually represent respiratory-phase metrics and wheeze/cra
 
 Abdomen result should eventually represent bowel events, rate/variability, report-defined pattern categories, and annotations.
 
+Phase 4 adds `abdomen-analysis-v1` inside the shared `organ-analysis-v1` envelope.
+Its `activity` branch reports timestamped binary bowel-activity window scores,
+labels, threshold and model/preprocessing/threshold versions. The active-window
+fraction counts overlapping windows; it is not event rate or duration fraction.
+Event/rate/variability/pattern fields remain explicitly null until separately
+implemented and validated. Missing or failed models never create activity labels.
+See `AI-Pipeline/docs/abdomen_inference.md` for the full contract. The shared Python
+worker supports both packages; WebApp Abdomen transport and display are now wired
+in phase 5 through the existing backend.
+
 ---
 
 ## 9. Mobile -> Backend
@@ -334,3 +361,23 @@ WEBRTC_CONNECTION_FAILED
 ```
 
 Mobile UI maps technical failures into safe, useful user actions.
+
+## Existing Heart backend configuration (step 3)
+
+The existing /api/heart/analyze route now shares the retained analyze_recording.py
+worker with /api/analysis and /api/abdomen/analyze. Configure
+AURISCORE_HEART_PACKAGE with an absolute verified final package path and configure
+AURISCORE_PYTHON with the CNN-capable runtime. Invalid packages return HTTP 503;
+no package retains DSP with unavailable Murmur. The response remains heart-analysis-v1.
+The shared bridge retains Python/models across requests. See WebApp/docs/organ-analysis.md.
+
+## Shared app analysis endpoint (phase 5)
+
+POST /api/analysis accepts multipart audio (mono WAV) and mode (heart|abdomen),
+returning organ-analysis-v1. /api/abdomen/analyze fixes Abdomen mode; the existing
+/api/heart/analyze preserves heart-analysis-v1 for older clients. Partial results
+return 200, invalid audio 422, and model unavailable 503. Typed unavailable/quality
+responses remain renderable. Actual multipart body, WAV and worker output sizes
+are bounded. Correlation IDs isolate queued requests; timeout/cancellation clears
+the active process tree. The firmware protocol and physical BLE contract remain
+unchanged. See WebApp/docs/organ-analysis.md for fields/lifecycle details.

@@ -145,7 +145,18 @@ The outputs are aggregated into one versioned Heart result.
 
 ---
 
-## ADR template
+## ADR-009 — Retained local Python worker for WebApp organ analysis
+
+**Status:** Accepted for the current engineering prototype (2026-10-10)
+
+The existing Next.js backend shares one retained recorded-audio JSONL worker per
+Node process for Heart and Abdomen. The main recording flow captures actual PCM
+instead of inventing classifications. Research candidates cannot be activated
+without their respective final-package contracts. The legacy Heart endpoint
+preserves its schema; new clients use the shared organ envelope. This is local
+WebApp integration, not completion of native-mobile offline analysis or BLE.
+
+### ADR template
 
 ```text
 ## ADR-XXX — Title

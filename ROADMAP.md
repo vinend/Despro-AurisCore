@@ -32,6 +32,12 @@ Exit condition:
 
 ## Milestone 2 — Murmur deployment candidate
 
+Model audit/package preparation now supports structural verification, optional
+synthetic inference, and immutable engineering candidates for Heart and Abdomen.
+A005 is preliminary; no Heart deployment model is selected. The H021 fold weights,
+normalization and scaler artifacts are absent from this Windows checkout (the
+freeze manifest is present). See `AI-Pipeline/docs/model_candidate_audit.md`.
+
 - [x] audit H016–H020 operating points and failure mechanisms
 - [x] preserve sensitivity-first threshold discipline in completed experiments
 - [x] reduce train-only OOF FP from H020 179 to H021 117 at 0.90 sensitivity
@@ -92,6 +98,12 @@ Exit condition:
 
 ## Milestone 5 — Unified Heart result
 
+Step 2 shared service infrastructure is implemented: real recorded PCM/WAV,
+quality checks, explicit Heart/Abdomen routing, versioned envelope/errors and
+cached backend lifecycle. It retains Heart DSP while reporting missing model
+branches explicitly. Organ-model adapters and WebApp wiring are implemented;
+activation still requires approved final model/evaluation packages.
+
 Progress: `AI-Pipeline/src/auriscore/heart_result.py` assembles a prototype
 `heart-analysis-v1` result with an optional Murmur adapter. The WebApp service
 integration exists; offline mobile integration remains open. Murmur AI completion alone does not complete Heart.
@@ -125,7 +137,7 @@ markers, Murmur deployment inference, and persistence remain open.
 - [x] WebApp WAV file simulator
 - [x] WebApp mock/WebSocket PCM capture to the same Heart service
 - [ ] live/static waveform
-- [ ] recording/playback
+- [x] WebApp recording/playback (real PCM/WAV)
 - [x] WebApp BPM/rhythm display
 - [x] WebApp numeric candidate/event and interval display
 - [ ] S1/S2 markers
@@ -212,3 +224,29 @@ Exit condition:
 Never mark **Heart complete** when only Murmur AI is complete.
 
 Consult the Heart Definition of Done in `PRD.md`.
+
+## Six-step implementation progress: Heart inference
+
+Step 3 inference code and the existing Heart WAV backend connection are implemented.
+Activating Murmur remains dependent on a final model and matching recording-level
+validation/selection evidence. Abdomen inference is step 4; broader app integration
+and persistent worker lifecycle are step 5. No model training was performed.
+
+## Six-step implementation progress: Abdomen inference
+
+Phase 4 implements the bowel-activity window backend, final-package validation,
+window timestamps/summary and both-organ shared worker registration. A005 remains
+a research candidate; deployment needs corrected window evidence and explicit
+model/gate selection. Phase 5 connects Abdomen upload/results in the existing app.
+PRD bowel-event DSP and rate/pattern outputs remain separate implementation gaps.
+
+## Six-step implementation progress: app integration
+
+Phase 5 implements shared Heart/Abdomen upload, real main recording capture,
+organ-specific results, playback and in-memory status history in the existing app.
+Persistent Python lifecycle, correlation, deadlines and Windows tree cleanup are
+implemented. Final model/evaluation packages remain an activation prerequisite;
+physical BLE, native-mobile offline execution and Abdomen event DSP remain gaps.
+Phase 6 completes integrated engineering verification and readiness handoff.
+See `WebApp/docs/phase6-readiness.md`; this does not complete model eligibility,
+physical BLE, native offline execution or the full Heart/Abdomen PRD.

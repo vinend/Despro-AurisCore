@@ -350,6 +350,20 @@ Never ship a bare model artifact without metadata.
 
 ## 14. Boundary with Heart DSP
 
+The shared `AnalysisService` is now available for real recorded PCM/WAV input,
+quality validation and Heart/Abdomen routing. Its persistent worker retains
+explicitly registered backends across requests. It defaults to Heart DSP with
+Murmur unavailable. Verified final packages can register Heart Murmur and Abdomen
+window activity; unconfigured Abdomen remains unavailable. Deployment eligibility is not inferred
+from saved candidate files. See `AI-Pipeline/docs/analysis_service.md`.
+
+Step 1 model auditing is implemented by `scripts/audit_model_candidates.py` in
+`AI-Pipeline`. It validates archives, preprocessing and threshold provenance,
+optionally checks synthetic inference, and packages immutable engineering
+candidates. A005 is a preliminary Abdomen candidate; no Heart deployment model
+is selected. See `AI-Pipeline/docs/model_candidate_audit.md`. This does not train
+models or open additional evaluation splits.
+
 The unified Heart result combines an available Murmur AI output with:
 
 - Rhythm DSP output;
@@ -378,3 +392,29 @@ threshold for one fold, a new ensemble, or a single recording. The Heart WAV
 demo therefore keeps Murmur explicitly unavailable; it does not load H021
 research fold weights. A separately specified deployment model and evaluation
 decision is needed before Murmur inference can be connected.
+
+## Recording-level Heart inference (step 3)
+
+heart_inference.py implements frozen Keras scoring, recording aggregation, verified
+final-model packaging, and unified Heart DSP/Murmur results. This checkout still has
+no approved final package with recording-level threshold evidence. H021 research
+folds and older candidate thresholds are not deployment rules. See
+AI-Pipeline/docs/heart_inference.md for the contract and existing backend connection.
+
+## Window-level Abdomen inference (phase 4)
+
+abdomen_inference.py implements the frozen binary bowel-activity adapter and
+immutable final-package verification. analyze_recording.py can retain both organ
+backends and accept WAV paths, WAV bytes on stdin, or JSONL PCM/base64 recordings.
+A005's window threshold is not used as a recording diagnosis or bowel event rate.
+Its current single-subject evaluation does not satisfy the final-package contract.
+No threshold selection, training or sealed evaluation was performed. See
+AI-Pipeline/docs/abdomen_inference.md for the versioned result and evidence fields.
+
+## App integration (phase 5)
+
+The WebApp now sends captured PCM/recorded WAV to the retained shared worker for
+Heart/Abdomen. Uploaded files, captured mock audio and device audio use real
+analysis; simulator provenance remains visible. Only verified final packages
+activate model-backed output. No candidate, threshold or training decision changes
+in this phase. See WebApp/docs/organ-analysis.md for local setup and limitations.

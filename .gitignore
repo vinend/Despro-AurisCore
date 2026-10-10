@@ -16,6 +16,8 @@ AI-Pipeline/artifacts/models/*
 !AI-Pipeline/artifacts/models/.gitkeep
 AI-Pipeline/results/*/checkpoints/
 AI-Pipeline/results/*/intermediate/
+AI-Pipeline/artifacts/candidate-packages/
+AI-Pipeline/artifacts/deployment-packages/
 *.part
 
 
@@ -85,3 +87,6 @@ Thumbs.db
 # Database (Prisma local dev / SQLite)
 WebApp/prisma/*.db
 WebApp/prisma/*.db-journal
+
+# Generated local integration evidence (synthetic audio only)
+WebApp/artifacts/

@@ -1,0 +1,2 @@
+# Frozen artifacts are hashed as bytes; automatic CRLF conversion breaks audits.
+AI-Pipeline/analysis/HEART-DEVELOPMENT-FREEZE-H021/** -text

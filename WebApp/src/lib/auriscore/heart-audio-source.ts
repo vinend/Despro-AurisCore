@@ -25,6 +25,7 @@ export class PcgCaptureBuffer {
   private chunks: Int16Array[] = [];
   private lastSequence: number | null = null;
   private sampleRate: number | null = null;
+  private organMode: PcgPacketMsg["organMode"] | null = null;
   private sampleCount = 0;
   private packets = 0;
   private missing = 0;
@@ -36,6 +37,7 @@ export class PcgCaptureBuffer {
     this.chunks = [];
     this.lastSequence = null;
     this.sampleRate = null;
+    this.organMode = null;
     this.sampleCount = 0;
     this.packets = 0;
     this.missing = 0;
@@ -56,6 +58,10 @@ export class PcgCaptureBuffer {
   }
 
   private acceptPacket(packet: PcgPacketMsg): void {
+    if (this.organMode !== null && this.organMode !== packet.organMode) {
+      this.fail("Lokasi perangkat berubah saat rekaman; ulangi rekaman.");
+      return;
+    }
     if (this.sampleRate !== null && this.sampleRate !== packet.samplingRate) {
       this.fail("Laju sampling berubah saat rekaman.");
       return;
@@ -81,6 +87,7 @@ export class PcgCaptureBuffer {
     this.chunks.push(chunk);
     this.sampleCount += chunk.length;
     this.sampleRate = packet.samplingRate;
+    this.organMode = packet.organMode;
     this.lastSequence = packet.seq;
     this.packets += 1;
   }

@@ -181,9 +181,10 @@ One call can accept Heart audio and produce the agreed unified result without UI
 Current development progress: a browser user can select a local mono WAV or
 capture ten seconds of the existing WebSocket/mock PCM stream. Both flow
 through the same Heart service and display quality, BPM/rate, cardiac-event
-candidates/intervals, and Murmur availability. The older recording card still
-shows a separate simulated classifier. Uploaded-file waveform markers,
-physical BLE input, session save, and native mobile integration remain open.
+candidates/intervals, and Murmur availability. The main recording card now
+uses real captured audio and the shared Heart/Abdomen service, with playback and
+bounded in-memory history. Uploaded-file waveform event markers, physical BLE
+input, durable session save and native offline mobile integration remain open.
 
 ### Minimum functional flow
 

@@ -1,4 +1,4 @@
-/** Local development bridge: WAV bytes in, existing CPU-only Python DSP JSON out. */
+/** Existing WAV bridge: Heart DSP plus an explicitly configured final Murmur model. */
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -42,6 +42,7 @@ export async function analyzeWavWithPython(wav: Buffer): Promise<unknown> {
     child.on("error", () => reject(new HeartPythonError("Layanan DSP tidak dapat dimulai.", 503)));
     child.on("close", (code) => {
       if (tooLarge) reject(new HeartPythonError("Hasil DSP melebihi batas ukuran.", 502));
+      else if (code === 3) reject(new HeartPythonError("Paket model Heart belum tersedia atau tidak valid.", 503));
       else if (code !== 0) reject(new HeartPythonError("WAV tidak dapat diproses oleh DSP.", 422));
       else resolve(Buffer.concat(stdout).toString("utf8"));
     });

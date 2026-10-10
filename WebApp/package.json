@@ -8,6 +8,9 @@
     "start": "node .next/standalone/server.js",
     "lint": "eslint .",
     "test:heart": "tsx --test tests/heart-analysis.test.mjs tests/heart-audio-source.test.mjs tests/heart-stream-python.test.mjs",
+    "test:analysis": "tsx --test tests/*.test.mjs",
+    "verify:integration": "tsx scripts/verify-integration.mjs",
+    "typecheck": "tsc --noEmit",
     "db:push": "prisma db push --accept-data-loss",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -83,12 +86,14 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/node": "^26.6.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "bun-types": "^1.3.4",
     "eslint": "^9",
     "eslint-config-next": "^16.1.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   }

@@ -29,7 +29,7 @@ export class HttpHeartAnalysisService implements HeartAnalysisService {
     form.set("audio", file);
     let response: Response;
     try {
-      response = await this.request("/api/heart/analyze", { method: "POST", body: form });
+      response = await this.request.call(globalThis, "/api/heart/analyze", { method: "POST", body: form });
     } catch {
       throw new Error("Layanan Heart analysis tidak dapat dihubungi.");
     }

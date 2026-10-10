@@ -86,7 +86,7 @@ The analysis layer should accept audio independent of whether it originated from
 
 The current WebApp development adapter uses `PcgCaptureBuffer` as a common
 PCM-to-`AnalysisReadyAudio` boundary. File WAV input and captured mock/WebSocket
-PCM both enter the same `HeartAnalysisService` through a WAV upload. A
+PCM now enter the shared `OrganAnalysisService` through a WAV upload. A
 `BleAudioSource` adapter accepts an injected firmware transport and decoder;
 physical BLE discovery/packet decoding remains pending confirmed firmware
 UUIDs and byte layout. The analysis result schema is unchanged.
@@ -103,6 +103,18 @@ Version independently where practical:
 - mobile integration contract.
 
 ### 3.5 Research/production separation
+
+`AnalysisService` provides the shared recorded-audio quality/routing boundary.
+Organ backends are explicitly registered, versioned, loaded lazily once per
+service instance and called under a per-backend lock. A persistent JSON-lines
+worker retains those instances across recordings. Heart DSP is the default;
+model-backed Heart and Abdomen adapters now accept explicitly selected, verified
+deployment packages. Saved research candidates do not activate inference.
+
+`AI-Pipeline/src/auriscore/model_audit.py` audits standalone CNN artifacts and
+creates immutable engineering candidate packages outside experiment directories.
+It preserves source metadata while exposing a normalized Heart/Abdomen contract.
+Structural validity and synthetic runtime success do not authorize deployment.
 
 Experiment directories and research scripts are not production APIs.
 
@@ -329,3 +341,28 @@ When documents/code disagree:
 6. current implementation state.
 
 If implementation intentionally deviates from product requirements, resolve it explicitly through PRD/ADR updates rather than silently accepting the drift.
+
+## Heart inference extension (step 3)
+
+The existing Python Heart backend now supports verified final Murmur packages through
+HeartInferenceBackend. Rhythm and cardiac-event DSP remain independent branches.
+The existing Next.js WAV bridge can enable this adapter via AURISCORE_HEART_PACKAGE;
+no separate HTTP service is introduced. See AI-Pipeline/docs/heart_inference.md.
+
+## Abdomen inference extension (phase 4)
+
+AbdomenInferenceBackend runs frozen window-level bowel activity on the existing
+AnalysisService. One worker can retain both Heart and Abdomen models. Results use
+abdomen-analysis-v1 inside organ-analysis-v1. Window activity remains separate
+from bowel-event DSP, rate/variability and pattern categorization. The existing
+WebApp Abdomen client/HTTP wiring is implemented in phase 5. See
+AI-Pipeline/docs/abdomen_inference.md for the eligibility and output contracts.
+
+## Existing app integration (phase 5)
+
+The main WebApp recording flow now captures PCM and calls real analysis instead
+of fake classification. Heart and Abdomen share upload, playback and bounded
+in-memory analysis history. A retained Python JSONL worker per Node process is
+shared across existing/new endpoints; model instances survive individual HTTP
+requests. Browser execution still requires the local Python backend and does not
+establish native mobile offline inference. See WebApp/docs/organ-analysis.md.

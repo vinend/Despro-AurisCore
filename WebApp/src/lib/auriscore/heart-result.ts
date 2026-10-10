@@ -51,6 +51,11 @@ const availableMurmur = z.object({
   probability: finite.min(0).max(1),
   threshold: finite.min(0).max(1),
   label: z.enum(["present", "absent"]),
+  inference_unit: z.literal("recording").optional(),
+  aggregation: z.literal("mean_window_score").optional(),
+  window_count: z.number().int().positive().optional(),
+  score_kind: z.literal("uncalibrated_sigmoid").optional(),
+  probability_is_calibrated: z.literal(false).optional(),
 });
 
 export const heartAnalysisSchema = z.object({

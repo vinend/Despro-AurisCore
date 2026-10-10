@@ -1,5 +1,18 @@
 # TESTING.md
 
+Shared recorded-audio service checks live in
+`AI-Pipeline/tests/test_analysis_service.py`: PCM/WAV parity, int16 scaling,
+quality/size/rate rejection before backend loading, mode routing, candidate
+eligibility, one-time initialization under concurrent requests, failure caching,
+finite/versioned outputs, and persistent JSON-lines transport recovery.
+
+Model package preparation: `AI-Pipeline/tests/test_model_audit.py` checks saved
+artifact compatibility, invalid thresholds/shapes/normalization, corrupt and
+missing weights, immutable packaging, domain normalization and tamper detection.
+`scripts/audit_model_candidates.py --runtime` additionally loads saved CNNs and
+checks deterministic finite inference on synthetic audio. These checks measure
+software compatibility, not screening performance.
+
 ## 1. Test strategy
 
 ```text
@@ -304,3 +317,52 @@ If signal quality is insufficient:
 - warn/request re-recording;
 - do not present a confident clinical-looking result;
 - do not invent missing branch outputs.
+
+## Heart inference and existing backend verification (2026-10-10)
+
+120 focused Python tests passed across Heart inference, WAV bridge, shared analysis,
+model audit, Heart DSP and H021 freeze compatibility. Includes actual saved Keras
+inference on synthetic audio and a configured-package subprocess bridge test.
+Temporary deployment evaluation fixtures are fictional, not performance evidence.
+WebApp TypeScript tests were not run because its dependencies are not installed.
+No training, sealed-test evaluation, commit or push was performed.
+
+## Abdomen inference verification (2026-10-10)
+
+180 focused compatibility tests passed across Abdomen inference/dataset handling,
+Heart inference/DSP/WAV bridge, shared analysis, model audit and H021 freeze checks.
+After adding the stdin WAV adapter, 3 focused WAV/worker checks passed, including
+real A005 inference through the byte bridge and retained-worker requests. Two of
+those checks are additional cases (182 unique passing tests across both runs).
+Fourteen dependency deprecation warnings did not affect results. Test approval
+fixtures are fictional; synthetic inference does not establish model performance.
+Phase 4 changes only the existing Python pipeline; WebApp Abdomen integration is
+phase 5. No training, sealed evaluation, deployment package promotion or push occurred.
+
+## App integration verification (2026-10-10)
+
+29 WebApp tests passed with no skips, including actual Python DSP, temporary
+fictional Heart/A005 deployment fixtures, retained-worker reuse, concurrent
+correlation, queue limits, timeout/cancellation and Windows process-tree cleanup.
+TypeScript checking, linting of affected components/services and npm run build
+passed. Type checking was run independently because the existing Next config
+skips build-time type errors. Browser checks confirmed 75 BPM synthetic Heart
+upload, Abdomen unavailable, silent-audio rejection, real main PCM recording,
+playback and status history for both selected organs. Simulator provenance was
+visible. The browser check also caught and fixed an incorrect fetch receiver.
+No final packages were promoted; no physical BLE/mobile-offline validation,
+training, sealed evaluation, commit, push or external deployment occurred.
+
+## Final integrated verification - phase 6 (2026-10-10)
+
+182 Python checks passed in one run, with 14 dependency deprecation warnings.
+30 WebApp tests passed with no skips, including real Python recovery after active
+cancellation and idle shutdown. Independent TypeScript checking, phase 6 script
+lint and the production build passed. Nine real production HTTP scenarios passed
+through the shared/organ-specific/legacy endpoints, including concurrent distinct
+75/90 BPM recordings, missing models, invalid audio, size limits and recovery.
+`npm run verify:integration` repeats the HTTP checks and writes ignored synthetic
+evidence to `WebApp/artifacts/phase6-http.json`. See
+`WebApp/docs/phase6-readiness.md` for scope, commands and model activation gaps.
+Phase 5 browser evidence remains applicable: phase 6 changes verification/docs only.
+No clinical/model performance evaluation or model promotion was performed.

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ConnectionBadge } from "./connection-badge";
 import { DeviceStatusCard } from "./device-status-card";
 import { HistoryList } from "./history-list";
@@ -8,8 +8,8 @@ import { OrganModeSelector } from "./organ-mode-selector";
 import { PcgWaveform } from "./pcg-waveform";
 import { RecordingControls } from "./recording-controls";
 import { ResultCard } from "./result-card";
-import { HeartFileDemo } from "./heart-file-demo";
-import { HeartStreamDemo } from "./heart-stream-demo";
+import { OrganFileAnalysis } from "./organ-file-analysis";
+import type { AnalysisMode } from "@/lib/auriscore/analysis-result";
 import { usePcgStream } from "@/hooks/use-pcg-stream";
 import { useRecording } from "@/hooks/use-recording";
 import { ORGAN_MODE_LABELS } from "@/lib/auriscore/format";
@@ -27,8 +27,11 @@ export function MainScreen({
   trainingMetricsCard: ReactNode;
 }) {
   const stream = usePcgStream();
-  const recording = useRecording();
-  const busy = recording.phase === "recording" || recording.phase === "processing";
+  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("heart");
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const recording = useRecording(stream, analysisMode);
+  const recordingBusy = recording.phase === "recording" || recording.phase === "processing";
+  const busy = recordingBusy || uploadBusy;
 
   return (
     <div className="auris-workspace">
@@ -48,43 +51,46 @@ export function MainScreen({
         <div className="auris-page-heading">
           <div>
             <p className="auris-eyebrow">RUANG AUSKULTASI</p>
-            <h1>Pantau suara jantung.</h1>
-            <p>Pilih lokasi, amati sinyal, lalu mulai sesi rekaman.</p>
+            <h1>Pantau suara tubuh.</h1>
+            <p>Pilih organ, amati sinyal, lalu rekam atau unggah audio.</p>
           </div>
-          <span className="auris-session-label">PCG / {stream.isMock ? "DEMO" : "PERANGKAT"}</span>
+          <span className="auris-session-label">AUDIO / {stream.isMock ? "SIMULATOR" : stream.isConnected ? "PERANGKAT" : "TERPUTUS"}</span>
         </div>
-        <DeviceStatusCard status={stream.status} organMode={stream.organMode} connected={stream.isConnected} />
+        <label htmlFor="analysis-mode">Organ analisis </label>
+        <select id="analysis-mode" value={analysisMode} disabled={busy} onChange={event => {
+          recording.reset(); setAnalysisMode(event.target.value as AnalysisMode);
+        }}><option value="heart">Heart</option><option value="abdomen">Abdomen</option></select>
+        <DeviceStatusCard status={stream.status} organMode={stream.organMode} connected={stream.isConnected} analysisMode={analysisMode} />
         <div className="auris-console">
           <section className="auris-signal-panel" aria-labelledby="signal-heading">
             <div className="auris-panel-heading">
-              <div><p className="auris-eyebrow">SINYAL LANGSUNG</p><h2 id="signal-heading">Fonokardiogram</h2></div>
+              <div><p className="auris-eyebrow">SINYAL LANGSUNG</p><h2 id="signal-heading">{analysisMode === "heart" ? "Fonokardiogram" : "Audio abdomen"}</h2></div>
               <span className="auris-small-mono">{stream.hello?.samplingRate ?? EXPECTED_SAMPLING_RATE} Hz · mono</span>
             </div>
-            <OrganModeSelector value={stream.organMode} onChange={stream.setOrganMode} disabled={!stream.isConnected || busy} />
+            {analysisMode === "heart" && <OrganModeSelector value={stream.organMode} onChange={stream.setOrganMode} disabled={!stream.isConnected || busy} />}
             <div className="auris-scope-heading">
-              <span>{ORGAN_MODE_LABELS[stream.organMode]}</span>
+              <span>{analysisMode === "heart" ? ORGAN_MODE_LABELS[stream.organMode] : "Abdomen · gunakan sumber audio yang sesuai"}</span>
               <span>{stream.isConnected ? "Streaming" : "Menunggu koneksi"}</span>
             </div>
             <div className="auris-scope-canvas"><PcgWaveform buffer={stream.ring} versionRef={stream.versionRef} /></div>
             <div className="auris-time-axis" aria-hidden="true">
               <span>−5 s</span><span>−4</span><span>−3</span><span>−2</span><span>−1</span><span>0 s</span>
             </div>
-            <p className="auris-signal-caption">{stream.isMock ? "Sinyal sintetis dari simulator perangkat." : "Sinyal dari perangkat yang terhubung."} Jendela bergulir 5 detik.</p>
+            <p className="auris-signal-caption">{stream.isMock ? "Sinyal sintetis dari simulator perangkat." : stream.isConnected ? "Sinyal dari perangkat yang terhubung." : "Menunggu sumber audio."} Jendela bergulir 5 detik.</p>
           </section>
           <aside className="auris-side-panel" aria-label="Kontrol dan hasil sesi">
-            <RecordingControls phase={recording.phase} elapsedMs={recording.elapsedMs} bpm={stream.bpm} isMock={stream.isMock}
-              disabled={!stream.isConnected} onStart={() => recording.start(stream.organMode)}
+            <RecordingControls phase={recording.phase} elapsedMs={recording.elapsedMs} bpm={stream.bpm} isMock={stream.isMock && analysisMode === "heart"}
+              disabled={!stream.isConnected || uploadBusy} onStart={recording.start}
               onStop={recording.stop} onCommitBpm={stream.commitBpm} />
-            <ResultCard phase={recording.phase} result={recording.result} />
+            <ResultCard phase={recording.phase} result={recording.result} error={recording.error} file={recording.file} />
           </aside>
         </div>
-        <HeartFileDemo />
-        <HeartStreamDemo stream={stream} disabled={busy} />
-        {trainingMetricsCard}
+        <OrganFileAnalysis key={analysisMode} mode={analysisMode} onBusy={setUploadBusy} disabled={recordingBusy} />
+        {analysisMode === "heart" && trainingMetricsCard}
         <HistoryList entries={recording.history} />
       </main>
       <footer className="auris-footer">
-        <p>Prototipe penelitian. Stream perangkat simulasi; analisis WAV memakai DSP prototipe.</p>
+        <p>Prototipe penelitian. {stream.isMock ? "Audio simulator untuk uji rekayasa." : "Analisis memakai audio yang diterima."} Keluaran skrining bukan diagnosis.</p>
         <span>{stream.hello ? `${stream.hello.device} · ${stream.hello.fw}` : "Perangkat belum terhubung"}</span>
       </footer>
     </div>
