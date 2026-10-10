@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 import _bootstrap  # noqa: F401
 from auriscore.lung_training import preflight, train, train_final
-from auriscore.lung_training_policy import load_policy
+from auriscore.lung_training_policy import load_policy, model_dropout
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     p.add_argument("--output", type=Path, default=Path("results/EXP-L001-temporal-cnn"))
     p.add_argument("--folds", type=int, default=0)
     p.add_argument("--progress-interval", type=float, default=30, help="Seconds between batch/window progress logs (default: 30)")
-    p.add_argument("--training-policy", type=Path, help="Development-only LR schedule; existing feature cache remains unchanged")
+    p.add_argument("--training-policy", type=Path, help="Development LR/model policy; existing feature cache remains unchanged")
     p.add_argument("--final-selection", type=Path, help="Frozen development selection for all-TRAIN final fitting")
     p.add_argument("--authorized-training", action="store_true", help="Use only after the user's explicit go-ahead")
     a = p.parse_args()
@@ -34,4 +34,5 @@ if __name__ == "__main__":
         policy = load_policy(a.training_policy, config)
         print(json.dumps({"status": "preflight_only", "windows": len(index), "classes": config["classes"],
             "training_policy": policy, "initial_learning_rate": config["learning_rate"],
+            "model_dropout": model_dropout(policy),
             "training_started": False, "cpu_count": os.cpu_count(), "free_bytes": shutil.disk_usage(a.cache).free}))

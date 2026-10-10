@@ -2,8 +2,10 @@
 import numpy as np
 
 
-def build_model(shape, classes, *, temporal=True, learning_rate=.001, positive_weights=None):
+def build_model(shape, classes, *, temporal=True, learning_rate=.001, positive_weights=None, dropout=.2):
     """Time-preserving compact CNN; optional pooled window research baseline."""
+    from .lung_training_policy import validate_dropout
+    dropout = validate_dropout(dropout)
     import tensorflow as tf
     if len(shape) != 2 or min(shape) < 1 or not classes:
         raise ValueError("Expected time/frequency dimensions and explicit classes")
@@ -15,7 +17,7 @@ def build_model(shape, classes, *, temporal=True, learning_rate=.001, positive_w
     # Pool frequency only, keeping every output frame aligned with its input.
     x = tf.keras.layers.Reshape((shape[0], int(x.shape[2]) * int(x.shape[3])))(x)
     x = tf.keras.layers.Conv1D(64, 5, padding="same", activation="relu")(x)
-    x = tf.keras.layers.Dropout(.2)(x)
+    x = tf.keras.layers.Dropout(dropout)(x)
     if not temporal:
         x = tf.keras.layers.GlobalAveragePooling1D()(x)
     outputs = tf.keras.layers.Dense(len(classes), activation="sigmoid", name="lung_probabilities")(x)

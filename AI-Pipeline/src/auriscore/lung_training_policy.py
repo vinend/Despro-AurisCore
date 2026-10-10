@@ -6,6 +6,20 @@ from typing import Any
 import numpy as np
 
 POLICY_SCHEMA = "lung-training-policy-v1"
+MODEL_POLICY_SCHEMA = "lung-training-policy-v2"
+
+
+def validate_dropout(value: float) -> float:
+    """Accept a finite numeric dropout probability; reject bools and silent coercion."""
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or not np.isfinite(value) or not 0 <= value < 1):
+        raise ValueError("Lung dropout must be a finite number in [0, 1)")
+    return float(value)
+
+
+def model_dropout(policy: dict) -> float:
+    """Resolve explicit v2 dropout or the historical v1/default rate of 0.2."""
+    return validate_dropout(policy.get("model", {"dropout": .2})["dropout"])
 
 
 def validate_policy(policy: dict, config: dict) -> dict:
@@ -14,9 +28,19 @@ def validate_policy(policy: dict, config: dict) -> dict:
     if (isinstance(initial, bool) or not isinstance(initial, (int, float))
             or not np.isfinite(initial) or initial <= 0):
         raise ValueError("Positive finite cached learning rate required")
-    if (not isinstance(policy, dict) or set(policy) != {"schema_version", "learning_rate_schedule"}
-            or policy["schema_version"] != POLICY_SCHEMA or not isinstance(policy["learning_rate_schedule"], dict)):
+    if not isinstance(policy, dict):
         raise ValueError("Invalid Lung training policy schema")
+    version = policy.get("schema_version")
+    required = {"schema_version", "learning_rate_schedule"}
+    if version == MODEL_POLICY_SCHEMA:
+        required.add("model")
+    if (version not in {POLICY_SCHEMA, MODEL_POLICY_SCHEMA} or set(policy) != required
+            or not isinstance(policy["learning_rate_schedule"], dict)):
+        raise ValueError("Invalid Lung training policy schema")
+    if version == MODEL_POLICY_SCHEMA:
+        if not isinstance(policy["model"], dict) or set(policy["model"]) != {"dropout"}:
+            raise ValueError("Explicit dropout-only model policy required")
+        model_dropout(policy)
     schedule = policy["learning_rate_schedule"]
     if schedule == {"type": "constant"}:
         return json.loads(json.dumps(policy))

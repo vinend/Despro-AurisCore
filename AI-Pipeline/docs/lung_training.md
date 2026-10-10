@@ -189,6 +189,46 @@ with epochs and thresholds. Final fitting replays these fixed rates without
 validation callbacks or test monitoring; a plateau selection missing the frozen
 rates is rejected. Existing constant-LR selections remain supported.
 
+### EXP-L005: stronger dropout, compared with EXP-L003
+
+The user-reported EXP-L004 history confirms LR reductions after epochs 4/6/8/10,
+early stopping at epoch 10 and restoration of epoch 2 (validation loss 0.8355).
+No reduced-LR epoch improved the selected checkpoint; metric differences from
+EXP-L003 cannot be attributed to the later reductions. More epochs alone are
+not supported by that result.
+
+`configs/lung_training_dropout.json` defines `lung-training-policy-v2`: explicit
+model dropout 0.4 instead of the historical 0.2, and constant LR 0.001. Compare
+with the fixed-LR EXP-L003 baseline so dropout is the sole changed factor.
+Convolution widths/context, weighted masked loss, normalization, supervision,
+split, seed, batch size, maximum epochs (50), early stopping (eight) and threshold
+selection stay fixed. The preprocessed cache can be reused. V1 policies and
+omitted policies preserve dropout 0.2. The policy/hash and process logs record
+dropout; the serialized model retains its rate. A future final selection must
+freeze the v2 policy to reproduce the selected dropout. No research candidate
+is activated automatically. Increased dropout is a hypothesis, not evidence of
+better quality or more useful epochs.
+
+After syncing the updated code, run from AI-Pipeline on Linux:
+
+```bash
+source .venv/bin/activate
+CACHE=data/processed/lung/cache/fa2fc598295d3e8b71d8e34cee4ecc7c21866cb658f57367ca9aa5ff546cee14
+python scripts/train_lung_cnn.py --cache "$CACHE" \
+  --training-policy configs/lung_training_dropout.json
+mkdir -p artifacts/lung-launch
+set -o pipefail
+python -u scripts/train_lung_cnn.py --cache "$CACHE" \
+  --training-policy configs/lung_training_dropout.json --progress-interval 10 \
+  --output results/EXP-L005-temporal-cnn-dropout --authorized-training \
+  2>&1 | tee artifacts/lung-launch/EXP-L005.log
+```
+
+Keep a fresh output directory and compare per-class ROC/PR AUC, F1, sensitivity,
+specificity and localization metrics on development data. Do not select solely
+for epoch count. Official test stays sealed. This implementation did not start
+training; the second command above explicitly starts it on the Linux machine.
+
 Temporal checkpoint outputs are available now through the research WAV and
 saved-development localization commands. Existing temporal checkpoints need no
 retraining to produce onset/offset candidates. See

@@ -99,8 +99,8 @@ def test_dataset_rejects_test_rows_invalid_paths_and_inconsistent_geometry(cache
 
 
 @pytest.mark.parametrize("final", [False, True])
-@pytest.mark.parametrize("plateau", [False, True])
-def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_windows, monkeypatch, final, plateau):
+@pytest.mark.parametrize("policy_kind", ["baseline", "plateau", "dropout"])
+def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_windows, monkeypatch, final, policy_kind):
     from auriscore import lung_training, lung_models
     from auriscore.acquisition_lung import digest
     cache, rows, _ = cached_windows
@@ -113,10 +113,11 @@ def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_w
     config = {"seed": 42, "classes": ["inhalation", "exhalation", "wheeze"],
               "batch_size": 8, "epochs": 2, "patience": 1, "learning_rate": .001}
     policy_path = None
-    if plateau:
+    plateau = policy_kind == "plateau"
+    if policy_kind != "baseline":
         from pathlib import Path
         config["patience"] = 8
-        policy_path = Path(__file__).parents[1] / "configs/lung_training_plateau.json"
+        policy_path = Path(__file__).parents[1] / f"configs/lung_training_{policy_kind}.json"
         policy = json.loads(policy_path.read_text())
     monkeypatch.setattr(lung_training, "preflight", lambda *args: (config, rows))
     seen = []
@@ -153,14 +154,19 @@ def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_w
         def __call__(self, x, training=False):
             return np.full((1, x.shape[1], 3), .5)
 
-    monkeypatch.setattr(lung_models, "build_model", lambda *args, **kwargs: NoWeights())
+    def build_without_fitting(*args, **kwargs):
+        assert kwargs["dropout"] == (.4 if policy_kind == "dropout" else .2)
+        return NoWeights()
+
+    monkeypatch.setattr(lung_models, "build_model", build_without_fitting)
     output = cache / "experiment"
     if final:
         selection = cache / "selection.json"
         selection.write_text(json.dumps({"role": "development_validation", "config": config,
             "index_sha256": digest(cache / "index.csv"), "epochs": 2, "thresholds": [.5] * 3,
             "postprocessing": {"minimum_s": 0, "merge_gap_s": 0},
-            **({"training_policy": policy, "learning_rates": [.001, .001]} if plateau else {})}))
+            **({"training_policy": policy} if policy_path is not None else {}),
+            **({"learning_rates": [.001, .001]} if plateau else {})}))
         lung_training.train_final(cache, audit, selection, output, authorized=True)
     else:
         lung_training.train(cache, audit, output, authorized=True, training_policy=policy_path)
@@ -177,5 +183,5 @@ def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_w
     if not final:
         assert source["config"] == config
     assert source["training_policy"]["learning_rate_schedule"]["type"] == ("reduce_on_plateau" if plateau else "constant")
-    if plateau and not final:
+    if policy_path is not None and not final:
         assert source["training_policy_sha256"] == digest(policy_path)

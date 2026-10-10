@@ -1,0 +1,5 @@
+{
+  "schema_version": "lung-training-policy-v2",
+  "learning_rate_schedule": {"type": "constant"},
+  "model": {"dropout": 0.4}
+}

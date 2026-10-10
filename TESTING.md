@@ -456,3 +456,15 @@ optimizing weights. Dataset trainer stubs check persisted preparation/completion
 and per-class evaluation events for both development and final paths. The focused
 logging, policy, dataset and lifecycle suite passed 30 tests on 2026-10-10, with
 Keras NumPy array-copy deprecation warnings; no model training was launched.
+
+`test_lung_dropout.py` verifies v2 dropout validation, v1/default compatibility,
+constant-LR/frozen-final semantics, unchanged temporal output shape, saved model
+dropout retention and inference parity with identical weights (dropout disabled
+at inference). Trainer stubs verify both development and final paths pass 0.4
+for the opt-in dropout policy and 0.2 for earlier protocols without fitting.
+
+Verified 2026-10-10: 73 focused Lung tests passed (dropout, logging, policy,
+dataset, lifecycle, localization, diagnostics, core and inference), with Keras
+NumPy array-copy deprecation warnings. Real-cache v2 preflight accepted 46,308
+windows, dropout 0.4 and constant LR 0.001, reporting training_started=false.
+No official test labels were opened and no weights were optimized.

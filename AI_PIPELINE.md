@@ -477,3 +477,12 @@ fold support, normalization progress, epoch losses/LR/checkpoint/stop decisions,
 development prediction and evaluation are reported. Batch/window updates are
 time-throttled (`--progress-interval`, default 30 seconds); fitting and selection
 rules are unchanged. Final fitting remains free of validation/test callbacks.
+
+The next Lung regularization experiment (EXP-L005) opts into
+`configs/lung_training_dropout.json`: versioned policy v2 explicitly sets model
+dropout 0.4 and constant LR. Relative to EXP-L003, only dropout changes from 0.2;
+cache geometry/identity, masks, loss, splits and selection rules are unchanged.
+Historical v1/default policies keep 0.2. Both development and final builders use
+the policy's frozen dropout, retained in the saved Keras model and process logs.
+EXP-L004 selected epoch 2 before any LR reduction; its later schedule did not
+produce a better checkpoint. Stronger dropout is unmeasured pending Linux fitting.

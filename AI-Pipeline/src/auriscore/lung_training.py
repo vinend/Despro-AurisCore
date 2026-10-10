@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from .acquisition_lung import digest
 from .lung_preprocessing import validate_config
-from .lung_training_policy import load_policy, development_callbacks, final_learning_rates, learning_rate_logger
+from .lung_training_policy import load_policy, development_callbacks, final_learning_rates, learning_rate_logger, model_dropout
 from .lung_training_log import TrainingLog, runtime_details, process_callback
 
 
@@ -159,6 +159,7 @@ def train(cache, audit_path, output, *, authorized=False, folds=0, training_poli
     try:
         log.event("runtime", **runtime_details(tf))
         log.event("experiment_started", output=str(output), policy=policy, initial_lr=config["learning_rate"],
+                  dropout=model_dropout(policy),
                   maximum_epochs=config["epochs"], patience=config["patience"], batch_size=config["batch_size"],
                   folds=len(partitions), input_pipeline=INPUT_PIPELINE_VERSION, official_test="sealed")
         for fold, (fitting, validation) in enumerate(partitions):
@@ -169,8 +170,9 @@ def train(cache, audit_path, output, *, authorized=False, folds=0, training_poli
             mean, std, weights = statistics(cache, fitting, log=log)
             log.event("statistics_completed", positive_weights=dict(zip(config["classes"], weights.tolist())))
             x, _, _ = load_block(Path(cache) / fitting.iloc[0].file)
-            model = build_model(x.shape, config["classes"], positive_weights=weights, learning_rate=config["learning_rate"])
-            log.event("model_built", input_shape=list(x.shape))
+            model = build_model(x.shape, config["classes"], positive_weights=weights,
+                                learning_rate=config["learning_rate"], dropout=model_dropout(policy))
+            log.event("model_built", input_shape=list(x.shape), dropout=model_dropout(policy))
             folder = output / f"fold-{fold}"
             folder.mkdir()
             np.savez(folder / "normalization.npz", mean=mean, std=std)
@@ -268,12 +270,14 @@ def train_final(cache, audit_path, selection_path, output, *, authorized=False, 
         log.event("runtime", **runtime_details(tf))
         log.event("final_preflight_completed", windows=len(index), groups=index.group.nunique(),
                   classes=config["classes"], fixed_epochs=selection["epochs"], policy=policy,
+                  dropout=model_dropout(policy),
                   official_test="sealed", validation_callbacks=False)
         mean, std, weights = statistics(cache, index, log=log)
         log.event("statistics_completed", positive_weights=dict(zip(config["classes"], weights.tolist())))
         x, _, _ = load_block(Path(cache) / index.iloc[0].file)
         tf.keras.utils.set_random_seed(config["seed"])
-        model = build_model(x.shape, config["classes"], positive_weights=weights, learning_rate=config["learning_rate"])
+        model = build_model(x.shape, config["classes"], positive_weights=weights,
+                            learning_rate=config["learning_rate"], dropout=model_dropout(policy))
         dataset = build_dataset(cache, index, mean, std, batch_size=config["batch_size"],
                                 training=True, seed=config["seed"])
         callbacks = []
