@@ -458,3 +458,22 @@ Version lung-frame-events-v2 is shared with future approved inference packages,
 whose final selection/evidence must explicitly freeze it. Legacy evidence keeps
 v1 behavior. The existing Lung API schema is unchanged and research models remain
 ineligible for live activation. See AI-Pipeline/docs/lung_localization.md.
+
+## Lung training-only LR policy
+
+The opt-in `AI-Pipeline/configs/lung_training_plateau.json` halves learning rate
+after two validation-loss plateau epochs, down to 1e-6, before the existing
+eight-epoch early stopper. It preserves initial LR, model, splits, supervision,
+cache identity, and best-weight restoration. Omission preserves fixed-LR runs.
+Experiment provenance records the normalized policy/hash; history records LR
+used and next LR. Final selections using this policy must freeze per-epoch rates
+from development; final fitting replays them without validation/test callbacks.
+See `AI-Pipeline/docs/lung_training.md` for EXP-L004 Linux commands. This is an
+unmeasured research experiment, not a deployment or performance claim.
+
+Lung training additionally emits timestamped process events and persists
+`process.jsonl` in each created experiment. Preparation, visible GPU/CPU runtime,
+fold support, normalization progress, epoch losses/LR/checkpoint/stop decisions,
+development prediction and evaluation are reported. Batch/window updates are
+time-throttled (`--progress-interval`, default 30 seconds); fitting and selection
+rules are unchanged. Final fitting remains free of validation/test callbacks.

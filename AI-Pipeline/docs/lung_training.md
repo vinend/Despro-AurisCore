@@ -122,6 +122,73 @@ the dataset before using readiness.json.
 
 ## Activation and limits
 
+### EXP-L004: validation-plateau learning-rate experiment
+
+EXP-L003 completed on the Linux GPU server. Its best reported validation loss
+was 0.8388 at epoch 2; training loss continued falling while validation loss
+rose. The next one-factor experiment adds LR reduction, keeping the temporal
+CNN, supervision, splits, cached features, initial LR 0.001, maximum 50 epochs
+and early-stopping patience eight unchanged. This may improve optimization;
+it does not guarantee more epochs or better generalization.
+
+`configs/lung_training_plateau.json` is a training-only policy: halve LR after
+two epochs without improved validation loss, with a floor of 0.000001. Reduction
+runs before early stopping. Best validation weights are still restored and
+checkpointed. `source.json` records the policy and file hash; `history.csv`
+records `learning_rate` used in each epoch and `next_learning_rate` after any
+reduction. Omit `--training-policy` to reproduce the constant-LR baseline.
+The policy does not alter the immutable cache configuration or localization
+provenance. No preprocessing or dataset download is needed for an existing cache.
+
+After syncing this code to Linux, run from AI-Pipeline with the existing venv:
+
+```bash
+source .venv/bin/activate
+CACHE=data/processed/lung/cache/fa2fc598295d3e8b71d8e34cee4ecc7c21866cb658f57367ca9aa5ff546cee14
+python scripts/train_lung_cnn.py --cache "$CACHE" \
+  --training-policy configs/lung_training_plateau.json
+mkdir -p artifacts/lung-launch
+set -o pipefail
+python -u scripts/train_lung_cnn.py --cache "$CACHE" \
+  --training-policy configs/lung_training_plateau.json \
+  --output results/EXP-L004-temporal-cnn-plateau --authorized-training \
+  2>&1 | tee artifacts/lung-launch/EXP-L004.log
+python -m json.tool results/EXP-L004-temporal-cnn-plateau/status.json
+python -m json.tool results/EXP-L004-temporal-cnn-plateau/fold-0/evaluation.json
+```
+
+The first Python command is preflight only. The second starts training; choose
+a fresh experiment ID if the output directory already exists. Compare development
+class-wise discrimination and localization against EXP-L003 before choosing
+another change. Keep the official test sealed and candidates research-only.
+
+Training prints timestamped UTC process events with elapsed seconds to stderr,
+alongside the existing Keras/TensorFlow output. These cover preflight, visible GPU
+names or CPU fallback, fold window/group counts and seed, TRAIN-only normalization
+progress and positive weights, model input shape, epoch/batch progress, validation
+start, losses, used/next LR, best epoch/loss, early-stop counter, best-checkpoint
+saves and restored weights. GPU visibility does not prove every operation runs
+on GPU. Saved-development prediction progress, threshold selection, per-class
+metrics, artifact paths, completion and failures are also logged. Final fitting
+logs fixed-epoch progress without introducing validation or test callbacks.
+
+Each created experiment automatically saves structured events to `process.jsonl`;
+`history.csv`, `history.json` and `status.json` retain their existing roles. Preflight
+events before experiment creation and raw TensorFlow messages are console-only;
+the `2>&1 | tee ...` command above captures the full console, including tracebacks.
+Use `--progress-interval 10` on the training command for more frequent batch/window
+updates (default 30 seconds). First/last items and all epoch boundaries always
+print. Logging changes do not alter model fitting, splits or threshold selection.
+
+If this protocol is later selected for final all-development fitting, selection
+JSON must include the normalized `training_policy` from source.json and a
+`learning_rates` list containing the first selected `epochs` values from the
+development history's `learning_rate` column (through the selected best epoch,
+not the trailing early-stopping epochs). Freeze the chosen fold/schedule along
+with epochs and thresholds. Final fitting replays these fixed rates without
+validation callbacks or test monitoring; a plateau selection missing the frozen
+rates is rejected. Existing constant-LR selections remain supported.
+
 Temporal checkpoint outputs are available now through the research WAV and
 saved-development localization commands. Existing temporal checkpoints need no
 retraining to produce onset/offset candidates. See

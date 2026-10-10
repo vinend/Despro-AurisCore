@@ -99,7 +99,8 @@ def test_dataset_rejects_test_rows_invalid_paths_and_inconsistent_geometry(cache
 
 
 @pytest.mark.parametrize("final", [False, True])
-def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_windows, monkeypatch, final):
+@pytest.mark.parametrize("plateau", [False, True])
+def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_windows, monkeypatch, final, plateau):
     from auriscore import lung_training, lung_models
     from auriscore.acquisition_lung import digest
     cache, rows, _ = cached_windows
@@ -111,6 +112,12 @@ def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_w
     audit.write_text("{}")
     config = {"seed": 42, "classes": ["inhalation", "exhalation", "wheeze"],
               "batch_size": 8, "epochs": 2, "patience": 1, "learning_rate": .001}
+    policy_path = None
+    if plateau:
+        from pathlib import Path
+        config["patience"] = 8
+        policy_path = Path(__file__).parents[1] / "configs/lung_training_plateau.json"
+        policy = json.loads(policy_path.read_text())
     monkeypatch.setattr(lung_training, "preflight", lambda *args: (config, rows))
     seen = []
 
@@ -118,6 +125,13 @@ def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_w
         def fit(self, data, **kwargs):
             # Stand-in only: exercise exactly what both trainers pass to Keras.
             assert kwargs["shuffle"] is False
+            callbacks = kwargs["callbacks"]
+            if final:
+                assert not any(isinstance(c, (tf.keras.callbacks.ReduceLROnPlateau,
+                                              tf.keras.callbacks.EarlyStopping)) for c in callbacks)
+                assert any(isinstance(c, tf.keras.callbacks.LearningRateScheduler) for c in callbacks) == plateau
+            else:
+                assert any(isinstance(c, tf.keras.callbacks.ReduceLROnPlateau) for c in callbacks) == plateau
             count = 22 if final else 16
             assert data.cardinality().numpy() == (count + 7) // 8
             orders = []
@@ -145,10 +159,23 @@ def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_w
         selection = cache / "selection.json"
         selection.write_text(json.dumps({"role": "development_validation", "config": config,
             "index_sha256": digest(cache / "index.csv"), "epochs": 2, "thresholds": [.5] * 3,
-            "postprocessing": {"minimum_s": 0, "merge_gap_s": 0}}))
+            "postprocessing": {"minimum_s": 0, "merge_gap_s": 0},
+            **({"training_policy": policy, "learning_rates": [.001, .001]} if plateau else {})}))
         lung_training.train_final(cache, audit, selection, output, authorized=True)
     else:
-        lung_training.train(cache, audit, output, authorized=True)
+        lung_training.train(cache, audit, output, authorized=True, training_policy=policy_path)
     assert seen == [True]
     assert json.loads((output / "status.json").read_text())["status"] == "completed"
     assert json.loads((output / "source.json").read_text())["input_pipeline_version"] == lung_training.INPUT_PIPELINE_VERSION
+    source = json.loads((output / "source.json").read_text())
+    events = [json.loads(line) for line in (output / "process.jsonl").read_text().splitlines()]
+    assert events[0]["stage"] == "runtime"
+    assert events[-1]["stage"] == "experiment_completed"
+    assert any(event["stage"] == "statistics_completed" for event in events)
+    if not final:
+        assert sum(event["stage"] == "class_evaluation" for event in events) == 3
+    if not final:
+        assert source["config"] == config
+    assert source["training_policy"]["learning_rate_schedule"]["type"] == ("reduce_on_plateau" if plateau else "constant")
+    if plateau and not final:
+        assert source["training_policy_sha256"] == digest(policy_path)

@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from .acquisition_lung import digest
 from .lung_preprocessing import validate_config
+from .lung_training_policy import load_policy, development_callbacks, final_learning_rates, learning_rate_logger
+from .lung_training_log import TrainingLog, runtime_details, process_callback
 
 
 def preflight(cache, audit_path):
@@ -101,11 +103,11 @@ def build_dataset(cache: str | Path, rows: pd.DataFrame, mean: np.ndarray,
     return dataset.prefetch(1)
 
 
-def statistics(cache, index):
+def statistics(cache, index, *, log=None):
     total = squares = None
     count = 0
     positives = negatives = None
-    for name in index.file:
+    for position, name in enumerate(index.file, 1):
         x, y, mask = load_block(Path(cache) / name)
         selected = x[np.any(mask > 0, axis=1)].astype(np.float64)
         if total is None:
@@ -113,6 +115,8 @@ def statistics(cache, index):
             positives = np.zeros(y.shape[1]); negatives = positives.copy()
         total += selected.sum(axis=0); squares += (selected ** 2).sum(axis=0); count += len(selected)
         positives += (y * mask).sum(axis=0); negatives += ((1 - y) * mask).sum(axis=0)
+        if log is not None:
+            log.progress("training_statistics", position, len(index))
     if not count or np.any(positives == 0) or np.any(negatives == 0):
         raise ValueError("TRAIN needs valid positive/negative support for every selected class")
     mean = total / count
@@ -120,11 +124,15 @@ def statistics(cache, index):
     return mean.astype(np.float32), std.astype(np.float32), np.clip(negatives / positives, .25, 20).astype(np.float32)
 
 
-def train(cache, audit_path, output, *, authorized=False, folds=0):
+def train(cache, audit_path, output, *, authorized=False, folds=0, training_policy=None, progress_interval=30):
     """Only this function fits weights; explicit authorization is mandatory."""
     if authorized is not True:
         raise PermissionError("Training requires the user's go-ahead and --authorized-training")
+    log = TrainingLog(progress_interval)
+    log.event("preflight_started", cache=str(cache), audit=str(audit_path))
     config, index = preflight(cache, audit_path)
+    policy = load_policy(training_policy, config)
+    log.event("preflight_completed", windows=len(index), classes=config["classes"])
     if folds and (folds < 2 or index.group.nunique() < folds):
         raise ValueError("Insufficient distinct groups for CV")
     import tensorflow as tf
@@ -135,9 +143,11 @@ def train(cache, audit_path, output, *, authorized=False, folds=0):
     if output.exists():
         raise ValueError("Experiment directory already exists; never overwrite experiments")
     output.mkdir(parents=True)
+    log.bind(output)
     (output / "status.json").write_text(json.dumps({"status": "running", "started": time.time()}))
     (output / "source.json").write_text(json.dumps({"index_sha256": digest(Path(cache) / "index.csv"),
         "audit_sha256": digest(audit_path), "config": config, "evaluation_role": "development_only",
+        "training_policy": policy, "training_policy_sha256": digest(training_policy) if training_policy is not None else None,
         "input_pipeline_version": INPUT_PIPELINE_VERSION,
         "shuffle_policy": "seeded_full_filename_permutation_each_training_epoch"}, indent=2))
     partitions = [(index[index.split == "train"], index[index.split == "validation"])]
@@ -147,11 +157,20 @@ def train(cache, audit_path, output, *, authorized=False, folds=0):
         partitions = [(index.iloc[a], index.iloc[b]) for a, b in GroupKFold(folds).split(index, groups=index.group)]
     predictions = []
     try:
+        log.event("runtime", **runtime_details(tf))
+        log.event("experiment_started", output=str(output), policy=policy, initial_lr=config["learning_rate"],
+                  maximum_epochs=config["epochs"], patience=config["patience"], batch_size=config["batch_size"],
+                  folds=len(partitions), input_pipeline=INPUT_PIPELINE_VERSION, official_test="sealed")
         for fold, (fitting, validation) in enumerate(partitions):
+            log.event("fold_started", fold=fold, seed=config["seed"] + fold, training_windows=len(fitting),
+                      validation_windows=len(validation), training_groups=fitting.group.nunique(),
+                      validation_groups=validation.group.nunique())
             tf.keras.utils.set_random_seed(config["seed"] + fold)
-            mean, std, weights = statistics(cache, fitting)
+            mean, std, weights = statistics(cache, fitting, log=log)
+            log.event("statistics_completed", positive_weights=dict(zip(config["classes"], weights.tolist())))
             x, _, _ = load_block(Path(cache) / fitting.iloc[0].file)
             model = build_model(x.shape, config["classes"], positive_weights=weights, learning_rate=config["learning_rate"])
+            log.event("model_built", input_shape=list(x.shape))
             folder = output / f"fold-{fold}"
             folder.mkdir()
             np.savez(folder / "normalization.npz", mean=mean, std=std)
@@ -159,29 +178,45 @@ def train(cache, audit_path, output, *, authorized=False, folds=0):
                                           training=True, seed=config["seed"] + fold)
             validation_data = build_dataset(cache, validation, mean, std, batch_size=config["batch_size"],
                                             training=False, seed=config["seed"] + fold)
+            callbacks = development_callbacks(folder, config, policy)
+            stopper = next(c for c in callbacks if isinstance(c, tf.keras.callbacks.EarlyStopping))
+            callbacks.append(process_callback(log, epochs=config["epochs"],
+                steps=(len(fitting) + config["batch_size"] - 1) // config["batch_size"], early_stopper=stopper,
+                checkpoint=folder / "best.weights.h5"))
+            log.event("fitting_started", fold=fold, validation_batches=(len(validation) + config["batch_size"] - 1) // config["batch_size"])
             history = model.fit(training_data, validation_data=validation_data, epochs=config["epochs"], shuffle=False,
-                callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=config["patience"], restore_best_weights=True),
-                           tf.keras.callbacks.CSVLogger(str(folder / "history.csv")),
-                           tf.keras.callbacks.ModelCheckpoint(str(folder / "best.weights.h5"), save_weights_only=True, save_best_only=True)], verbose=2)
+                callbacks=callbacks, verbose=2)
             model.save(folder / "model.keras")
+            log.event("model_saved", path=str(folder / "model.keras"))
             scores, truths, masks = [], [], []
-            for row in validation.itertuples():
+            log.event("development_prediction_started", fold=fold, windows=len(validation))
+            for position, row in enumerate(validation.itertuples(), 1):
                 features, truth, validity = load_block(Path(cache) / row.file)
                 probability = np.asarray(model(np.clip((features - mean) / std, -5, 5)[None], training=False))[0]
                 scores.append(probability); truths.append(truth); masks.append(validity)
                 predictions.append({"fold": fold, "group": row.group, "file": row.file})
+                log.progress("development_prediction", position, len(validation))
             truth, probability, validity = np.concatenate(truths), np.concatenate(scores), np.concatenate(masks)
+            log.event("threshold_selection_started", fold=fold, population="development_only")
             thresholds = select_thresholds(truth, probability, validity)
+            log.event("threshold_selection_completed", thresholds=dict(zip(config["classes"], thresholds)))
+            log.event("evaluation_started", fold=fold)
+            metrics = frame_metrics(truth, probability, validity, thresholds)
             np.savez_compressed(folder / "development_predictions.npz", truth=truth, scores=probability, mask=validity)
             (folder / "evaluation.json").write_text(json.dumps({"role": "development_only", "classes": config["classes"],
-                "thresholds": thresholds, "metrics": frame_metrics(truth, probability, validity, thresholds),
+                "thresholds": thresholds, "metrics": metrics,
                 "groups": sorted(validation.group.unique()), "patient_disjoint_verified": False}, indent=2))
             (folder / "history.json").write_text(json.dumps(history.history))
+            for name, metric in zip(config["classes"], metrics):
+                log.event("class_evaluation", class_name=name, **metric)
+            log.event("fold_completed", fold=fold, artifacts=str(folder))
             tf.keras.backend.clear_session()
         (output / "prediction_index.json").write_text(json.dumps(predictions, indent=2))
         (output / "status.json").write_text(json.dumps({"status": "completed", "finished": time.time(), "deployment_eligible": False}))
-    except Exception:
+        log.event("experiment_completed", output=str(output), deployment_eligible=False)
+    except Exception as error:
         (output / "status.json").write_text(json.dumps({"status": "failed", "finished": time.time()}))
+        log.event("experiment_failed", error_type=type(error).__name__, error=str(error))
         raise
 
 
@@ -198,10 +233,12 @@ def export_tflite(model_path, destination, *, representative=None):
     Path(destination).write_bytes(converter.convert())
 
 
-def train_final(cache, audit_path, selection_path, output, *, authorized=False):
+def train_final(cache, audit_path, selection_path, output, *, authorized=False, progress_interval=30):
     """Fit all development groups with a frozen, development-selected epoch count."""
     if authorized is not True:
         raise PermissionError("Final training requires the user's explicit go-ahead")
+    log = TrainingLog(progress_interval)
+    log.event("final_preflight_started", cache=str(cache), selection=str(selection_path))
     config, index = preflight(cache, audit_path)
     selection = json.loads(Path(selection_path).read_text())
     from .lung_temporal import LOCALIZATION_VERSION
@@ -218,33 +255,51 @@ def train_final(cache, audit_path, selection_path, output, *, authorized=False):
             or any(not isinstance(v, (int, float)) or not np.isfinite(v) or not 0 <= v <= 2
                    for v in selection["postprocessing"].values())):
         raise ValueError("A frozen development selection bound to this cache/config is required")
+    policy, rates = final_learning_rates(selection, config)
     output = Path(output)
     if output.exists():
         raise ValueError("Never overwrite a final experiment")
     import tensorflow as tf
     from .lung_models import build_model
-    mean, std, weights = statistics(cache, index)
-    x, _, _ = load_block(Path(cache) / index.iloc[0].file)
-    tf.keras.utils.set_random_seed(config["seed"])
-    model = build_model(x.shape, config["classes"], positive_weights=weights, learning_rate=config["learning_rate"])
-    dataset = build_dataset(cache, index, mean, std, batch_size=config["batch_size"],
-                            training=True, seed=config["seed"])
     output.mkdir(parents=True)
+    log.bind(output)
     (output / "status.json").write_text(json.dumps({"status": "running", "model_role": "final_deployment_candidate"}))
     try:
+        log.event("runtime", **runtime_details(tf))
+        log.event("final_preflight_completed", windows=len(index), groups=index.group.nunique(),
+                  classes=config["classes"], fixed_epochs=selection["epochs"], policy=policy,
+                  official_test="sealed", validation_callbacks=False)
+        mean, std, weights = statistics(cache, index, log=log)
+        log.event("statistics_completed", positive_weights=dict(zip(config["classes"], weights.tolist())))
+        x, _, _ = load_block(Path(cache) / index.iloc[0].file)
+        tf.keras.utils.set_random_seed(config["seed"])
+        model = build_model(x.shape, config["classes"], positive_weights=weights, learning_rate=config["learning_rate"])
+        dataset = build_dataset(cache, index, mean, std, batch_size=config["batch_size"],
+                                training=True, seed=config["seed"])
+        callbacks = []
+        if rates is not None:
+            callbacks.append(tf.keras.callbacks.LearningRateScheduler(lambda epoch, current: rates[epoch], verbose=1))
+        callbacks.extend([learning_rate_logger(), tf.keras.callbacks.CSVLogger(str(output / "history.csv"))])
+        callbacks.append(process_callback(log, epochs=selection["epochs"],
+            steps=(len(index) + config["batch_size"] - 1) // config["batch_size"]))
+        log.event("final_fitting_started", output=str(output), input_shape=list(x.shape))
         model.fit(dataset, epochs=selection["epochs"], shuffle=False,
-                  callbacks=[tf.keras.callbacks.CSVLogger(str(output / "history.csv"))], verbose=2)
+                  callbacks=callbacks, verbose=2)
         model.save(output / "model.keras")
+        log.event("model_saved", path=str(output / "model.keras"))
         np.savez(output / "normalization.npz", mean=mean, std=std)
         (output / "config.json").write_text(json.dumps(config, indent=2))
         (output / "selection.json").write_text(json.dumps(selection, indent=2))
         (output / "source.json").write_text(json.dumps({"audit_sha256": digest(audit_path),
             "index_sha256": digest(Path(cache) / "index.csv"), "selection_sha256": digest(output / "selection.json"),
             "model_role": "final_deployment_candidate", "model_sha256": digest(output / "model.keras"),
+            "training_policy": policy, "learning_rates": rates,
             "config_sha256": digest(output / "config.json"), "normalization_sha256": digest(output / "normalization.npz"),
             "input_pipeline_version": INPUT_PIPELINE_VERSION,
             "shuffle_policy": "seeded_full_filename_permutation_each_training_epoch"}, indent=2))
         (output / "status.json").write_text(json.dumps({"status": "completed", "deployment_eligible": False}))
-    except Exception:
+        log.event("experiment_completed", output=str(output), deployment_eligible=False)
+    except Exception as error:
         (output / "status.json").write_text(json.dumps({"status": "failed", "deployment_eligible": False}))
+        log.event("experiment_failed", error_type=type(error).__name__, error=str(error))
         raise

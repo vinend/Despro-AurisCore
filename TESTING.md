@@ -433,3 +433,26 @@ boundary errors, version rejection and preservation of the live interval schema.
 No weights were fitted. The real Linux EXP-L003 artifact is absent locally;
 actual checkpoint localization accuracy and physical-device behavior remain
 unverified. Official dataset test annotations were not opened.
+
+## Lung learning-rate policy verification
+
+`AI-Pipeline/tests/test_lung_training_policy.py` simulates Keras callback
+lifecycles without fitting weights: reduction before stopping, LR floor,
+used/next LR CSV values, unchanged optimizer iterations and weights, fixed-LR
+baseline preservation, strict policy rejection, and frozen final replay without
+validation. Run with the existing focused Lung dataset/lifecycle/localization
+tests. Actual quality and epoch-count effects require a fresh Linux development
+run; no sealed test is used to tune this schedule.
+
+Verified 2026-10-10: the focused policy, localization, diagnostics, dataset,
+Lung core, lifecycle and inference suite passed 55 tests. Keras emitted existing
+NumPy array-copy deprecation warnings. CLI preflight accepted the plateau policy
+against the real 46,308-window cache and reported `training_started: false`.
+
+Detailed logging verification: `test_lung_training_log.py` covers UTC timestamps,
+stderr/JSONL correspondence, throttled progress, invalid intervals, CPU/GPU
+visibility reporting, and simulated best-checkpoint/early-stop callbacks without
+optimizing weights. Dataset trainer stubs check persisted preparation/completion
+and per-class evaluation events for both development and final paths. The focused
+logging, policy, dataset and lifecycle suite passed 30 tests on 2026-10-10, with
+Keras NumPy array-copy deprecation warnings; no model training was launched.
