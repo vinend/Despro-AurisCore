@@ -193,3 +193,14 @@ git add results/EXP-A101-abdomen-crnn-sed/
 git commit -m "feat(sed): save completed EXP-A101 abdomen CRNN SED model and evaluation"
 git push origin feat/abdomen-crnn-sed
 ```
+
+### E. Completed Run Results (EXP-A101)
+* **Status:** Completed (2026-10-13)
+* **Training Time:** 422.01s (stopped at Epoch 16, best checkpoint Epoch 8)
+* **Best Val Loss:** `0.1053` (Val PR-AUC: `0.8769`, Val ROC-AUC: `0.8994`)
+* **Event SED Metrics (Collar 100 ms):**
+  * Detected Events: 320 (Ground Truth: 452)
+  * Event Precision: **45.62%**
+  * Event Recall / Sensitivity: **32.30%**
+  * Event F1-Score: **37.82%**
+* **Full Milestone Report:** `AI-Pipeline/docs/abdomen_crnn_sed_training.md`

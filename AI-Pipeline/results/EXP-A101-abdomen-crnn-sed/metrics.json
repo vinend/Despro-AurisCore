@@ -1,0 +1,18 @@
+{
+  "status": "completed",
+  "experiment_id": "EXP-A101-abdomen-crnn-sed",
+  "model_architecture": "CRNN_SED (Conv2D + BiGRU + TimeDistributed)",
+  "training_time_s": 422.01,
+  "total_epochs": 16,
+  "best_val_loss": 0.1053,
+  "event_metrics_collar_100ms": {
+    "true_positives": 146.0,
+    "false_positives": 174.0,
+    "false_negatives": 306.0,
+    "precision": 0.4562,
+    "recall_sensitivity": 0.323,
+    "event_f1": 0.3782
+  },
+  "detected_events_count": 320,
+  "ground_truth_events_count": 452
+}
