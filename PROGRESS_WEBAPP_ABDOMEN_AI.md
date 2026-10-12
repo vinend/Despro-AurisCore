@@ -19,34 +19,36 @@ Dalam proyek AurisCore, scope pekerjaan Anda mencakup dua pilar utama:
 Berikut adalah peta menyeluruh seluruh cabang (branch) yang terlibat dalam pengembangan WebApp dan Abdomen AI:
 
 ```mermaid
-gitGraph
-   commit id: "inisialisasi web-app"
-   branch feat/abdomen-ai
-   checkout feat/abdomen-ai
-   commit id: "EXP-A001..A004"
-   commit id: "EXP-A005 (Best SE-CNN)"
-   commit id: "EXP-A006"
-   checkout master
-   merge feat/abdomen-ai id: "reconcile research"
-   branch feat/analysis
-   checkout feat/analysis
-   commit id: "Next.js Python Worker"
-   commit id: "POST /api/abdomen/analyze"
-   commit id: "organ-result-view"
-   checkout master
-   merge feat/analysis id: "integrate-heart-abdomen"
-   commit id: "ESP32 Wi-Fi Gateway"
-   commit id: "package_active_models"
-   branch feat/abdomen-dsp-localization
-   checkout feat/abdomen-dsp-localization
-   commit id: "Hilbert Envelope DSP"
-   commit id: "MAD Threshold & Motility"
-   checkout master
-   branch feat/abdomen-crnn-sed
-   checkout feat/abdomen-crnn-sed
-   commit id: "CRNN SED Architecture"
-   commit id: "EXP-A101 Retraining"
-   commit id: "DCASE 100ms Evaluation"
+flowchart TD
+    subgraph BaseApp ["Lineage Master & WebApp"]
+        M0["origin/web-app<br/>(Inisialisasi Prototipe UI)"]
+        M1["master<br/>(Reconcile & Baseline Pipeline)"]
+        M2["Integrasi WebApp + Python Worker<br/>(commit 4a66650: POST /api/analysis)"]
+        M3["ESP32 Wi-Fi Gateway & Packaging<br/>(commit 5980677 & 92c0dc6)"]
+    end
+
+    subgraph AbdomenWindow ["feat/abdomen-ai (Window-Level)"]
+        W1["Preprocessing Figshare & Queue 6 Model"]
+        W2["EXP-A005 (Best Residual SE-CNN)<br/>Val Loss 0.0571 | F1 1.000"]
+    end
+
+    subgraph AbdomenDSP ["feat/abdomen-dsp-localization"]
+        D1["Hilbert Envelope + MAD Threshold"]
+        D2["Hitung Motilitas & Bowel Rate (events/min)"]
+    end
+
+    subgraph AbdomenSED ["feat/abdomen-crnn-sed (Retraining)"]
+        S1["CRNN Sound Event Detection (16 ms resolution)"]
+        S2["EXP-A101 Retraining (BiGRU + Focal Loss)"]
+        S3["Evaluasi Standar DCASE Collar 100 ms"]
+    end
+
+    M0 --> W1
+    W1 --> W2
+    W2 -->|Reconcile & Package Model| M1
+    M1 --> M2 --> M3
+    M3 -->|Cabang Riset DSP| D1 --> D2
+    M3 -->|Cabang Retraining SED| S1 --> S2 --> S3
 ```
 
 ### Rincian Peran & Status Tiap Branch:
@@ -243,14 +245,14 @@ Berdasarkan data empiris di atas, langkah terbaik ke depan untuk tugas akhir/pro
 
 ```mermaid
 flowchart LR
-    Audio[Audio Perut 8 kHz] --> Bandpass[Bandpass 100-1000 Hz]
-    Bandpass --> DSP[Ekstraksi Amplop Hilbert E t]
-    Bandpass --> Mel[Log-Mel Spectrogram]
-    Mel --> CRNN[CRNN SED Frame P t]
-    DSP --> Gate{Hybrid Score Fusion}
+    Audio["Audio Perut (8 kHz Mono)"] --> Bandpass["Bandpass (100–1000 Hz)"]
+    Bandpass --> DSP["Ekstraksi Amplop Hilbert E(t)"]
+    Bandpass --> Mel["Log-Mel Spectrogram"]
+    Mel --> CRNN["CRNN SED Frame P(t)"]
+    DSP --> Gate{"Hybrid Score Fusion"}
     CRNN --> Gate
-    Gate -->|E t x P t| Hysteresis[Adaptive Thresholding Onset 0.35]
-    Hysteresis --> Motility[Kalkulasi Bowel Rate & Variabilitas]
+    Gate -->|"E(t) × P(t)"| Hysteresis["Adaptive Thresholding (Onset 0.35)"]
+    Hysteresis --> Motility["Kalkulasi Bowel Rate & Variabilitas"]
 ```
 
 ### 1. Pendekatan Hybrid (Energy Envelope + Deep Spectral Gating) — **Rekomendasi Utama**
