@@ -2,8 +2,8 @@
 
 **Project:** AurisCore Digital Stethoscope (Assistive Acoustic Screening System)  
 **Repository:** `https://github.com/vinend/Despro-AurisCore.git`  
-**Current Active Feature Branch:** `feat/abdomen-ai`  
-**Status Date:** 2026-10-07  
+**Current Active Feature Branch:** `feat/abdomen-crnn-sed` (CRNN Frame-Level Retraining)  
+**Status Date:** 2026-10-10  
 
 ---
 
@@ -147,3 +147,49 @@ python scripts/training_status.py --plan configs/abdomen_cnn_queue.json
 4. **Git Branch Discipline:**
    * All Abdomen AI changes must stay on `feat/abdomen-ai`.
    * Never force-push or merge broken checkpoints to `master`. Only completed results, configs, and code are committed.
+
+---
+
+## 6. CRNN Sound Event Detection (SED) Retraining Workflow (`feat/abdomen-crnn-sed`)
+
+### A. Objective & Approach
+This branch implements **Approach 2 (Pure Deep Learning Frame-Level SED)**:
+* Replaces global pooling with **frequency-only pooling** + **Bidirectional GRU** + **TimeDistributed Dense**.
+* Predicts acoustic burst probability $P(t) \in [0, 1]$ per **16 ms time frame** (313 frames per 5.0s window).
+* Uses **Binary Focal Loss** ($\gamma=2.0$) to handle silence-vs-burst class imbalance.
+* Evaluates both frame-level metrics and **Event-based F1-score with 100 ms collar tolerance** (DCASE standard).
+
+### B. Step-by-Step Execution on Remote PC Lab
+
+```powershell
+# 1. Navigate and switch to the retraining branch
+cd D:\Musyaffa\Despro-AurisCore\AI-Pipeline
+git fetch origin
+git checkout feat/abdomen-crnn-sed
+git pull origin feat/abdomen-crnn-sed
+
+# 2. Activate virtual environment
+.venv\Scripts\Activate.ps1
+
+# 3. Kill any lingering Python processes
+Stop-Process -Name python -Force -ErrorAction SilentlyContinue
+
+# 4. Start the interactive CRNN training
+python scripts/train_abdomen_sed.py
+```
+
+### C. Expected Outputs & Artifacts
+Training runs for up to 35 epochs (with EarlyStopping patience 8). Expected completion time: $\approx 25 - 40\text{ minutes}$ on CPU.
+
+Artifacts generated under `AI-Pipeline/results/EXP-A101-abdomen-crnn-sed/`:
+* `best_model.keras` — Trained CRNN Keras weights.
+* `history.csv` — Epoch-by-epoch training and validation loss/metrics.
+* `training_history.png` — Loss and accuracy convergence curves.
+* `metrics.json` — Evaluated Event F1-score, Recall, Precision (Collar 100 ms), and event counts.
+
+### D. Post-Training Git Commit on PC Lab
+```powershell
+git add results/EXP-A101-abdomen-crnn-sed/
+git commit -m "feat(sed): save completed EXP-A101 abdomen CRNN SED model and evaluation"
+git push origin feat/abdomen-crnn-sed
+```
