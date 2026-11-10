@@ -1,2 +1,6 @@
 # Frozen artifacts are hashed as bytes; automatic CRLF conversion breaks audits.
 AI-Pipeline/analysis/HEART-DEVELOPMENT-FREEZE-H021/** -text
+
+AI-Pipeline/configs/rd_ltmil_scientific_binding_b1.json -text
+AI-Pipeline/configs/rd_logmel_temporal_mil_v1.json -text
+AI-Pipeline/research/h022_temporal/*.py text eol=lf

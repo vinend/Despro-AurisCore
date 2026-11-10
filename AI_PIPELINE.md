@@ -1,5 +1,9 @@
 # AI_PIPELINE.md
 
+## RD-H022-TMIL-P1
+
+The progress_heart research run uses a fold-matched H022 trunk, Temporal MIL and a fit-only H022 precision comparator. The [destination runbook](AI-Pipeline/research/h022_temporal/README.md) defines supervision, calibration and the frozen gate.
+
 ## 1. Scope
 
 This document governs **trainable AI work for the current Heart Murmur branch** and its deployment path.

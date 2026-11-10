@@ -1,5 +1,9 @@
 # TESTING.md
 
+## RD-H022-TMIL-P1
+
+For progress_heart, run [the remote GPU checks](AI-Pipeline/research/h022_temporal/README.md) before RD-H022-TMIL-P1. After one completed run, verify-results replays all outer recordings and compares participant decisions before reporting phase and time candidates.
+
 Shared recorded-audio service checks live in
 `AI-Pipeline/tests/test_analysis_service.py`: PCM/WAV parity, int16 scaling,
 quality/size/rate rejection before backend loading, mode routing, candidate
