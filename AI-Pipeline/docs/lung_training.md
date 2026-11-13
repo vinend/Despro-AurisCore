@@ -1,5 +1,75 @@
 # Lung training readiness — HF_Lung_V1
 
+## Controlled generalization probes — 2026-11-10
+
+L006 completed ten epochs and restored epoch two (best validation loss 0.82691).
+Saved-score and unsmoothed-boundary analysis is documented in
+[L006 findings](lung_l006_findings.md). Phase conflict remains 59.3% on jointly
+valid development frames, and crackle predictions are positive on 97.0% of its
+supervised frames. These findings do not establish dataset size as the sole cause.
+See [additional dataset assessment](lung_dataset_expansion.md) for primary sources,
+label-granularity differences, patient grouping and access limitations.
+
+Policy `lung-training-policy-v4` adds frozen initial LR, Adam decoupled weight
+decay, TRAIN-only normalized-feature frequency masks, and ordered research class
+subsets. Older v1/v2/v3 policies preserve their original behavior. Features,
+targets, masks and split files are never rewritten. Subset heads use the same
+original TRAIN normalization, projecting TRAIN class weights and target/mask
+columns only. Validation/prediction are never augmented. Stateless masks follow
+the seeded shuffled input order; timing and annotation arrays remain aligned.
+
+The user authorized implementing and training all five independent probes:
+L007 initial LR 0.0003, L008 weight decay 0.0001, L009 maximum four frequency-mask
+bins, L010 phase-only sigmoids and L011 four-sound sigmoids. Each compares against
+L006 independently; they do not combine unmeasured changes. All retain dilation
+16, dropout 0.2, seed 42, batch eight, maximum 50 epochs, val_loss early stopping
+patience eight and restored best weights. Early stopping is not disabled to
+inflate the epoch count. More epochs is not an acceptance metric by itself.
+
+`scripts/run_lung_research_queue.py` accepts an explicit
+`configs/lung_improvement_queue.json`, `--cache`, `--audit`, `--results`, `--output`
+and `--authorized-training`. It requires GPU, refuses existing runs/evidence,
+freezes protocol/code/policy/baseline hashes, and executes one trainer at a time.
+`train_lung_cnn.py --require-gpu` refuses CPU fallback on authorized fitting.
+After each run the queue saves score diagnostics, existing-threshold localization
+and matching-population per-class comparisons including accuracy, balanced
+accuracy, confusion counts, sensitivity, specificity, precision/F1, ROC/PR-AUC,
+thresholds and support. All use development data; official test remains sealed.
+Failed runs and logs remain recorded and stop the queue rather than being hidden.
+
+No automatic model winner or activation is selected. The subset heads remain
+research-only and are rejected by final fitting until a separate final-package
+contract is specified. Full-class v4 final selections replay the frozen initial
+LR/weight decay/augmentation; adaptive schedules still require frozen epoch rates.
+The current worker/API and `lung-analysis-v1` remain unchanged.
+
+Launch checkpoint: on 2026-11-10 at approximately 09:43 WIB the GPU-only serial
+queue was launched as WSL PID 384. Its initial status is running with L007 active;
+no new evaluation metrics were available at launch. Persisted queue status,
+protocol, package inventory and per-run logs/analyses are under
+`artifacts/lung-launch/EXP-L007-L011-20261110/queue/`; supervisor stderr is
+`artifacts/lung-launch/EXP-L007-L011-20261110/queue.log`. Code snapshot:
+`/home/vinend/auriscore-lung-runs/EXP-L007-L011-20261110`. No active polling
+continues after the startup check. Launch evidence and result folders are ignored.
+
+Execution update (2026-11-10): the user requests development training on the
+current Windows computer with GPU use. Native Windows TensorFlow is not the
+CUDA runtime for this run. Following user setup, Ubuntu-24.04 runs in WSL2 and
+`nvidia-smi` sees the RTX 5060. TensorFlow 2.21.0 now passes actual model
+forward/backward GPU checks, and all 85 Lung tests pass under WSL.
+The copied `.venv` is unusable. An ignored isolated `.runtime/lung-preflight/`
+at repository root now supports base tests/data preflight, without TensorFlow.
+See [the improvement and GPU plan](../../LUNG_IMPROVEMENT_PLAN.md) for the frozen
+L006 comparison and remaining activation requirements. The user confirmed sampled
+audio/annotation review. EXP-L006-temporal-cnn-context was launched as WSL PID
+2489 on 2026-11-10 at approximately 07:48 WIB; startup reached TRAIN statistics
+with the GPU active. Logs/protocol/runtime evidence are under
+`artifacts/lung-launch/EXP-L006-20261110/` and results under
+`results/EXP-L006-temporal-cnn-context/`. No completed metrics exist at launch;
+official test stays sealed and no model is activated. Stop active polling after
+launch; inspect persisted status later. The original command examples below
+describe prior preparation, not an instruction to launch a duplicate L006 run.
+
 Implementation date: 2026-10-10. The user authorized development training. The
 first local EXP-L001 launch stopped during preparation; no epoch/checkpoint was
 saved. The user subsequently completed EXP-L002 on a Linux GPU server. Its
@@ -228,6 +298,64 @@ Keep a fresh output directory and compare per-class ROC/PR AUC, F1, sensitivity,
 specificity and localization metrics on development data. Do not select solely
 for epoch count. Official test stays sealed. This implementation did not start
 training; the second command above explicitly starts it on the Linux machine.
+
+### Alignment review and EXP-L006: longer temporal context
+
+The supplied EXP-L005 diagnostics show almost-always-positive phase/crackle
+outputs: inhalation F1 gains only 0.0019 over always-positive, and 87.3% of jointly
+supervised frames predict both phases versus 1.1% target overlap. Dropout alone
+did not resolve this. Check source alignment before fitting another model:
+
+```bash
+CACHE=data/processed/lung/cache/fa2fc598295d3e8b71d8e34cee4ecc7c21866cb658f57367ca9aa5ff546cee14
+python scripts/review_lung_alignment.py --cache "$CACHE" \
+  --output artifacts/lung-launch/alignment-context-v1
+python -m json.tool artifacts/lung-launch/alignment-context-v1/report.json
+xdg-open artifacts/lung-launch/alignment-context-v1/review.html
+```
+
+The immutable output includes original development WAV copies, waveform and
+annotation lanes on a common seconds axis, and source/cache comparison evidence.
+Defaults sample one recording per split/device and additional stridor/rhonchi
+examples if available; repeat `--recording-id <id>` to select specific cached
+development records. The tool verifies audited audio/label hashes, reparses source
+annotations and regenerates every window for each selected recording, comparing
+features (tolerance 1e-5), targets, masks, timestamps and start samples. Test and
+quarantine identities are rejected before their audio/label files are opened.
+Preflight verifies manifest/cache provenance. A sample agreement is not a whole
+dataset or independent acoustic annotation audit. Listen for phase changes and
+annotated event boundaries; `acoustic_alignment_verified` stays false. Do not
+shift/relabel annotations automatically or train if mismatches are unresolved.
+
+`configs/lung_training_context.json` uses v3 policy with temporal Conv1D dilation
+16, dropout 0.2 and constant LR 0.001. Compare with EXP-L003: the sole model change
+is dilation of the existing 5-wide Conv1D (no extra layers or parameters).
+Theoretical receptive field grows from 11 to 71 feature frames: 224 ms to 1.184 s
+including the 64-ms FFT at 16-ms hops. These are context spans, not a promise of
+uniform dependence on every frame. Frequency processing, loss, labels/masks,
+cache, split, thresholds and early stopping stay unchanged. Padding is still
+`same`, preserving time alignment; near window boundaries the larger context
+includes zeros. This symmetric context requires future samples and does not
+establish causal low-latency device behavior. Offline localization uses the saved
+model directly; legacy models retain dilation 1. Final fitting must freeze v3
+policy to reproduce dilation. No package or API changes/activation occur.
+
+After reviewing alignment, explicitly start the separate Linux experiment:
+
+```bash
+python scripts/train_lung_cnn.py --cache "$CACHE" \
+  --training-policy configs/lung_training_context.json
+mkdir -p artifacts/lung-launch
+set -o pipefail
+python -u scripts/train_lung_cnn.py --cache "$CACHE" \
+  --training-policy configs/lung_training_context.json --progress-interval 10 \
+  --output results/EXP-L006-temporal-cnn-context --authorized-training \
+  2>&1 | tee artifacts/lung-launch/EXP-L006.log
+```
+
+Use a fresh experiment directory. Compare phase conflict, per-class discrimination
+and one-to-one localization metrics against development baselines, preserving the
+official test. Improved generalization or useful epoch count remains unmeasured.
 
 Temporal checkpoint outputs are available now through the research WAV and
 saved-development localization commands. Existing temporal checkpoints need no

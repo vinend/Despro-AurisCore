@@ -1,5 +1,19 @@
 # INTEGRATION.md
 
+Research artifact extension (2026-11-10): Lung config may explicitly select
+`lung_feature_policy.schema_version=lung-fixed-logmel-v1`, bound by the existing
+full config hash; absence preserves legacy features. v7 research training emits
+`lung-trajectory-v1` protocol/epoch metrics, weights and fixed probe predictions.
+These artifacts do not change HTTP/organ result schemas or activate models.
+Existing models/normalization must never be combined with the new feature cache.
+See AI-Pipeline/docs/lung_fixed_reference_trajectory.md.
+
+Research-only source addition (2026-11-10): L012 fits on an audited HF+SPRSound
+development cache. SPR event taxonomy provides acoustic supervision, not I/E
+phase labels; missing phases and uncovered intervals are masked. No research
+checkpoint is auto-registered, and HTTP/result schemas remain unchanged. See
+AI-Pipeline/docs/lung_sprsound_training.md for mapping and limitations.
+
 ## 1. Purpose
 
 Define versioned interfaces between:

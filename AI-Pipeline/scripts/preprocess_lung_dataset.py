@@ -22,9 +22,10 @@ if __name__ == "__main__":
     events = pd.read_csv(a.manifest / "events.csv")
     assert_split_integrity(frame)
     output = a.manifest / "cache" / config_digest(config)
-    output.mkdir(parents=True, exist_ok=True)
+    output.mkdir(parents=True, exist_ok=False)
     index = []
-    for row in frame[frame.split.isin(["train", "validation"])].itertuples():
+    development = frame[frame.split.isin(["train", "validation"])]
+    for position, row in enumerate(development.itertuples(), 1):
         if digest(a.root / row.file_path) != row.sha256 or digest(a.root / row.label_path) != row.label_sha256:
             raise ValueError("Dataset changed after manifest audit")
         audio, rate = sf.read(a.root / row.file_path)
@@ -35,6 +36,8 @@ if __name__ == "__main__":
             np.savez_compressed(output / name, **block)
             index.append({"file": name, "group": row.group, "recording_id": row.recording_id,
                           "split": row.split, "source_sha256": row.sha256})
+        if position == 1 or position % 100 == 0 or position == len(development):
+            print(f'Cached {position}/{len(development)} development recordings; {len(index)} windows', flush=True)
     pd.DataFrame(index).to_csv(output / "index.csv", index=False)
     (output / "config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
     (output / "provenance.json").write_text(json.dumps({"audit_sha256": digest(a.manifest / "audit.json"),

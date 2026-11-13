@@ -1,5 +1,111 @@
 # AI_PIPELINE.md
 
+User-authorized L019 launch (2026-11-10): `EXP-L019-fixed-reference` compares the
+verified Lung fixed-reference/floor cache against L017 with the same model,
+objective/LR/fitting rows and newly saved per-epoch trajectory. A frozen standalone
+protocol binds control/cache/code/policy/package hashes and fixed evaluations.
+WSL supervisor PID 26483 / trainer 26498; startup passes preflight and confirms
+RTX 5060 GPU:0 before TRAIN statistics. No performance gain or promotion is
+claimed. Official test stays sealed. See AI-Pipeline/docs/lung_l019_fixed_reference.md.
+
+Fixed-reference Lung implementation (2026-11-10): opt-in `lung-fixed-logmel-v1`
+uses absolute reference/floor while preserving the shared Heart/Abdomen and legacy
+Lung path. v7 training policies save every epoch's pre-restoration weights,
+fixed grouped probe predictions and class/source confidence/ranking metrics with
+optimizer update counts. Stopping/threshold selection remain unchanged. A new
+immutable feature cache is prepared separately; old models require their old
+features/normalization. No fitting is launched by this task. See
+[implementation and evidence](AI-Pipeline/docs/lung_fixed_reference_trajectory.md).
+Completed verification: all 46,308 non-feature payloads/parsed split-index rows
+match the original; 38,590 overlap pairs have maximum feature difference zero.
+New-cache preflight and actual GPU gradients/trajectory evidence pass without
+optimizer updates. No accuracy result or new training launch is claimed.
+
+Completed L016–L018 deep review (2026-11-10): all runs complete and pass numerical
+parity, but fail the research performance gate. L017 common-L016-weight loss is
+0.98844 versus L016 0.98338; L018 is worse. A read-only paired feature/inference
+probe establishes window-relative dB reference as a cause of same-audio overlap
+prediction inconsistency; device-conditional crackle failure persists. Later
+epoch ranking/calibration cannot be reconstructed from best-only checkpoints.
+Six focused tests pass; no new fitting, thresholds or official-test access.
+See [deep review and next protocol](AI-Pipeline/docs/lung_l016_l018_deep_review.md).
+
+Numerical/objective Lung continuation (2026-11-10): opt-in v6 freezes stable BCE,
+deterministic float32 runtime and explicit TRAIN-only weighting/empty-window
+settings. L016 establishes that numerical boundary against L015; L017 changes
+only the weight estimator; L018 changes only empty-window fitting inclusion.
+All retain the original cache, normalization scope, split and three-label task.
+Legacy policies are unchanged; v6 final-package fitting is rejected. Full suite:
+148 pass; three preflights and actual GPU gradients/reload pass. See
+[bounded protocol and limitations](AI-Pipeline/docs/lung_objective_experiments.md).
+
+L015 investigation (2026-11-10): three-sound fitting completed at epoch 10,
+restoring epoch 2. The early optimum persists. A read-only full-cache audit finds
+device/prevalence shift, a crackle device-only PR-AUC baseline above the CNN,
+empty supervised windows and a frame-weight/per-window-reduction mismatch.
+Manual probability clipping loses extreme-example gradients synthetically;
+its causal role is unproven at the best checkpoint. No training defaults or
+weights were changed. The next protocol must isolate versioned loss/objective
+changes and source-stratified diagnostics before further fitting. See
+[investigation and evidence](AI-Pipeline/docs/lung_l015_pipeline_investigation.md).
+Official test remains sealed; no model is activated.
+
+Three-sound Lung update (2026-11-10): the user requests temporary training of
+wheeze/rhonchi/crackle only. L015 removes stridor from the L011 head with all
+other declared training/data settings fixed. The canonical three independent
+sigmoid outputs use original masked cache columns 2/3/5. 135 tests and preflight
+pass. GPU supervisor launched as WSL PID 14888; no metrics or promotion claimed
+at launch. Official test and broader Lung product requirements are unchanged.
+See AI-Pipeline/docs/lung_three_sound_experiment.md.
+
+Compact Lung update (2026-11-10): a bounded L010/L011 error review reproduced
+60 windows from ten recordings without mismatch, followed by user listening
+confirmation. Opt-in v5 bottlenecks reduce phase/sound models from about 269k
+to 93k parameters while preserving time outputs and all original HF supervision.
+132 tests and actual GPU forward/backward pass. L013 vs L010 and L014 vs L011
+are launched serially under WSL PID 11139; startup has L013 active. No new
+performance claim, threshold-rule change, test opening or model activation is
+made at launch. See AI-Pipeline/docs/lung_compact_experiments.md.
+
+Completed Lung review (2026-11-10): L012 restored epoch two and stopped at ten
+because of eight stale validation-loss epochs, not a ten-epoch cap. Same-population
+saved-artifact analysis finds macro PR-AUC 0.39225 versus L006 0.40436 and joint
+phase predictions 70.27% versus 59.33%. TRAIN class weights changed with source
+addition; common-L006-weight loss reconstruction remains worse (0.84003 versus
+0.82694). L007/L008 also select epoch two. This read-only review changes no
+threshold, model, split or active run. See AI-Pipeline/docs/lung_l012_review.md.
+
+Lung source-addition update (2026-11-10): user-authorized L012 adds pinned,
+patient-disjoint SPRSound 2022 TRAIN acoustic windows while preserving HF
+validation. 585 quality-eligible recordings / 85 source patients add 2,181
+windows; source stridor support remains just one event/patient. Missing I/E and
+unannotated intervals are masked; category completeness is an explicit assumption
+inside annotated events only. Source acquisition, cache builder and bounded-GPU
+entrypoint are implemented, with 116 passing Lung/source tests. WSL PID 3621
+reached TRAIN statistics with GPU active. No final metrics, official-test opening
+or package activation occurred at launch. See AI-Pipeline/docs/lung_sprsound_training.md.
+
+Lung generalization update (2026-11-10): L006 completed and remains research-only.
+Its saved prediction/boundary diagnostics motivate five independent GPU probes,
+L007–L011 (lower initial LR, weight decay, frequency masking, phase-only and
+sound-only heads). Versioned v4 policies preserve original feature caches,
+group splits and label masks; subset outputs are research-only. The serial queue
+freezes code/config/baseline provenance before fitting, retains best checkpoints
+and saves per-class same-population comparisons after each completed run.
+No official test is opened or package activated. See
+AI-Pipeline/docs/lung_l006_findings.md and lung_dataset_expansion.md in that folder.
+
+Lung execution update (2026-11-10): the user authorizes local development
+training with GPU and confirms sampled annotation/audio review. Ubuntu WSL2 /
+TensorFlow 2.21.0 passes actual model forward/backward on RTX 5060; 85 Lung tests
+pass. EXP-L006-temporal-cnn-context is launched as WSL PID 2489, with startup
+reaching TRAIN statistics. Its only declared model change against L003 is
+temporal dilation 1 -> 16. Original L003 artifacts are absent locally, so a
+cross-runtime comparison remains exploratory. No completed L006 metrics exist
+at launch, official test remains sealed and no package is activated. See
+LUNG_IMPROVEMENT_PLAN.md and artifacts/lung-launch/EXP-L006-20261110/ within
+AI-Pipeline for protocol/runtime/test/launch evidence (the plan is at repo root).
+
 ## 1. Scope
 
 This document governs **trainable AI work for the current Heart Murmur branch** and its deployment path.
@@ -486,3 +592,14 @@ Historical v1/default policies keep 0.2. Both development and final builders use
 the policy's frozen dropout, retained in the saved Keras model and process logs.
 EXP-L004 selected epoch 2 before any LR reduction; its later schedule did not
 produce a better checkpoint. Stronger dropout is unmeasured pending Linux fitting.
+
+Lung EXP-L006 freezes v3 temporal dilation 16, default dropout 0.2 and constant
+LR to isolate context span against EXP-L003. The existing Conv1D weights/shapes
+and parameter count are unchanged; theoretical context spans 71 frames/1.184 s
+instead of 11 frames/224 ms. Frame outputs/cache/splits/loss remain fixed; saved
+models preserve dilation, and final selections must retain the v3 policy.
+Symmetric padding includes future samples and boundary zeros, so this does not
+claim causal streaming inference. `review_lung_alignment.py` first creates sampled
+source/cache checks plus listenable development timelines. Mechanical agreement
+does not verify acoustic annotations; human review is required before the next
+authorized Linux run. No test labels or model fitting are involved in the review.

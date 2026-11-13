@@ -7,6 +7,51 @@ import numpy as np
 
 POLICY_SCHEMA = "lung-training-policy-v1"
 MODEL_POLICY_SCHEMA = "lung-training-policy-v2"
+CONTEXT_POLICY_SCHEMA = "lung-training-policy-v3"
+RESEARCH_POLICY_SCHEMA = "lung-training-policy-v4"
+COMPACT_POLICY_SCHEMA = "lung-training-policy-v5"
+OBJECTIVE_POLICY_SCHEMA = "lung-training-policy-v6"
+TRAJECTORY_POLICY_SCHEMA = "lung-training-policy-v7"
+OBJECTIVE_SCHEMAS = (OBJECTIVE_POLICY_SCHEMA, TRAJECTORY_POLICY_SCHEMA)
+
+
+def loss_settings(policy: dict) -> dict:
+    """Resolve opt-in loss changes; historical policies retain their exact objective."""
+    return dict(policy.get('loss', {'numerics': 'legacy_clip',
+                                   'positive_weighting': 'global_frame',
+                                   'empty_training_windows': 'keep'}))
+
+
+def model_bottleneck(policy: dict) -> int | None:
+    """Resolve an opt-in time-preserving frequency-feature projection."""
+    value = policy.get('model', {}).get('bottleneck_channels')
+    if value is not None and (type(value) is not int or value not in (8, 16, 32, 64, 128)):
+        raise ValueError('Bottleneck channels must be one of 8, 16, 32, 64, 128')
+    return value
+
+
+def optimizer_settings(policy: dict, config: dict) -> tuple[float, float]:
+    """Resolve opt-in optimizer changes without mutating cached preprocessing."""
+    settings = policy.get("optimizer", {})
+    return float(settings.get("initial_learning_rate", config["learning_rate"])), float(settings.get("weight_decay", 0))
+
+
+def selected_classes(policy: dict, config: dict) -> list[str]:
+    """Select an ordered research head; never infer absent labels for other tasks."""
+    return list(policy.get("classes") or config["classes"])
+
+
+def frequency_mask_bins(policy: dict) -> int:
+    """Maximum TRAIN-only normalized-feature frequency mask width."""
+    return policy.get("augmentation", {}).get("frequency_mask_bins", 0)
+
+
+def model_dilation(policy: dict) -> int:
+    """Resolve the frozen temporal dilation; historical models use one."""
+    value = policy.get("model", {}).get("temporal_dilation", 1)
+    if type(value) is not int or not 1 <= value <= 16:
+        raise ValueError("Temporal dilation must be an integer from 1 to 16")
+    return value
 
 
 def validate_dropout(value: float) -> float:
@@ -31,16 +76,77 @@ def validate_policy(policy: dict, config: dict) -> dict:
     if not isinstance(policy, dict):
         raise ValueError("Invalid Lung training policy schema")
     version = policy.get("schema_version")
+    if version == TRAJECTORY_POLICY_SCHEMA:
+        base = {k: v for k, v in policy.items() if k != 'trajectory'}
+        base['schema_version'] = OBJECTIVE_POLICY_SCHEMA
+        validate_policy(base, config)
+        trajectory = policy.get('trajectory')
+        if (not isinstance(trajectory, dict)
+                or set(trajectory) != {'every_epochs', 'recordings_per_device_partition', 'thresholds'}
+                or type(trajectory['every_epochs']) is not int or trajectory['every_epochs'] != 1
+                or type(trajectory['recordings_per_device_partition']) is not int
+                or not 1 <= trajectory['recordings_per_device_partition'] <= 64
+                or not isinstance(trajectory['thresholds'], list)
+                or len(trajectory['thresholds']) != len(selected_classes(base, config))
+                or any(isinstance(v, bool) or not isinstance(v, (int, float)) or not np.isfinite(v)
+                       or not 0 < v < 1 for v in trajectory['thresholds'])):
+            raise ValueError('Explicit bounded per-epoch trajectory policy required')
+        return json.loads(json.dumps(policy, allow_nan=False))
+    if version == OBJECTIVE_POLICY_SCHEMA:
+        # Reuse the closed noncompact v4 schema before validating the new boundary.
+        if 'loss' not in policy or policy.get('runtime') != {'deterministic_ops': True, 'tf32': False}:
+            raise ValueError('Explicit loss and deterministic float32 runtime required')
+        if (type(policy['runtime']['deterministic_ops']) is not bool
+                or type(policy['runtime']['tf32']) is not bool):
+            raise ValueError('Runtime flags must be explicit booleans')
+        legacy = {k: v for k, v in policy.items() if k not in ('loss', 'runtime')}
+        legacy['schema_version'] = RESEARCH_POLICY_SCHEMA
+        validate_policy(legacy, config)
+        loss = policy['loss']
+        if (not isinstance(loss, dict)
+                or set(loss) != {'numerics', 'positive_weighting', 'empty_training_windows'}
+                or loss['numerics'] != 'stable_bce'
+                or loss['positive_weighting'] not in ('global_frame', 'window_mass')
+                or loss['empty_training_windows'] not in ('keep', 'drop')):
+            raise ValueError('Invalid versioned Lung loss policy')
+        return json.loads(json.dumps(policy, allow_nan=False))
     required = {"schema_version", "learning_rate_schedule"}
-    if version == MODEL_POLICY_SCHEMA:
+    if version in (MODEL_POLICY_SCHEMA, CONTEXT_POLICY_SCHEMA, RESEARCH_POLICY_SCHEMA, COMPACT_POLICY_SCHEMA):
         required.add("model")
-    if (version not in {POLICY_SCHEMA, MODEL_POLICY_SCHEMA} or set(policy) != required
+    if version in (RESEARCH_POLICY_SCHEMA, COMPACT_POLICY_SCHEMA):
+        required.update({"optimizer", "augmentation", "classes"})
+    if (version not in (POLICY_SCHEMA, MODEL_POLICY_SCHEMA, CONTEXT_POLICY_SCHEMA, RESEARCH_POLICY_SCHEMA, COMPACT_POLICY_SCHEMA) or set(policy) != required
             or not isinstance(policy["learning_rate_schedule"], dict)):
         raise ValueError("Invalid Lung training policy schema")
-    if version == MODEL_POLICY_SCHEMA:
-        if not isinstance(policy["model"], dict) or set(policy["model"]) != {"dropout"}:
-            raise ValueError("Explicit dropout-only model policy required")
+    if version in (MODEL_POLICY_SCHEMA, CONTEXT_POLICY_SCHEMA, RESEARCH_POLICY_SCHEMA, COMPACT_POLICY_SCHEMA):
+        model_keys = {"dropout", "temporal_dilation"} if version != MODEL_POLICY_SCHEMA else {"dropout"}
+        if version == COMPACT_POLICY_SCHEMA:
+            model_keys.add('bottleneck_channels')
+        if not isinstance(policy["model"], dict) or set(policy["model"]) != model_keys:
+            raise ValueError("Explicit versioned model policy required")
         model_dropout(policy)
+        model_dilation(policy)
+        if version == COMPACT_POLICY_SCHEMA and model_bottleneck(policy) is None:
+            raise ValueError('Compact policy requires explicit bottleneck channels')
+    if version in (RESEARCH_POLICY_SCHEMA, COMPACT_POLICY_SCHEMA):
+        optimizer = policy["optimizer"]
+        augmentation = policy["augmentation"]
+        if (not isinstance(optimizer, dict) or set(optimizer) != {"initial_learning_rate", "weight_decay"}
+                or any(isinstance(v, bool) or not isinstance(v, (int, float)) or not np.isfinite(v)
+                       for v in optimizer.values())
+                or not 0 < optimizer["initial_learning_rate"] <= initial
+                or not 0 <= optimizer["weight_decay"] <= .01):
+            raise ValueError("Invalid research optimizer policy")
+        if (not isinstance(augmentation, dict) or set(augmentation) != {"frequency_mask_bins"}
+                or type(augmentation["frequency_mask_bins"]) is not int
+                or not 0 <= augmentation["frequency_mask_bins"] <= min(8, config.get("n_mels", 96))):
+            raise ValueError("Invalid TRAIN frequency mask policy")
+        classes = policy["classes"]
+        if classes is not None and (not isinstance(classes, list) or not classes
+                or any(not isinstance(c, str) for c in classes) or len(set(classes)) != len(classes)
+                or classes != [c for c in config["classes"] if c in classes]):
+            raise ValueError("Research classes must be a unique ordered cache subset")
+        initial, _ = optimizer_settings(policy, config)
     schedule = policy["learning_rate_schedule"]
     if schedule == {"type": "constant"}:
         return json.loads(json.dumps(policy))
@@ -110,6 +216,7 @@ def final_learning_rates(selection: dict, config: dict) -> tuple[dict, list[floa
     """
     policy = (validate_policy(selection["training_policy"], config) if "training_policy" in selection
               else load_policy(None, config))
+    config = {**config, "learning_rate": optimizer_settings(policy, config)[0]}
     rates = selection.get("learning_rates")
     if rates is None:
         if policy["learning_rate_schedule"]["type"] != "constant":

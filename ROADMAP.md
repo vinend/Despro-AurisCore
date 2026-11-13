@@ -1,5 +1,99 @@
 # ROADMAP.md
 
+L019 launched by explicit user request (2026-11-10): fixed-reference Lung GPU
+training with full epoch trajectory, control L017, standalone WSL PID 26483.
+Post-fit diagnostics/localization/parity and same-label-population comparison are
+predeclared; no adaptive successor or automatic deployment. Initial GPU startup
+and cache preflight pass. See AI-Pipeline/docs/lung_l019_fixed_reference.md.
+
+Lung representation/observability implementation (2026-11-10): opt-in fixed dB
+reference/floor and v7 epoch checkpoints/probe metrics are implemented and tested.
+New cache preparation/verification preserves old labels, splits and models.
+Next fitting must use fresh provenance and TRAIN normalization, with grouped
+research selection; no model training is launched by this implementation task.
+See AI-Pipeline/docs/lung_fixed_reference_trajectory.md.
+
+Completed L016–L018 (2026-11-10): all queue checks passed, no candidate meets the
+research gate. The next Lung priority is an opt-in fixed-reference/fixed-floor
+feature representation with overlap invariance tests, predeclared trajectory
+checkpoints/class/source metrics and TRAIN-only grouped comparisons. A paired
+frozen-model probe demonstrates sensitivity to window dB reference; source
+generalization and temporal supervision remain open. No further training is
+launched by this review. See AI-Pipeline/docs/lung_l016_l018_deep_review.md.
+
+Lung objective continuation (2026-11-10): implemented and verified versioned
+stable BCE/deterministic float32, per-window-mass weighting and TRAIN-only
+empty-window filtering. A bounded serial L016/L017/L018 protocol isolates later
+objective changes and adds parity/source-stratified evidence; 148 tests pass.
+No performance or deployment claim follows from these engineering checks.
+See [execution protocol](AI-Pipeline/docs/lung_objective_experiments.md).
+Standalone GPU queue launched as WSL PID 19198, with L016 active and L017/L018
+pending successful predecessor checks. No completed-run metrics exist at launch.
+
+L015 status (2026-11-10): completed, best epoch 2 / stopped epoch 10; narrowing
+to three labels did not resolve degradation. The next Lung work is a versioned
+stable-loss verification, explicit weighting/mask objective, inference parity and
+source-stratified TRAIN-only evaluation protocol, followed by compatible targeted
+data acquisition if supported. No additional run was launched during the audit.
+See [prioritized investigation](AI-Pipeline/docs/lung_l015_pipeline_investigation.md).
+The launch notes below are historical; no deployment candidate is approved.
+
+Temporary three-label Lung priority (2026-11-10): user-authorized L015 trains
+wheeze/rhonchi/crackle only against L011, preserving original HF data and other
+training settings. 135 tests pass; WSL GPU supervisor PID 14888 is launched.
+No new metrics are claimed at launch. Phase/product requirements and official
+test roles remain unchanged. See AI-Pipeline/docs/lung_three_sound_experiment.md.
+
+Compact Lung execution (2026-11-10): error review, user listening confirmation,
+opt-in bottleneck policies, tests and GPU kernel checks completed. L013 phase
+vs L010 and L014 sounds vs L011 are launched serially with unchanged HF data and
+early-stopping rules; WSL supervisor PID 11139, L013 active at startup. No new
+metrics or deployment eligibility are claimed. See
+AI-Pipeline/docs/lung_compact_experiments.md for protocol, counts and artifacts.
+
+Latest Lung planning checkpoint (2026-11-10): L007–L011 queue completed.
+Separate phase head L010 improves frame ranking and reduces phase conflict to
+42.31%, but event localization/respiratory availability remain poor. Next plan:
+bounded error/annotation review, then controlled compact phase/sound comparisons
+against L010/L011, followed conditionally by weighting/sampling/decoder studies.
+No additional training is launched by this planning update. See
+AI-Pipeline/docs/lung_next_steps.md. Official test and deployment remain closed.
+
+Lung completed-result review (2026-11-10): L012 is completed and not promoted.
+Epoch-ten stopping is the configured best-epoch-two plus patience-eight behavior.
+Same-population common-weight/ranking/phase analysis does not show overall
+improvement from this source addition. L007/L008 are also completed; L009 was
+active at the review's initial queue snapshot. No new training or threshold
+selection was launched for the review. See AI-Pipeline/docs/lung_l012_review.md.
+
+Lung additional-source pilot (2026-11-10): pinned SPRSound 2022 TRAIN acquisition,
+patient/blob exclusions, acoustic masks and immutable mixed-cache preparation are
+implemented. L012 was launched as WSL PID 3621 with GPU active; 116 Lung/source
+tests pass. HF validation is unchanged, official tests remain closed, and source
+rare-class support remains limited. No new model metrics exist at launch. See
+AI-Pipeline/docs/lung_sprsound_training.md for source counts, assumptions and paths.
+
+Lung generalization probes (2026-11-10): L006 is completed, best epoch two,
+validation loss 0.82691; phase conflict/positive-prediction and boundary issues
+remain. L007–L011 separately study lower initial LR, weight decay, TRAIN frequency
+masking and independent phase/sound heads under GPU-only serial execution.
+Official test and model activation remain closed. Additional-source assessment
+prioritizes SPRSound acoustic labels, considers ICBHI cycle-level supervision,
+and records restricted incremental HF labels; no new source is merged yet.
+
+Launch checkpoint: WSL supervisor PID 384, queue running with L007 active,
+108 Lung engineering tests passing. New-run metrics remain pending. Evidence:
+`AI-Pipeline/artifacts/lung-launch/EXP-L007-L011-20261110/queue/`.
+
+Lung execution update (2026-11-10): local GPU development training is requested.
+The [Lung improvement plan](LUNG_IMPROVEMENT_PLAN.md) defines L006 context dilation,
+annotation review, grouped comparisons and conditional next experiments. Windows
+base-data preflight passes; Ubuntu WSL2 sees the RTX 5060 and TensorFlow 2.21.0
+passes actual model forward/backward GPU checks. All 85 Lung tests pass.
+EXP-L006-temporal-cnn-context was launched as WSL PID 2489; startup reached
+TRAIN statistics. No completed model metrics or official-test evaluation exist
+at launch. Logs/protocol are in `AI-Pipeline/artifacts/lung-launch/EXP-L006-20261110/`.
+
 ## Current priority
 
 **Heart first: preserve Murmur research discipline, validate the implemented DSP prototype, complete the unified demo, and confirm physical hardware integration.**

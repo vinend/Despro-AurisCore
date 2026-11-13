@@ -18,6 +18,10 @@ Read project documentation in this order for non-trivial work:
 
 ## Current software team
 
+For an end-to-end explanation of Heart/Lung model training, ESP32 audio capture,
+WebSocket transport and the recorded-audio backend, see
+[Training and device streaming](TRAINING_AND_DEVICE_STREAMING.md).
+
 - Rowen — AI / signal processing / model optimization
 - Musyaffa — mobile app / UI/UX / Clinical Decision Support interface
 - Alvin — software integration / backend / AI support as needed

@@ -109,7 +109,8 @@ def test_window_overlap_is_averaged_tail_dropped_and_non_temporal_model_rejected
         predict_frames(audio, 8000, config, np.zeros(96), np.ones(96), lambda *a, **kw: np.zeros((1, 6)))
 
 
-def test_saved_prediction_evaluation_merges_recording_and_rejects_misalignment(tmp_path, config, monkeypatch):
+@pytest.mark.parametrize("sound_subset", [False, True])
+def test_saved_prediction_evaluation_merges_recording_and_rejects_misalignment(tmp_path, config, monkeypatch, sound_subset):
     experiment, folder = completed(tmp_path, config)
     cache = tmp_path / "cache"
     cache.mkdir()
@@ -137,6 +138,15 @@ def test_saved_prediction_evaluation_merges_recording_and_rejects_misalignment(t
                                                         "index_sha256": digest(cache / "index.csv"), "audit_sha256": digest(audit)}))
     (experiment / "prediction_index.json").write_text(json.dumps(prediction_order))
     saved = {key: np.concatenate([block[i] for block in blocks]) for i, key in enumerate(("truth", "scores", "mask"))}
+    if sound_subset:
+        source = json.loads((experiment / "source.json").read_text())
+        source["model_classes"] = config["classes"][2:]
+        (experiment / "source.json").write_text(json.dumps(source))
+        evaluation = json.loads((folder / "evaluation.json").read_text())
+        evaluation["classes"] = config["classes"][2:]
+        evaluation["thresholds"] = evaluation["thresholds"][2:]
+        (folder / "evaluation.json").write_text(json.dumps(evaluation))
+        saved = {key: value[:, 2:] for key, value in saved.items()}
     np.savez(folder / "development_predictions.npz", **saved)
     monkeypatch.setattr("auriscore.lung_localization.preflight", lambda *_: (config, pd.DataFrame(rows)))
     result = evaluate_development_localization(cache, audit, experiment)
@@ -144,7 +154,8 @@ def test_saved_prediction_evaluation_merges_recording_and_rejects_misalignment(t
     assert result["event_metrics"]["wheeze"]["fp"] == 0
     assert result["event_metrics"]["wheeze"]["onset_mae_s"] == pytest.approx(0)
     assert result["event_metrics"]["wheeze"]["offset_mae_s"] == pytest.approx(0)
-    assert result["event_metrics"]["inhalation"]["onset_mae_s"] is None
+    if not sound_subset:
+        assert result["event_metrics"]["inhalation"]["onset_mae_s"] is None
     assert len(result["recordings"][0]["sound_events"]) == 1
     assert result["recordings"][0]["sound_events"][0]["positive_frame_count"] == 5
     saved["truth"][0, 0] = 1

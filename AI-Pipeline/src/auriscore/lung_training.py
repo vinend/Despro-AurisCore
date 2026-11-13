@@ -7,7 +7,9 @@ import numpy as np
 import pandas as pd
 from .acquisition_lung import digest
 from .lung_preprocessing import validate_config
-from .lung_training_policy import load_policy, development_callbacks, final_learning_rates, learning_rate_logger, model_dropout
+from .lung_training_policy import load_policy, development_callbacks, final_learning_rates, learning_rate_logger, model_dropout, model_dilation
+from .lung_training_policy import optimizer_settings, selected_classes, frequency_mask_bins, model_bottleneck
+from .lung_training_policy import loss_settings, OBJECTIVE_POLICY_SCHEMA, OBJECTIVE_SCHEMAS, TRAJECTORY_POLICY_SCHEMA
 from .lung_training_log import TrainingLog, runtime_details, process_callback
 
 
@@ -56,7 +58,7 @@ INPUT_PIPELINE_VERSION = "lung-cache-dataset-v2"
 
 def build_dataset(cache: str | Path, rows: pd.DataFrame, mean: np.ndarray,
                   std: np.ndarray, *, batch_size: int, training: bool,
-                  seed: int) -> Any:
+                  seed: int, class_indices: list[int] | None = None, frequency_mask: int = 0) -> Any:
     """Stream aligned cache blocks with known batch count and TRAIN-only shuffling.
 
     Shuffle filenames before loading tensors so a full permutation costs only
@@ -79,6 +81,13 @@ def build_dataset(cache: str | Path, rows: pd.DataFrame, mean: np.ndarray,
             or not np.isfinite(mean).all() or not np.isfinite(std).all() or np.any(std <= 0)):
         raise ValueError("Invalid Lung dataset normalization")
     feature_shape, target_shape = features.shape, truth.shape
+    if (type(frequency_mask) is not int or not 0 <= frequency_mask <= features.shape[1]
+            or (not training and frequency_mask)):
+        raise ValueError("Frequency masking is TRAIN-only and must fit the feature band")
+    indices = list(range(truth.shape[1])) if class_indices is None else class_indices
+    if (not indices or any(type(i) is not int or not 0 <= i < truth.shape[1] for i in indices)
+            or indices != sorted(set(indices))):
+        raise ValueError("Invalid ordered class projection")
     import tensorflow as tf
     dataset = tf.data.Dataset.from_tensor_slices(names)
     if training:
@@ -88,15 +97,22 @@ def build_dataset(cache: str | Path, rows: pd.DataFrame, mean: np.ndarray,
         x, y, mask = load_block(cache / name.decode("utf-8"))
         if x.shape != feature_shape or y.shape != target_shape:
             raise ValueError("Inconsistent Lung cache geometry")
-        return np.clip((x - mean) / std, -5, 5), np.concatenate([y, mask], axis=-1)
+        return np.clip((x - mean) / std, -5, 5), np.concatenate([y[:, indices], mask[:, indices]], axis=-1)
 
-    def map_block(name):
+    def map_block(position, name):
         x, packed = tf.numpy_function(load, [name], [tf.float32, tf.float32])
         x.set_shape(feature_shape)
-        packed.set_shape((*target_shape[:-1], target_shape[-1] * 2))
+        packed.set_shape((*target_shape[:-1], len(indices) * 2))
+        if frequency_mask:
+            # Shuffle changes which recording receives each stateless mask across epochs.
+            seeds = tf.stack([tf.cast(seed, tf.int32), tf.cast(position, tf.int32)])
+            width = tf.random.stateless_uniform((), seeds, minval=0, maxval=frequency_mask + 1, dtype=tf.int32)
+            start = tf.random.stateless_uniform((), seeds + [1, 0], minval=0, maxval=feature_shape[1] - width + 1, dtype=tf.int32)
+            band = tf.range(feature_shape[1])
+            x = tf.where(((band >= start) & (band < start + width))[None, :], tf.zeros_like(x), x)
         return x, packed
 
-    dataset = dataset.map(map_block, num_parallel_calls=1, deterministic=True)
+    dataset = dataset.enumerate().map(map_block, num_parallel_calls=1, deterministic=True)
     dataset = dataset.batch(batch_size, drop_remainder=False)
     batches = (len(names) + batch_size - 1) // batch_size
     dataset = dataset.apply(tf.data.experimental.assert_cardinality(batches))
@@ -132,6 +148,10 @@ def train(cache, audit_path, output, *, authorized=False, folds=0, training_poli
     log.event("preflight_started", cache=str(cache), audit=str(audit_path))
     config, index = preflight(cache, audit_path)
     policy = load_policy(training_policy, config)
+    classes = selected_classes(policy, config)
+    indices = [config["classes"].index(c) for c in classes]
+    initial_lr, weight_decay = optimizer_settings(policy, config)
+    objective = loss_settings(policy)
     log.event("preflight_completed", windows=len(index), classes=config["classes"])
     if folds and (folds < 2 or index.group.nunique() < folds):
         raise ValueError("Insufficient distinct groups for CV")
@@ -148,6 +168,7 @@ def train(cache, audit_path, output, *, authorized=False, folds=0, training_poli
     (output / "source.json").write_text(json.dumps({"index_sha256": digest(Path(cache) / "index.csv"),
         "audit_sha256": digest(audit_path), "config": config, "evaluation_role": "development_only",
         "training_policy": policy, "training_policy_sha256": digest(training_policy) if training_policy is not None else None,
+        "model_classes": classes, "normalization_scope": "all_original_supervised_TRAIN_classes",
         "input_pipeline_version": INPUT_PIPELINE_VERSION,
         "shuffle_policy": "seeded_full_filename_permutation_each_training_epoch"}, indent=2))
     partitions = [(index[index.split == "train"], index[index.split == "validation"])]
@@ -157,9 +178,15 @@ def train(cache, audit_path, output, *, authorized=False, folds=0, training_poli
         partitions = [(index.iloc[a], index.iloc[b]) for a, b in GroupKFold(folds).split(index, groups=index.group)]
     predictions = []
     try:
+        if policy['schema_version'] in OBJECTIVE_SCHEMAS:
+            tf.keras.utils.set_random_seed(config['seed'])
+            tf.config.experimental.enable_op_determinism()
+            tf.config.experimental.enable_tensor_float_32_execution(False)
+            log.event('numerical_runtime_configured', **policy['runtime'])
         log.event("runtime", **runtime_details(tf))
-        log.event("experiment_started", output=str(output), policy=policy, initial_lr=config["learning_rate"],
-                  dropout=model_dropout(policy),
+        log.event("experiment_started", output=str(output), policy=policy, initial_lr=initial_lr,
+                  weight_decay=weight_decay, model_classes=classes, frequency_mask_bins=frequency_mask_bins(policy),
+                  dropout=model_dropout(policy), temporal_dilation=model_dilation(policy),
                   maximum_epochs=config["epochs"], patience=config["patience"], batch_size=config["batch_size"],
                   folds=len(partitions), input_pipeline=INPUT_PIPELINE_VERSION, official_test="sealed")
         for fold, (fitting, validation) in enumerate(partitions):
@@ -169,18 +196,37 @@ def train(cache, audit_path, output, *, authorized=False, folds=0, training_poli
             tf.keras.utils.set_random_seed(config["seed"] + fold)
             mean, std, weights = statistics(cache, fitting, log=log)
             log.event("statistics_completed", positive_weights=dict(zip(config["classes"], weights.tolist())))
+            objective_report = None
+            model_weights = weights[indices]
+            if policy['schema_version'] in OBJECTIVE_SCHEMAS:
+                from .lung_objective import plan_supervision
+                fitting, model_weights, objective_report = plan_supervision(cache, fitting, indices, objective, log=log)
+                log.event('supervision_planned', **{k: v for k, v in objective_report.items() if k != 'fitting_files'})
             x, _, _ = load_block(Path(cache) / fitting.iloc[0].file)
-            model = build_model(x.shape, config["classes"], positive_weights=weights,
-                                learning_rate=config["learning_rate"], dropout=model_dropout(policy))
-            log.event("model_built", input_shape=list(x.shape), dropout=model_dropout(policy))
+            model = build_model(x.shape, classes, positive_weights=model_weights,
+                                learning_rate=initial_lr, dropout=model_dropout(policy), temporal_dilation=model_dilation(policy), weight_decay=weight_decay,
+                                **({'bottleneck_channels': model_bottleneck(policy)} if model_bottleneck(policy) is not None else {}),
+                                **({'loss_numerics': objective['numerics']} if policy['schema_version'] in OBJECTIVE_SCHEMAS else {}))
+            log.event("model_built", input_shape=list(x.shape), dropout=model_dropout(policy), temporal_dilation=model_dilation(policy),
+                      bottleneck_channels=model_bottleneck(policy),
+                      parameter_count=model.count_params() if callable(getattr(model, 'count_params', None)) else None)
             folder = output / f"fold-{fold}"
             folder.mkdir()
+            if objective_report is not None:
+                (folder / 'objective.json').write_text(json.dumps(objective_report, indent=2))
             np.savez(folder / "normalization.npz", mean=mean, std=std)
             training_data = build_dataset(cache, fitting, mean, std, batch_size=config["batch_size"],
-                                          training=True, seed=config["seed"] + fold)
+                                          training=True, seed=config["seed"] + fold, class_indices=indices,
+                                          frequency_mask=frequency_mask_bins(policy))
             validation_data = build_dataset(cache, validation, mean, std, batch_size=config["batch_size"],
-                                            training=False, seed=config["seed"] + fold)
+                                            training=False, seed=config["seed"] + fold, class_indices=indices)
             callbacks = development_callbacks(folder, config, policy)
+            if policy['schema_version'] == TRAJECTORY_POLICY_SCHEMA:
+                from .lung_trajectory import trajectory_callback
+                callbacks.append(trajectory_callback(folder, Path(cache), fitting, validation,
+                    pd.read_csv(Path(audit_path).parent / 'recordings.csv', dtype={'group': str}),
+                    mean, std, indices, classes, model_weights, policy,
+                    seed=config['seed']+fold, batch_size=config['batch_size'], log=log))
             stopper = next(c for c in callbacks if isinstance(c, tf.keras.callbacks.EarlyStopping))
             callbacks.append(process_callback(log, epochs=config["epochs"],
                 steps=(len(fitting) + config["batch_size"] - 1) // config["batch_size"], early_stopper=stopper,
@@ -194,6 +240,7 @@ def train(cache, audit_path, output, *, authorized=False, folds=0, training_poli
             log.event("development_prediction_started", fold=fold, windows=len(validation))
             for position, row in enumerate(validation.itertuples(), 1):
                 features, truth, validity = load_block(Path(cache) / row.file)
+                truth, validity = truth[:, indices], validity[:, indices]
                 probability = np.asarray(model(np.clip((features - mean) / std, -5, 5)[None], training=False))[0]
                 scores.append(probability); truths.append(truth); masks.append(validity)
                 predictions.append({"fold": fold, "group": row.group, "file": row.file})
@@ -201,15 +248,15 @@ def train(cache, audit_path, output, *, authorized=False, folds=0, training_poli
             truth, probability, validity = np.concatenate(truths), np.concatenate(scores), np.concatenate(masks)
             log.event("threshold_selection_started", fold=fold, population="development_only")
             thresholds = select_thresholds(truth, probability, validity)
-            log.event("threshold_selection_completed", thresholds=dict(zip(config["classes"], thresholds)))
+            log.event("threshold_selection_completed", thresholds=dict(zip(classes, thresholds)))
             log.event("evaluation_started", fold=fold)
             metrics = frame_metrics(truth, probability, validity, thresholds)
             np.savez_compressed(folder / "development_predictions.npz", truth=truth, scores=probability, mask=validity)
-            (folder / "evaluation.json").write_text(json.dumps({"role": "development_only", "classes": config["classes"],
+            (folder / "evaluation.json").write_text(json.dumps({"role": "development_only", "classes": classes,
                 "thresholds": thresholds, "metrics": metrics,
                 "groups": sorted(validation.group.unique()), "patient_disjoint_verified": False}, indent=2))
             (folder / "history.json").write_text(json.dumps(history.history))
-            for name, metric in zip(config["classes"], metrics):
+            for name, metric in zip(classes, metrics):
                 log.event("class_evaluation", class_name=name, **metric)
             log.event("fold_completed", fold=fold, artifacts=str(folder))
             tf.keras.backend.clear_session()
@@ -258,6 +305,11 @@ def train_final(cache, audit_path, selection_path, output, *, authorized=False, 
                    for v in selection["postprocessing"].values())):
         raise ValueError("A frozen development selection bound to this cache/config is required")
     policy, rates = final_learning_rates(selection, config)
+    if policy['schema_version'] in OBJECTIVE_SCHEMAS:
+        raise ValueError('Objective research policies require a separately specified final package contract')
+    if selected_classes(policy, config) != config["classes"]:
+        raise ValueError("Research class-subset heads require a separately specified final package contract")
+    initial_lr, weight_decay = optimizer_settings(policy, config)
     output = Path(output)
     if output.exists():
         raise ValueError("Never overwrite a final experiment")
@@ -270,16 +322,17 @@ def train_final(cache, audit_path, selection_path, output, *, authorized=False, 
         log.event("runtime", **runtime_details(tf))
         log.event("final_preflight_completed", windows=len(index), groups=index.group.nunique(),
                   classes=config["classes"], fixed_epochs=selection["epochs"], policy=policy,
-                  dropout=model_dropout(policy),
+                  dropout=model_dropout(policy), temporal_dilation=model_dilation(policy),
                   official_test="sealed", validation_callbacks=False)
         mean, std, weights = statistics(cache, index, log=log)
         log.event("statistics_completed", positive_weights=dict(zip(config["classes"], weights.tolist())))
         x, _, _ = load_block(Path(cache) / index.iloc[0].file)
         tf.keras.utils.set_random_seed(config["seed"])
         model = build_model(x.shape, config["classes"], positive_weights=weights,
-                            learning_rate=config["learning_rate"], dropout=model_dropout(policy))
+                            learning_rate=initial_lr, dropout=model_dropout(policy), temporal_dilation=model_dilation(policy), weight_decay=weight_decay,
+                            **({'bottleneck_channels': model_bottleneck(policy)} if model_bottleneck(policy) is not None else {}))
         dataset = build_dataset(cache, index, mean, std, batch_size=config["batch_size"],
-                                training=True, seed=config["seed"])
+                                training=True, seed=config["seed"], frequency_mask=frequency_mask_bins(policy))
         callbacks = []
         if rates is not None:
             callbacks.append(tf.keras.callbacks.LearningRateScheduler(lambda epoch, current: rates[epoch], verbose=1))

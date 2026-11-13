@@ -1,0 +1,8 @@
+{
+  "schema_version": "lung-training-policy-v4",
+  "learning_rate_schedule": {"type": "constant"},
+  "model": {"dropout": 0.2, "temporal_dilation": 16},
+  "optimizer": {"initial_learning_rate": 0.001, "weight_decay": 0.0},
+  "augmentation": {"frequency_mask_bins": 0},
+  "classes": ["wheeze", "rhonchi", "crackle"]
+}

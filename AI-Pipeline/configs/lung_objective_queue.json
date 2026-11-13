@@ -1,0 +1,11 @@
+{
+  "schema_version": "lung-development-queue-v1",
+  "baseline": "EXP-L015-three-sound",
+  "selection": "Bounded numerical/objective research only; no automatic promotion or further adaptive run. Three predeclared comparisons on internal development, not official test. Save per-class metrics, fixed-threshold source strata, device-only TRAIN prior and inference parity. Later best epoch alone is not success.",
+  "research_gate": {"macro_pr_auc_improvement": 0.01, "maximum_per_class_pr_auc_drop": 0.01, "crackle_roc_auc_minimum": 0.60, "crackle_specificity_minimum": 0.10, "maximum_sensitivity_drop_per_class": 0.02, "clinical_gate": false},
+  "runs": [
+    {"experiment_id": "EXP-L016-numerical-contract", "policy": "configs/lung_training_stable_loss.json", "factor": "Justified numerical boundary: stable BCE and deterministic float32 runtime together. Compared with L015; not an isolated estimate of the BCE effect. Objective, fitting rows, normalization, masks, model and LR unchanged.", "pipeline_audit": true},
+    {"experiment_id": "EXP-L017-window-objective", "policy": "configs/lung_training_window_objective.json", "comparison_baseline": "EXP-L016-numerical-contract", "factor": "Only positive class-weight estimator changes: global frame counts to actual per-window objective mass, retaining clipping bounds and all fitting windows.", "pipeline_audit": true},
+    {"experiment_id": "EXP-L018-supervised-windows", "policy": "configs/lung_training_supervised_windows.json", "comparison_baseline": "EXP-L017-window-objective", "factor": "Only remove zero-supervision TRAIN windows from fitting; normalization scope and complete validation coverage unchanged. Fewer steps per epoch are reported, not treated as a benefit by themselves.", "pipeline_audit": true}
+  ]
+}

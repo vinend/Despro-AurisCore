@@ -1,0 +1,6 @@
+{
+  "schema_version": "lung-development-queue-v1",
+  "baseline": "EXP-L010-phase-only",
+  "selection": "Research only: compare same-population PR-AUC, sensitivity, phase conflict and event metrics; no automatic promotion.",
+  "runs": [{"experiment_id": "EXP-L013-compact-phase", "policy": "configs/lung_training_compact_phase.json", "factor": "64-channel pointwise frequency-feature bottleneck before unchanged temporal convolution"}]
+}

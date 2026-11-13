@@ -1,5 +1,141 @@
 # TESTING.md
 
+## Fixed-reference features and trajectory — 2026-11-10
+
+40 focused checks pass for Lung-only fixed-reference/floor features, identical
+shared/legacy tensors, overlap/tail/mask behavior, closed v7 policy, grouped
+probe selection and pre-restoration epoch checkpoints with unchanged optimizer
+counter. Broader regression: 297 pass, one existing Abdomen constructor validation
+test fails and reproduces on exported Git HEAD source. That unrelated failure
+is preserved in the evidence and not counted as a passing test. Full real-cache
+payload/overlap verification is required before the new representation is used.
+See AI-Pipeline/docs/lung_fixed_reference_trajectory.md.
+Complete real-cache verification passes all 46,308 non-feature payloads and
+38,590 overlap pairs (maximum feature delta zero). Real v7 preflight and RTX 5060
+forward/backward/trajectory snapshot pass with zero optimizer updates. Ten final
+feature/trajectory tests include actual EarlyStopping restoration. Old/new parsed
+indices match; CSV byte hashes are recorded separately, not claimed identical.
+
+## Completed L016–L018 deep review — 2026-11-10
+
+Six focused review tests pass: per-window positive/negative BCE decomposition,
+mask-zero windows, monotonic analytic weight inverse, absolute-frame overlap
+merge/padding/conflict rejection, and a synthetic reproduction of window-relative
+dB offsets, plus existing loss/stopping checks. Completed-run population hashes
+match and best losses reconstruct within 0.0000015. A 32-pair deterministic GPU
+inference-only probe holds audio/model fixed and reduces overlap disagreement
+after in-memory reference alignment. No optimizer updates, cache mutation,
+threshold selection or test-label reads. See
+[evidence and limits](AI-Pipeline/docs/lung_l016_l018_deep_review.md).
+
+## Lung objective/numerical verification — 2026-11-10
+
+148 complete Lung/source tests pass, no skips, 271 dependency warnings, 17.90 s.
+New checks cover closed v6 policies and legacy replay, actual Dense sigmoid
+extreme gradients, logits-reference/mask agreement, fitting-only weight support,
+zero-window filtering/cardinality, complete validation coverage, fixed-threshold
+source/date strata and queue parity/failure preservation. All three real-cache
+preflights pass. Actual RTX 5060 forward/backward at [2,309,96] has ten finite
+gradient arrays and exact reload parity, without optimizer steps. On frozen L015,
+explicit deterministic float32 CPU/GPU probes each have zero cross-process score
+difference; historical saved-score parity under that runtime still fails.
+See [protocol and evidence](AI-Pipeline/docs/lung_objective_experiments.md).
+
+## L015 pipeline audit — 2026-11-10
+
+Three new `test_lung_loss_audit.py` tests pass in WSL/TensorFlow (no skips):
+per-window/global-frame weighting mismatch, unknown-mask zero contribution and
+extreme-logit gradient loss under legacy clipping versus stable BCE/reference.
+The read-only investigation scans 46,308 development windows and runs frozen
+checkpoint inference on deterministic diagnostic samples without optimizer steps.
+All ten saved layer arrays equal the best checkpoint. Strict reloaded prediction
+parity on 16 windows fails at atol/rtol 1e-4 (max 0.00012337); zero sampled
+threshold decisions change. This remains open, not a passing parity claim.
+See [scope, evidence and limitations](AI-Pipeline/docs/lung_l015_pipeline_investigation.md).
+No training policy, threshold, source split, official test or production contract
+was changed by this investigation.
+
+## Three-sound Lung verification — 2026-11-10
+
+135 complete Lung/source tests pass with zero skips and 231 dependency
+deprecation warnings (17.18 s). New tests verify L015 differs from L011 only in
+selected classes, uses columns 2/3/5, emits 309 x 3 independent sigmoid outputs
+with 269,315 parameters, and passes actual development trainer wiring without
+fitting. Real HF preflight passes all 46,308 windows. Evidence:
+`AI-Pipeline/artifacts/lung-launch/three-sound-checks-20261110/`.
+GPU fitting is launched separately; no test labels or deployment model activated.
+
+## Compact Lung verification — 2026-11-10
+
+Latest full Lung/source suite: 132 passed, zero skips, 221 dependency deprecation
+warnings, 14.48 s. `test_lung_compact.py` covers strict v5 policies, legacy replay,
+parameter/time-shape invariants, serialization, valid-label-only error cues and
+matching-control comparison labels. The trainer integration tests include both
+compact tasks without fitting. Actual synthetic forward/backward on GPU:0 passes
+for both 93k-parameter models with zero optimizer steps. Evidence:
+`AI-Pipeline/artifacts/lung-launch/compact-checks-20261110/`.
+Ten selected development recordings / 60 windows pass source/cache regeneration;
+user listening confirmation was received before L013/L014 launch. This does not
+verify all labels or establish model improvement. Official test remains closed.
+
+## Read-only completed Lung review — 2026-11-10
+
+`test_lung_training_review.py`: two tests pass for best-epoch-plus-patience
+arithmetic and per-window masked BCE/common-weight loss reconstruction, including
+shape/weight guards. The real review validates identical saved truth/mask/group/
+class identities across L006/L007/L008/L012 and reconstructs reported best loss
+within 0.00004. No fitting, threshold reselection or official-test access occurs.
+`scripts/analyze_lung_overfit.py` saves complete metrics and a visually inspected
+four-panel PNG. See AI-Pipeline/docs/lung_l012_review.md for findings and limitations.
+
+## SPRSound source-addition verification — 2026-11-10
+
+`test_sprsound.py` verifies test-patient/blob exclusion from metadata only,
+millisecond category mapping, combined positives, acoustic-only validity,
+unknown interval/phase masking, quality and timestamp rejection, immutable cache
+creation, combined manifest counts, and byte-identical original HF validation.
+Latest full suite: 116 passed, no skips, 173 dependency deprecation warnings,
+7.58 s (CPU execution under the WSL TensorFlow environment). Log:
+`AI-Pipeline/artifacts/lung-launch/SPRSound-20261110/full-tests.log`.
+Actual multi-source cache preflight passes 48,489 development windows.
+L012 startup confirms RTX 5060 GPU:0 with a 3,072 MiB cap; no completed metrics
+or clinical validity are claimed. Source test labels/audio were not downloaded.
+
+## Lung generalization policy/queue verification — 2026-11-10
+
+`test_lung_research.py` exercises invalid optimizer/augmentation/class policies,
+frozen lower-LR final replay, deterministic TRAIN-only masking with unchanged
+targets/masks, validation isolation, actual development wiring for each of the
+five policies without fitting weights, comparison population guards, explicit
+queue authorization and serial failure preservation. The localization test
+also validates projected sound-head predictions against original cache columns.
+Older policy and retained-worker tests remain in the complete Lung suite.
+These engineering tests do not establish an accuracy improvement.
+
+Latest complete Lung run: 108 passed, no skips, 173 dependency deprecation
+warnings, 13.60 s under Ubuntu WSL2 / TensorFlow 2.21.0. Log:
+`AI-Pipeline/artifacts/lung-launch/improvement-checks-20261110/pytest.log`.
+`git diff --check` also passes. Standalone L007–L011 training was launched only
+after these checks; no official-test evaluation was performed.
+
+## Local WSL GPU launch verification — 2026-11-10
+
+Ubuntu-24.04 WSL2 / Python 3.12.3 / TensorFlow 2.21.0 sees the RTX 5060.
+An L006-shaped model (309 x 96 input, six outputs, dilation 16) produced finite
+outputs and gradients on GPU:0, with zero optimizer steps and synthetic data only.
+`python -m pytest tests/test_lung*.py -q` passed all 85 tests, no skips,
+with 123 dependency deprecation warnings. `pip check` found no broken requirements.
+Linux real-cache preflight passed all 46,308 development windows.
+Sampled source/cache review covered six recordings / 36 windows without mismatch;
+the user subsequently confirmed listening/annotation review was appropriate.
+This does not establish exhaustive label coverage, patient independence or model
+performance. Evidence is ignored under
+`AI-Pipeline/artifacts/lung-launch/EXP-L006-20261110/`; alignment evidence is
+under `artifacts/lung-launch/alignment-gpu-20261110/` within AI-Pipeline.
+L006 was launched separately as WSL PID 2489; startup reached TRAIN statistics.
+No official-test labels opened, package activated or completed model metrics
+claimed at launch. Runtime checks do not validate clinical performance.
+
 Shared recorded-audio service checks live in
 `AI-Pipeline/tests/test_analysis_service.py`: PCM/WAV parity, int16 scaling,
 quality/size/rate rejection before backend loading, mode routing, candidate
@@ -468,3 +604,18 @@ dataset, lifecycle, localization, diagnostics, core and inference), with Keras
 NumPy array-copy deprecation warnings. Real-cache v2 preflight accepted 46,308
 windows, dropout 0.4 and constant LR 0.001, reporting training_started=false.
 No official test labels were opened and no weights were optimized.
+
+Context/alignment verification uses `test_lung_context.py` and
+`test_lung_alignment.py`: invalid/legacy/frozen dilation policy, identical model
+parameter count and temporal output shape, saved-model parity, source/annotation
+hash rejection, regenerated cache targets including deliberate shifted-target
+detection, immutable review output, listenable WAV copies and exclusion of
+non-development IDs. Trainer stubs verify v3 dilation reaches development and
+final builders. No optimizer steps or official-test annotation reads are needed.
+
+Verified 2026-10-10: 85 focused Lung tests passed, with Keras NumPy array-copy
+deprecation warnings. The real local development review selected six recordings
+covering TRAIN/validation devices plus stridor/rhonchi examples, regenerated 36
+windows and found zero source/cache mismatches. Listening-based acoustic alignment
+remains unverified. Evidence is ignored under artifacts/lung-launch; no model
+fitting or official-test opening was performed.

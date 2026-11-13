@@ -6,8 +6,44 @@ from .preprocessing import preprocess
 from .spectrogram import extract_spectrogram_tensor, validate_spectrogram_config
 
 
+def feature_policy(config: dict) -> dict | None:
+    """Validate opt-in Lung-only fixed-reference features; absence preserves legacy."""
+    policy = config.get('lung_feature_policy')
+    if 'lung_feature_policy' not in config:
+        return None
+    if (not isinstance(policy, dict) or set(policy) != {'schema_version', 'reference_power', 'floor_db'}
+            or policy['schema_version'] != 'lung-fixed-logmel-v1'
+            or any(isinstance(policy[k], bool) or not isinstance(policy[k], (int, float))
+                   or not np.isfinite(policy[k]) for k in ('reference_power', 'floor_db'))
+            or policy['reference_power'] <= 0 or not -120 <= policy['floor_db'] <= -20):
+        raise ValueError('Explicit finite Lung fixed-reference feature policy required')
+    return policy
+
+
+def extract_lung_features(audio: np.ndarray, config: dict) -> np.ndarray:
+    """Time-major Lung features; fixed floor has no window-dependent top_db cap."""
+    policy = feature_policy(config)
+    if policy is None:
+        return extract_spectrogram_tensor(audio, config).T.astype(np.float32)
+    validate_config(config)
+    signal = np.asarray(audio)
+    if signal.ndim != 1 or not signal.size or not np.isfinite(signal).all():
+        raise ValueError('Finite nonempty mono Lung feature input required')
+    # Reuse the exact FFT/mel calculation; change only the Lung dB reference/floor.
+    from .spectrogram import _power_spectrogram
+    power = _power_spectrogram(signal, config).astype(np.float64)
+    minimum = policy['reference_power'] * 10 ** (policy['floor_db']/10)
+    if not np.isfinite(power).all() or not np.isfinite(minimum) or minimum <= 0:
+        raise ValueError('Invalid Lung power tensor or fixed floor')
+    db = 10*np.log10(np.maximum(power, minimum)/policy['reference_power'])
+    if not np.isfinite(db).all():
+        raise ValueError('Nonfinite fixed-reference Lung features')
+    return db.T.astype(np.float32)
+
+
 def validate_config(config):
     validate_spectrogram_config(config)
+    feature_policy(config)
     if (config["sample_rate"] != 8000 or config.get("spectrogram_center") is not False
             or config.get("spectrogram_type") != "logmel" or config.get("spectrogram_normalization") != "none"
             or config["feature_fmax"] >= 2000 or not 0 <= config["overlap"] < 1
@@ -39,7 +75,7 @@ def windows(audio, rate, events, config, *, valid_end_s=None, coverage=False):
     for start in starts:
         block = x[start:start + size]
         block = np.pad(block, (0, size - len(block)))
-        feature = extract_spectrogram_tensor(block, config).T.astype(np.float32)
+        feature = extract_lung_features(block, config)
         times = (start + np.arange(len(feature)) * hop + fft / 2) / target_rate
         ends = (start + np.arange(len(feature)) * hop + fft) / target_rate
         mask = np.repeat((ends <= valid_end_s + 1e-9)[:, None], len(config["classes"]), axis=1)

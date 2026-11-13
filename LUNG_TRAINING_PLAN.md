@@ -1,5 +1,12 @@
 # Lung training implementation plan — HF_Lung_V1
 
+Current execution update (2026-11-10): the user authorizes local development
+training with GPU use. See [Lung improvement and GPU training plan](LUNG_IMPROVEMENT_PLAN.md)
+for the L006 protocol and conditional follow-up comparisons. Ubuntu WSL2,
+TensorFlow GPU forward/backward and 85 Lung tests now pass. L006 was launched
+as WSL PID 2489; startup reached TRAIN statistics. No completed evaluation
+result exists at launch; official test and deployment remain separate.
+
 Date: 2026-10-10. Status: software implemented; development training authorized.
 The initial EXP-L001 launch stopped during preparation; preserve it and start a
 fresh experiment when retrying. The user subsequently completed Linux EXP-L002;

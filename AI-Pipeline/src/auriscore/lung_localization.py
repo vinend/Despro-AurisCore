@@ -28,7 +28,12 @@ def _development(experiment: Path, fold: int) -> tuple[dict, Path, dict]:
         raise ValueError("Nonnegative development fold required")
     source = json.loads((experiment / "source.json").read_text())
     status = json.loads((experiment / "status.json").read_text())
-    config = source["config"]
+    config = dict(source["config"])
+    model_classes = source.get("model_classes", config["classes"])
+    if (not isinstance(model_classes, list) or not model_classes
+            or model_classes != [c for c in config["classes"] if c in model_classes]):
+        raise ValueError("Invalid research model class projection")
+    config["classes"] = model_classes
     validate_config(config)
     folder = experiment / f"fold-{fold}"
     evaluation = json.loads((folder / "evaluation.json").read_text())
@@ -131,7 +136,7 @@ def evaluate_development_localization(cache: Path, audit: Path, experiment: Path
                     minimum_s=minimum_s, merge_gap_s=merge_gap_s)
     cached_config, index = preflight(cache, audit)
     source = json.loads((experiment / "source.json").read_text())
-    if (config != cached_config or source.get("index_sha256") != digest(cache / "index.csv")
+    if (source["config"] != cached_config or source.get("index_sha256") != digest(cache / "index.csv")
             or source.get("audit_sha256") != digest(audit)):
         raise ValueError("Development predictions are not bound to this cache")
     order = json.loads((experiment / "prediction_index.json").read_text())
@@ -155,6 +160,7 @@ def evaluate_development_localization(cache: Path, audit: Path, experiment: Path
             or not np.isin(truth, [0, 1]).all() or not np.isin(masks, [0, 1]).all()):
         raise ValueError("Saved frame arrays disagree")
     offset = 0
+    class_indices = [cached_config["classes"].index(c) for c in config["classes"]]
     for row in order:
         if row["file"] not in selected.index:
             raise ValueError("Prediction row is not in development cache")
@@ -165,7 +171,7 @@ def evaluate_development_localization(cache: Path, audit: Path, experiment: Path
         if record.split not in {"train", "validation"} or record.split != item.split or str(record.group) != str(item.group):
             raise ValueError("Non-development recording rejected")
         with np.load(cache / row["file"], allow_pickle=False) as block:
-            y, mask, start = block["targets"], block["mask"], int(block["start_sample"])
+            y, mask, start = block["targets"][:, class_indices], block["mask"][:, class_indices], int(block["start_sample"])
         end = offset + len(y)
         if not np.array_equal(truth[offset:end], y) or not np.array_equal(masks[offset:end], mask):
             raise ValueError("Saved predictions are misaligned with cache targets")

@@ -1,0 +1,14 @@
+{
+  "schema_version": "lung-fixed-reference-experiment-v1",
+  "experiment_id": "EXP-L019-fixed-reference",
+  "baseline": "EXP-L017-window-objective",
+  "policy": "configs/lung_training_fixed_reference_trajectory.json",
+  "factor": "Lung log-mel reference/floor changes from per-window max/relative floor to absolute reference1/floor-80dB; recompute TRAIN normalization. Epoch telemetry is observational; model, optimizer, loss, fitting rows and data split match L017.",
+  "threshold_rule": {"population": "internal_development_only", "method": "maximum_F1_per_class", "grid_start": 0.05, "grid_stop": 0.95, "points": 37, "tie": "lowest_threshold"},
+  "early_stopping": {"monitor": "val_loss", "patience": 8, "restore_best_weights": true, "maximum_epochs": 50},
+  "research_gate_relative_to_baseline": {"macro_pr_auc_improvement": 0.01, "maximum_per_class_pr_auc_drop": 0.01, "crackle_roc_auc_minimum": 0.60, "crackle_specificity_minimum": 0.10, "maximum_sensitivity_drop_per_class": 0.02},
+  "evaluation_unit": "masked_development_frames_including_overlapping_windows; independent patients unverified",
+  "official_test_labels_opened": false,
+  "automatic_promotion": false,
+  "additional_adaptive_runs": false
+}

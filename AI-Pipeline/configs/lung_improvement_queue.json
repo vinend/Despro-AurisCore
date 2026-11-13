@@ -1,0 +1,12 @@
+{
+  "schema_version": "lung-development-queue-v1",
+  "baseline": "EXP-L006-temporal-cnn-context",
+  "selection": "No automatic winner or deployment; compare matched classes, sensitivity and PR-AUC, phase conflict, localization and best epoch after completion.",
+  "runs": [
+    {"experiment_id": "EXP-L007-lower-initial-lr", "policy": "configs/lung_training_lower_lr.json", "factor": "Initial LR 0.001 -> 0.0003"},
+    {"experiment_id": "EXP-L008-weight-decay", "policy": "configs/lung_training_weight_decay.json", "factor": "Adam decoupled weight decay 0 -> 0.0001"},
+    {"experiment_id": "EXP-L009-frequency-mask", "policy": "configs/lung_training_frequency_mask.json", "factor": "TRAIN-only normalized-feature frequency mask width 0..4 bins"},
+    {"experiment_id": "EXP-L010-phase-only", "policy": "configs/lung_training_phase_only.json", "factor": "Independent phase-only sigmoid head; existing overlap policy retained"},
+    {"experiment_id": "EXP-L011-sound-only", "policy": "configs/lung_training_sound_only.json", "factor": "Independent four-sound sigmoid head"}
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "schema_version": "lung-development-queue-v1",
+  "baseline": "EXP-L011-sound-only",
+  "selection": "Research only: compare matching acoustic classes and sensitivity/PR-AUC/localization; no automatic promotion.",
+  "runs": [{"experiment_id": "EXP-L014-compact-sound", "policy": "configs/lung_training_compact_sound.json", "factor": "64-channel pointwise frequency-feature bottleneck before unchanged temporal convolution"}]
+}

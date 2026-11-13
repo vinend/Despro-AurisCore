@@ -9,6 +9,38 @@ from .acquisition_lung import digest
 from .lung_training import preflight
 
 
+def stratified_scores(truth: np.ndarray, scores: np.ndarray, mask: np.ndarray,
+                      classes: list[str], thresholds: list[float],
+                      devices: list[str], groups: list[str]) -> dict:
+    """Report fixed-threshold metrics by source/device and date, without tuning.
+
+    Arrays are window x frame x class. Metadata describes windows in their saved
+    prediction order. Counts retain overlapping frames, not independent patients.
+    """
+    from .lung_evaluation import frame_metrics
+    if (truth.ndim != 3 or truth.shape != scores.shape or mask.shape != truth.shape
+            or len(devices) != len(truth) or len(groups) != len(truth)):
+        raise ValueError('Aligned prediction windows and metadata required')
+    score_summary(truth.reshape(-1, len(classes)), scores.reshape(-1, len(classes)),
+                  mask.reshape(-1, len(classes)), classes, thresholds)
+    report = {'unit': 'masked_frames_in_overlapping_development_windows',
+              'thresholds_reselected': False, 'independent_patient_validation': False}
+    for name, labels in [('device', devices), ('date_group', groups)]:
+        labels = np.asarray(labels, str)
+        result = {}
+        for label in sorted(set(labels)):
+            selected = labels == label
+            metrics = frame_metrics(truth[selected], scores[selected], mask[selected], thresholds)
+            for metric in metrics:
+                total = sum(metric[k] for k in ('tp', 'tn', 'fp', 'fn'))
+                metric['accuracy'] = (metric['tp'] + metric['tn']) / total if total else None
+                metric['balanced_accuracy'] = ((metric['sensitivity'] + metric['specificity']) / 2
+                    if metric['sensitivity'] is not None and metric['specificity'] is not None else None)
+            result[label] = {'windows': int(selected.sum()), 'metrics': dict(zip(classes, metrics))}
+        report[name] = result
+    return report
+
+
 def score_summary(truth: np.ndarray, scores: np.ndarray, mask: np.ndarray,
                   classes: list[str], thresholds: list[float]) -> dict:
     """Describe saved scores at existing thresholds without selecting new ones."""
@@ -128,6 +160,7 @@ def diagnose(cache: Path, audit: Path, *, experiment: Path | None = None) -> dic
               "index_sha256": digest(cache / "index.csv"), "audit_sha256": digest(audit),
               "classes": classes, "splits": summarize(totals), "devices": summarize(device_totals),
               "train_positive_weights": dict(zip(classes, weights.tolist())),
+              "train_positive_weights_scope": "global_frame_reference; actual versioned fitting weights are in fold objective.json",
               "phase_target_states": phase, "mask_checks": violations, "annotation_durations": durations,
               "saved_predictions": None}
     if experiment is not None:
@@ -139,13 +172,19 @@ def diagnose(cache: Path, audit: Path, *, experiment: Path | None = None) -> dic
         report["saved_predictions"] = {}
         for folder in sorted(experiment.glob("fold-*")):
             evaluation = json.loads((folder / "evaluation.json").read_text())
-            if evaluation.get("role") != "development_only" or evaluation.get("classes") != classes:
+            model_classes = source.get("model_classes", classes)
+            if (not isinstance(model_classes, list) or not model_classes
+                    or model_classes != [c for c in classes if c in model_classes]
+                    or evaluation.get("role") != "development_only" or evaluation.get("classes") != model_classes):
                 raise ValueError("Invalid development evaluation role/classes")
             path = folder / "development_predictions.npz"
             with np.load(path, allow_pickle=False) as saved:
                 report["saved_predictions"][folder.name] = {
                     "sha256": digest(path),
-                    "summary": score_summary(saved["truth"], saved["scores"], saved["mask"], classes, evaluation["thresholds"])}
+                    "summary": score_summary(saved["truth"], saved["scores"], saved["mask"], model_classes, evaluation["thresholds"])}
+                objective_path = folder / 'objective.json'
+                if objective_path.exists():
+                    report['saved_predictions'][folder.name]['fitting_objective'] = json.loads(objective_path.read_text())
         if not report["saved_predictions"]:
             raise ValueError("No saved development predictions")
     return report

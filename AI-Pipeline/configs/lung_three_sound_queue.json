@@ -1,0 +1,6 @@
+{
+  "schema_version": "lung-development-queue-v1",
+  "baseline": "EXP-L011-sound-only",
+  "selection": "Research only: compare the same wheeze/rhonchi/crackle validation frames against L011, including sensitivity, PR-AUC and localization; no automatic promotion.",
+  "runs": [{"experiment_id": "EXP-L015-three-sound", "policy": "configs/lung_training_three_sound.json", "factor": "Remove stridor supervision/output from the four-sound L011 head; retain three independent acoustic sigmoid outputs"}]
+}

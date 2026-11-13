@@ -99,7 +99,7 @@ def test_dataset_rejects_test_rows_invalid_paths_and_inconsistent_geometry(cache
 
 
 @pytest.mark.parametrize("final", [False, True])
-@pytest.mark.parametrize("policy_kind", ["baseline", "plateau", "dropout"])
+@pytest.mark.parametrize("policy_kind", ["baseline", "plateau", "dropout", "context"])
 def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_windows, monkeypatch, final, policy_kind):
     from auriscore import lung_training, lung_models
     from auriscore.acquisition_lung import digest
@@ -156,6 +156,7 @@ def test_both_trainers_wire_known_shuffled_data_without_fitting_weights(cached_w
 
     def build_without_fitting(*args, **kwargs):
         assert kwargs["dropout"] == (.4 if policy_kind == "dropout" else .2)
+        assert kwargs["temporal_dilation"] == (16 if policy_kind == "context" else 1)
         return NoWeights()
 
     monkeypatch.setattr(lung_models, "build_model", build_without_fitting)
