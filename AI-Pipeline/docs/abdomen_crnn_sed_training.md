@@ -188,10 +188,14 @@ By user instruction (2026-11-12), future Abdomen AI development focused on the *
 
 ---
 
-## 11. Final Model Candidate Selection (EXP-A103 Locked for Production)
+## 11. EXP-A103 candidate status
 
-By architectural and user decision (2026-11-13), **`EXP-A103-abdomen-crnn-hard-negatives` is designated as the primary production candidate model**:
-1. **Clinical Justification:** It is the only trained model inoculated against hardware stethoscope bleed-through and environmental artifacts.
-2. **Post-Processing Configuration:** Operating with dual presets (`screening_recall` for ileus rule-out, and `balanced_precision` / `high_precision` for motility rate counting).
-3. **Downstream Integration:** Model weights `AI-Pipeline/results/EXP-A103-abdomen-crnn-hard-negatives/best_model.keras` are wired into `auriscore.abdomen_inference` and the `abdomen-analysis-v1` service schema for the WebApp CDS interface.
+A103 is a research candidate. The CRNN checkpoint and profile sweeps are
+available for offline evaluation. The existing Abdomen WebApp backend does not
+load this checkpoint or expose its intervals. The historical event evaluator
+pools events across overlapping windows and recording identities, and gates
+matches on onset only. Its reported metrics are development results, not
+validated onset/offset accuracy or evidence for ruling out a condition.
+Re-evaluate by recording with deduplicated windows and explicit boundary
+matching before using these numbers to support a deployment decision.
 

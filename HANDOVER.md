@@ -221,6 +221,6 @@ git push origin feat/abdomen-crnn-sed
   * 2,161 training segments (+20% data). Validation and test sets 100% clean and untouched.
   * Training completed: 27 epochs, best val loss `0.1192`.
   * **Result:** False Positives reduced from 452 down to **427** (-25 FP) at Collar 100ms; Collar 250ms Precision reached **44.43%** (Recall **66.15%**, F1 **53.16%**); High-Precision profile reached **63.04%** Precision.
-* **Locked Production Candidate:** **`EXP-A103`** selected as the production model for `abdomen-analysis-v1` due to demonstrated robustness against real-world stethoscope acoustic artifacts.
+* **Research Candidate:** **`EXP-A103`** remains available for offline evaluation. It is not wired into `abdomen-analysis-v1`; see the training report for evaluation limitations.
 
 

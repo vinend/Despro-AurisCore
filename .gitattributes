@@ -4,3 +4,8 @@ AI-Pipeline/analysis/HEART-DEVELOPMENT-FREEZE-H021/** -text
 AI-Pipeline/configs/rd_ltmil_scientific_binding_b1.json -text
 AI-Pipeline/configs/rd_logmel_temporal_mil_v1.json -text
 AI-Pipeline/research/h022_temporal/*.py text eol=lf
+AI-Pipeline/analysis/EXP-H014-declared-positive-supervision/** -text
+AI-Pipeline/analysis/EXP-H015-heart-site-aware-mil/** -text
+AI-Pipeline/analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/** -text
+AI-Pipeline/analysis/EXP-H022-fold-local-hard-negative-contrastive-representation/** -text
+AI-Pipeline/results/EXP-H021-fold-local-hard-negative-acoustic-mining/** -text

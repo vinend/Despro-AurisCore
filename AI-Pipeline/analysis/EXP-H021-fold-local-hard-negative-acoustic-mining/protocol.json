@@ -1,0 +1,54 @@
+{
+  "config_sha256": "3b00d52eab0f7782ddff5efb8c9957309c64ddd8f9635c846d3b175de21698a0",
+  "created_at": "2026-10-08T16:14:26.996458+00:00",
+  "encoder_initialization": "from_scratch; H014/H016 weights not reused for new outer encoder",
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "python": "/home/rowen/.venvs/auriscore-gpu-tf220/bin/python",
+    "tensorflow": "2.20.0"
+  },
+  "experiment": "EXP-H021-fold-local-hard-negative-acoustic-mining",
+  "external_validation_eligibility": {
+    "f1": 0.75,
+    "pr_auc": 0.85,
+    "precision": 0.65,
+    "roc_auc": 0.92,
+    "sensitivity": 0.9,
+    "specificity": 0.85
+  },
+  "hard_negative_fraction": 0.2,
+  "hard_negative_unit": "recording",
+  "hard_negative_weight_multiplier": 2.0,
+  "hypothesis": "fold-local hard-negative emphasis improves acoustic representation and reduces H020 false positives",
+  "logistic_C_grid": [
+    0.01,
+    0.1,
+    1.0,
+    10.0
+  ],
+  "master_seed": 42,
+  "mining": "5 stratified inner participant folds inside each outer-training fold; Stage-1 inner fit/early-stop split only from inner-training participants; record score=mean segment probability; rank fit-role Absent recordings only; top ceil(20%); score ties by recording ID",
+  "mining_seed": "42 + outer_fold for inner assignment; 42 + 10*outer_fold + inner_fold for inner early-stop split",
+  "ordinary_weight_multiplier": 1.0,
+  "outer_eval": "excluded from inner mining and outer Stage-1 fit/early-stop; evaluated once",
+  "outer_fold_assignments_sha256": "75354a4188b1f23fd907f3f7a3e5a0cef1e0c83636cd205443c8e50572a5fa9e",
+  "precheck_sha256": "fd008c4668663be25ce69f5726425c8a1d528af774066b10ab81665e10121087",
+  "sample_weight_policy": "existing participant-balanced per-segment sample weights multiplied by recording hard-negative factor 2.0 or 1.0; internal early-stop remains unchanged",
+  "sealed_test_boundary": "never open sealed holdout",
+  "single_change": "multiply existing Stage-1 fit segment weights by 2.0 for selected hard-negative recordings; ordinary by 1.0",
+  "source_experiment": "EXP-H020-linear-participant-head",
+  "source_sha256": {
+    "scripts/train_h021_acoustic.py": "31a0db5cd9dd73a9c4cb59a927fdc157285ef92f32c2e649876849818d1f5928",
+    "src/auriscore/cnn.py": "abc4111275e191e842de8f5de6123d8be399a568c9e6084ec32fade5a1fe6cba",
+    "src/auriscore/hard_negative_mining.py": "221778c3d2106d17003b8b96da3ee4141be86c22be635995c8d81a96456a1731",
+    "src/auriscore/linear_head.py": "4a760f3c2b2a8d7b5a591adfc73460191380f8f9de94f02847f3d5c1ac390735"
+  },
+  "success": {
+    "breakthrough": "sensitivity>=.90 FP<=80",
+    "minimum": "sensitivity>=.90 FP<160 F1>.53",
+    "strong": "sensitivity>=.90 FP<=150",
+    "very_strong": "sensitivity>=.90 FP<=120"
+  },
+  "unchanged": "H016/H020 Stage-1 architecture, preprocessing, augmentation, class weighting policy, max epochs/patience, exact H015 outer folds, frozen encoder, uniform participant pooling, H020 scaler/L2 balanced logistic/C-grid/selection/threshold",
+  "validation_boundary": "never open external validation in H021"
+}

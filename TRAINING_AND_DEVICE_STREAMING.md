@@ -352,6 +352,5 @@ this document does not launch training, activate a package or flash hardware.
 - [Organ recording duration and lifecycle](WebApp/src/lib/auriscore/recording-session.ts)
   and [existing backend integration](WebApp/docs/organ-analysis.md).
 
-This guide adds documentation only. The pending EXP-L006/context and alignment
-code changes remain local work at the time of writing; this task does not push
-them or launch an experiment.
+EXP-L006 code and the alignment review are included in the integration. No
+EXP-L006 training result or newly approved deployment package is established.

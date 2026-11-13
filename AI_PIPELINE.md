@@ -4,6 +4,13 @@
 
 The progress_heart research run uses a fold-matched H022 trunk, Temporal MIL and a fit-only H022 precision comparator. The [destination runbook](AI-Pipeline/research/h022_temporal/README.md) defines supervision, calibration and the frozen gate.
 
+The integration also preserves the older H020–H022 research source and H021
+audit evidence from `reconcile/research-master-20261009`. The historical H022
+launch lock still binds its original Linux checkout and source hashes. Merging
+the source does not authorize a replay from master. H020's historical embedding
+inputs are not bundled. No prior WebApp or dataset snapshot replaces the current
+integration.
+
 ## 1. Scope
 
 This document governs **trainable AI work for the current Heart Murmur branch** and its deployment path.
