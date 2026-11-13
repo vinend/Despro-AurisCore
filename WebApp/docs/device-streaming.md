@@ -63,6 +63,15 @@ approval requirements are unchanged; streaming does not activate absent models.
 
 ## Checks and remaining acceptance
 
+Select the matching organ and click **Mulai** under **Prediksi langsung** once
+audio is streaming. Recording and playback are optional. The first result
+needs 10 s Heart, 30 s Lung or 5 s Abdomen plus processing time. Further windows
+are offered roughly once per second when the worker is free. These are
+transport windows; the worker uses the package's own feature and model input
+configuration. Heart DSP works without Murmur weights; Lung/Abdomen require
+verified packages. A103 is not a live package. Timing in the UI measures
+request-to-response, not sensor-to-screen latency.
+
 `npm test` in `mini-services/device-gateway` checks real WebSocket pairing/origin,
 command routing, exact binary forwarding, invalid continuity and stalled sources.
 `npm run test:analysis` in WebApp includes the gateway/browser decoder, full

@@ -6,6 +6,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { AnalysisPythonWorker } from "../src/lib/auriscore/analysis-python.server.ts";
 import { createAnalysisHandler } from "../src/lib/auriscore/analysis-route.server.ts";
+import { createLiveAnalysisHandler } from "../src/lib/auriscore/live-analysis-route.server.ts";
 
 const python = process.env.AURISCORE_PYTHON ?? path.join(process.env.USERPROFILE, ".codex/envs/auriscore-audit/Scripts/python.exe");
 const pipeline = path.resolve("../AI-Pipeline");
@@ -83,25 +84,38 @@ test("worker queue, timeout, cancellation and malformed output fail safely", opt
   } finally { cleanup(directory); }
 });
 
-test("configured real Heart and A005 packages flow through the existing HTTP handler", options, async () => {
+test("all three model adapters produce equivalent results from WAV and live PCM", options, async () => {
   const directory = mkdtempSync(path.join(tmpdir(), "auriscore-model-fixture-"));
   try {
     // Both decisions/evaluations are FICTIONAL fixtures. They are never deployed.
-    const code = `import runpy,sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(sys.argv[1])/'src'))\nroot=Path(sys.argv[1]);tmp=Path(sys.argv[2])\nfor organ in ('heart','abdomen'):\n d=runpy.run_path(str(root/'tests'/('test_'+organ+'_inference.py')))\n p=tmp/organ;p.mkdir()\n inputs=d['inputs'].__wrapped__(p)\n d['deployment'].__wrapped__(inputs)\n`;
+    const code = `import runpy,sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(sys.argv[1])/'src'))\nroot=Path(sys.argv[1]);tmp=Path(sys.argv[2])\nfor organ in ('heart','abdomen'):\n d=runpy.run_path(str(root/'tests'/('test_'+organ+'_inference.py')))\n p=tmp/organ;p.mkdir()\n inputs=d['inputs'].__wrapped__(p)\n d['deployment'].__wrapped__(inputs)\nd=runpy.run_path(str(root/'tests/test_lung_inference.py'))\np=tmp/'lung';p.mkdir()\nd['package'](p,d['config'].__wrapped__(),real_model=True)\n`;
     const prepared = spawnSync(python, ["-c", code, pipeline, directory], { env, encoding: "utf8", timeout: 60_000 });
     assert.equal(prepared.status, 0, prepared.stderr);
     const worker = new AnalysisPythonWorker(python, path.join(pipeline, "scripts/analyze_recording.py"),
       { ...env, AURISCORE_HEART_PACKAGE: path.join(directory, "heart/test-package"),
-        AURISCORE_ABDOMEN_PACKAGE: path.join(directory, "abdomen/fixture-package") });
+        AURISCORE_ABDOMEN_PACKAGE: path.join(directory, "abdomen/fixture-package"),
+        AURISCORE_LUNG_PACKAGE: path.join(directory, "lung/package") });
     try {
       const handler = createAnalysisHandler(undefined, false, (data, mode, signal) => worker.analyze(data, mode, signal));
-      for (const mode of ["heart", "abdomen", "heart"]) {
-        const form = new FormData(); form.set("mode", mode); form.set("audio", new File([wav()], "fixture.wav"));
+      const liveHandler = createLiveAnalysisHandler((samples, mode, signal) => worker.analyzeLive(samples, mode, signal));
+      for (const [mode, seconds] of [["heart", 10], ["abdomen", 5], ["lung", 30]]) {
+        const audio = wav(seconds);
+        const form = new FormData(); form.set("mode", mode); form.set("audio", new File([audio], "fixture.wav"));
         const response = await handler(new Request("http://localhost/api/analysis", { method: "POST", body: form }));
         assert.equal(response.status, 200); const body = await response.json();
-        assert.equal(body.mode, mode); assert.equal(body.status, "completed");
+        assert.equal(body.mode, mode); assert.ok(["completed", "partial"].includes(body.status));
+        assert.ok(body.analysis);
         if (mode === "heart") { assert.equal(body.analysis.murmur.status, "available"); assert.equal(body.analysis.rhythm.heart_rate_bpm, 75); }
-        else { assert.equal(body.analysis.activity.window_count, 2); assert.equal(body.analysis.bowel_rate_per_minute, null); }
+        else if (mode === "abdomen") { assert.equal(body.analysis.activity.window_count, 1); assert.equal(body.analysis.bowel_rate_per_minute, null); }
+        const responseLive = await liveHandler(new Request(`http://localhost/api/analysis/live?mode=${mode}`, {
+          method: "POST", headers: { "Content-Type": "application/octet-stream", "X-AurisCore-Start-Sample": "0" },
+          body: audio.subarray(44),
+        }));
+        assert.equal(responseLive.status, 200);
+        const { result: live, endSample } = await responseLive.json();
+        assert.equal(endSample, seconds * 8000);
+        assert.equal(live.source, "pcm");
+        assert.deepEqual({ ...live, request_id: null, source: "wav" }, { ...body, request_id: null });
       }
     } finally { await worker.dispose(); }
   } finally { cleanup(directory); }

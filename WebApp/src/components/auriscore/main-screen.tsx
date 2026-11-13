@@ -12,9 +12,12 @@ import { ResultCard } from "./result-card";
 import { DeviceConnect, type StreamSettings } from "./device-connect";
 import { LiveListening } from "./live-listening";
 import { OrganFileAnalysis } from "./organ-file-analysis";
+import { OrganResultView } from "./organ-result-view";
 import type { AnalysisMode } from "@/lib/auriscore/analysis-result";
 import { usePcgStream } from "@/hooks/use-pcg-stream";
 import { useRecording } from "@/hooks/use-recording";
+import { useLiveAnalysis } from "@/hooks/use-live-analysis";
+import { LIVE_RATE, LIVE_WINDOW_SAMPLES } from "@/lib/auriscore/live-analysis";
 import { ORGAN_MODE_LABELS } from "@/lib/auriscore/format";
 import { EXPECTED_SAMPLING_RATE } from "@/lib/auriscore/protocol";
 
@@ -41,6 +44,9 @@ export function MainScreen({
   const recordingBusy =
     recording.phase === "recording" || recording.phase === "processing";
   const busy = recordingBusy || uploadBusy;
+  const [liveEnabled, setLiveEnabled] = useState(false);
+  const livePaused = recording.phase === "processing" || uploadBusy;
+  const live = useLiveAnalysis(stream, analysisMode, liveEnabled && !livePaused);
 
   const organModes: { id: AnalysisMode; label: string; icon: typeof HeartPulse; desc: string }[] = [
     { id: "heart", label: "Heart", icon: HeartPulse, desc: "Jantung & PCG" },
@@ -95,6 +101,7 @@ export function MainScreen({
           disabled={busy}
           onConnect={(next) => {
             recording.reset();
+            setLiveEnabled(false);
             setSettings(next);
           }}
         />
@@ -263,6 +270,26 @@ export function MainScreen({
             />
           </aside>
         </div>
+
+        <section className="auris-result" aria-labelledby="live-analysis-heading">
+          <div className="auris-section-heading">
+            <h2 id="live-analysis-heading">Prediksi langsung</h2>
+            <button type="button" className="rounded-md border px-3 py-1"
+              aria-pressed={liveEnabled} disabled={!stream.isConnected || busy}
+              onClick={() => setLiveEnabled(value => !value)}>
+              {liveEnabled ? "Hentikan" : "Mulai"}
+            </button>
+          </div>
+          {liveEnabled && (
+            <p className="text-xs text-muted-foreground" role="status">
+              {livePaused ? "Dijeda selama analisis rekaman atau unggahan." : !stream.isConnected ? "Menunggu koneksi audio."
+                : live.error ?? (live.latest
+                  ? `Jendela ${(live.latest.startSample / LIVE_RATE).toFixed(1)}–${(live.latest.endSample / LIVE_RATE).toFixed(1)} s · ${live.latest.elapsedMs} ms dari kirim hingga hasil`
+                  : `Mengumpulkan ${LIVE_WINDOW_SAMPLES[analysisMode] / LIVE_RATE} detik audio berurutan atau menunggu hasil.`)}
+            </p>
+          )}
+          {liveEnabled && !livePaused && live.latest && <OrganResultView result={live.latest.result} />}
+        </section>
 
         {/* WAV File Upload & Offline Analysis */}
         <OrganFileAnalysis
