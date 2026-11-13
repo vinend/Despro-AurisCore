@@ -256,7 +256,6 @@ class AbdomenInferenceBackend:
                               "limitations": ["Window activity is not event count, event localization or disease diagnosis.",
                                               "Bowel rate, variability and pattern categories require separate validated analysis."]})
 
-
 def abdomen_backend_definition(package: Path) -> BackendDefinition:
     contract = load_abdomen_deployment(package)
     return BackendDefinition("abdomen", BACKEND_VERSION, lambda: AbdomenInferenceBackend(package, _verified_contract=contract),

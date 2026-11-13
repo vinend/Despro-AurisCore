@@ -23,11 +23,18 @@ export class AnalysisPythonWorker {
     private readonly env: NodeJS.ProcessEnv = process.env, private readonly timeoutMs = 90_000,
     private readonly maxQueue = 8, private readonly idleMs = 300_000) {}
   analyze(wav: Buffer, mode: AnalysisMode, signal?: AbortSignal): Promise<OrganAnalysisResult> {
+    return this.enqueue({ wav_base64: wav.toString("base64") }, mode, signal);
+  }
+  analyzeLive(samples: number[], mode: AnalysisMode, signal?: AbortSignal): Promise<OrganAnalysisResult> {
+    if (this.queued > 0) return Promise.reject(new AnalysisPythonError("Analisis sedang sibuk.", 429));
+    return this.enqueue({ samples, sample_rate: 8000, encoding: "int16" }, mode, signal);
+  }
+  private enqueue(audio: object, mode: AnalysisMode, signal?: AbortSignal): Promise<OrganAnalysisResult> {
     if (this.closed) return Promise.reject(new AnalysisPythonError("Layanan analisis sudah ditutup.", 503));
     if (this.queued >= this.maxQueue) return Promise.reject(new AnalysisPythonError("Layanan analisis sibuk. Coba lagi.", 503));
     this.queued++;
     const deadline = Date.now() + this.timeoutMs;
-    const task = this.tail.then(() => this.send(wav, mode, deadline, signal));
+    const task = this.tail.then(() => this.send(audio, mode, deadline, signal));
     this.tail = task.catch(() => undefined);
     return task.finally(() => { this.queued--; });
   }
@@ -87,7 +94,7 @@ export class AnalysisPythonWorker {
     child.on("close", () => { if (this.child === child) this.fail(new AnalysisPythonError("Layanan atau paket model analisis belum tersedia.", 503), false); });
     child.stdin.on("error", () => { if (this.child === child) this.fail(new AnalysisPythonError("Layanan analisis terputus.", 503)); });
   }
-  private send(wav: Buffer, mode: AnalysisMode, deadline: number, signal?: AbortSignal): Promise<OrganAnalysisResult> {
+  private send(audio: object, mode: AnalysisMode, deadline: number, signal?: AbortSignal): Promise<OrganAnalysisResult> {
     if (this.closed) throw new AnalysisPythonError("Layanan analisis sudah ditutup.", 503);
     if (signal?.aborted) throw new AnalysisPythonError("Analisis dibatalkan.", 499);
     const remaining = deadline - Date.now();
@@ -100,7 +107,7 @@ export class AnalysisPythonWorker {
       const abort = () => this.fail(new AnalysisPythonError("Analisis dibatalkan.", 499));
       signal?.addEventListener("abort", abort, { once: true });
       this.pending = { id, mode, resolve, reject, cleanup: () => { clearTimeout(timer); signal?.removeEventListener("abort", abort); } };
-      this.child!.stdin.write(JSON.stringify({ request_id: id, mode, wav_base64: wav.toString("base64") }) + "\n");
+      this.child!.stdin.write(JSON.stringify({ request_id: id, mode, ...audio }) + "\n");
     });
   }
   async dispose() {

@@ -108,6 +108,12 @@ def validate_preprocessing(metadata: dict[str, Any]) -> None:
         raise ValueError("Invalid frozen filter band")
     validate_spectrogram_config(config)
     expected = [*spectrogram_shape(config), 1]
+    if config.get("spectrogram_normalization") == "per_frequency":
+        means = np.asarray(config.get("spectrogram_frequency_mean", []), dtype=float)
+        stds = np.asarray(config.get("spectrogram_frequency_std", []), dtype=float)
+        if (means.shape != (expected[0],) or stds.shape != means.shape
+                or not np.isfinite(means).all() or not np.isfinite(stds).all() or np.any(stds <= 0)):
+            raise ValueError("Invalid frozen spectrogram normalization statistics")
     if metadata.get("input_shape") != expected:
         raise ValueError("Frozen preprocessing and tensor shape disagree")
 

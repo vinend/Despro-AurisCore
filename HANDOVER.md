@@ -2,8 +2,8 @@
 
 **Project:** AurisCore Digital Stethoscope (Assistive Acoustic Screening System)  
 **Repository:** `https://github.com/vinend/Despro-AurisCore.git`  
-**Current Active Feature Branch:** `feat/abdomen-ai`  
-**Status Date:** 2026-10-07  
+**Current Active Feature Branch:** `feat/abdomen-crnn-sed` (CRNN Frame-Level Retraining)  
+**Status Date:** 2026-10-10  
 
 ---
 
@@ -147,3 +147,80 @@ python scripts/training_status.py --plan configs/abdomen_cnn_queue.json
 4. **Git Branch Discipline:**
    * All Abdomen AI changes must stay on `feat/abdomen-ai`.
    * Never force-push or merge broken checkpoints to `master`. Only completed results, configs, and code are committed.
+
+---
+
+## 6. CRNN Sound Event Detection (SED) Retraining Workflow (`feat/abdomen-crnn-sed`)
+
+### A. Objective & Approach
+This branch implements **Approach 2 (Pure Deep Learning Frame-Level SED)**:
+* Replaces global pooling with **frequency-only pooling** + **Bidirectional GRU** + **TimeDistributed Dense**.
+* Predicts acoustic burst probability $P(t) \in [0, 1]$ per **16 ms time frame** (313 frames per 5.0s window).
+* Uses **Binary Focal Loss** ($\gamma=2.0$) to handle silence-vs-burst class imbalance.
+* Evaluates both frame-level metrics and **Event-based F1-score with 100 ms collar tolerance** (DCASE standard).
+
+### B. Step-by-Step Execution on Remote PC Lab
+
+```powershell
+# 1. Navigate and switch to the retraining branch
+cd D:\Musyaffa\Despro-AurisCore\AI-Pipeline
+git fetch origin
+git checkout feat/abdomen-crnn-sed
+git pull origin feat/abdomen-crnn-sed
+
+# 2. Activate virtual environment
+.venv\Scripts\Activate.ps1
+
+# 3. Kill any lingering Python processes
+Stop-Process -Name python -Force -ErrorAction SilentlyContinue
+
+# 4. Start the interactive CRNN training
+python scripts/train_abdomen_sed.py
+```
+
+### C. Expected Outputs & Artifacts
+Training runs for up to 35 epochs (with EarlyStopping patience 8). Expected completion time: $\approx 25 - 40\text{ minutes}$ on CPU.
+
+Artifacts generated under `AI-Pipeline/results/EXP-A101-abdomen-crnn-sed/`:
+* `best_model.keras` — Trained CRNN Keras weights.
+* `history.csv` — Epoch-by-epoch training and validation loss/metrics.
+* `training_history.png` — Loss and accuracy convergence curves.
+* `metrics.json` — Evaluated Event F1-score, Recall, Precision (Collar 100 ms), and event counts.
+
+### D. Post-Training Git Commit on PC Lab
+```powershell
+git add results/EXP-A101-abdomen-crnn-sed/
+git commit -m "feat(sed): save completed EXP-A101 abdomen CRNN SED model and evaluation"
+git push origin feat/abdomen-crnn-sed
+```
+
+### E. Completed Run Results (EXP-A101)
+* **Status:** Completed (2026-10-13)
+* **Training Time:** 422.01s (stopped at Epoch 16, best checkpoint Epoch 8)
+* **Best Val Loss:** `0.1053` (Val PR-AUC: `0.8769`, Val ROC-AUC: `0.8994`)
+* **Event SED Metrics (Collar 100 ms):**
+  * Detected Events: 320 (Ground Truth: 452)
+  * Event Precision: **45.62%**
+  * Event Recall / Sensitivity: **32.30%**
+  * Event F1-Score: **37.82%**
+* **Full Milestone Report:** `AI-Pipeline/docs/abdomen_crnn_sed_training.md`
+
+### F. Post-Hoc Calibrated Operating Profile (Active Decision)
+* **Screening Baseline:** `Onset: 0.55 / Offset: 0.45` with tight hysteresis (avoids false merge of adjacent bursts).
+* **Calibrated Metrics:**
+  * **Collar 100 ms:** Recall **56.19%** (up from 32.30%), Event F1 **45.44%**, TP = 254.
+  * **Collar 200 ms:** Recall **65.49%**, Event F1 **52.95%**, TP = 296.
+  * **Collar 250 ms:** Recall **67.04%**, Event F1 **54.20%**, TP = 303.
+* **Balanced Profile Alternative:** `Onset: 0.60 / Offset: 0.30` -> Precision **51.29%** (100 ms) / **61.60%** (250 ms).
+* **Code Implementation:** Active in `auriscore.sed_postprocessing.SED_CALIBRATED_PROFILES`. Designated as the primary focus for ongoing Abdomen AI development.
+
+### G. Hard Negative Mining & Production Selection (EXP-A103 - Locked Decision)
+* **EXP-A102 (Residual-SE CRNN):** 261k params, SeparableConv2D + Residual Skips + Squeeze-and-Excitation. Best Val Loss `0.1124`. High Precision profile reaches Precision `58.04%` / Recall `51.11%` at Collar 250ms.
+* **EXP-A103 (Residual-SE + Hard Negatives):**
+  * Ingested 10 physical hardware recordings (360 5.0s segments) from `D:\Despro\Prapemrosesan_Tubuh` as negative labels (`Absent = 0`).
+  * 2,161 training segments (+20% data). Validation and test sets 100% clean and untouched.
+  * Training completed: 27 epochs, best val loss `0.1192`.
+  * **Result:** False Positives reduced from 452 down to **427** (-25 FP) at Collar 100ms; Collar 250ms Precision reached **44.43%** (Recall **66.15%**, F1 **53.16%**); High-Precision profile reached **63.04%** Precision.
+* **Research Candidate:** **`EXP-A103`** remains available for offline evaluation. It is not wired into `abdomen-analysis-v1`; see the training report for evaluation limitations.
+
+

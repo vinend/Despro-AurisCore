@@ -1,0 +1,115 @@
+{
+  "binding_id": "RD-LTMIL-01-v1-B1",
+  "schema_version": 1,
+  "status": "SCIENTIFIC_DECISION_FROZEN_ENGINEERING_ACCEPTANCE_PENDING",
+  "base_spec": "configs/rd_logmel_temporal_mil_v1.json",
+  "base_spec_sha256": "ad4d828e082dc46406cbad957e31a706084046ad9ce9097e82b2d992f2265d67",
+  "training_authorized_by_this_contract": false,
+  "architecture_changed": false,
+  "statistics": {
+    "learning_role": "fit",
+    "population": "original fold fit participants after frozen declared-positive/retained-negative recording eligibility; every participant must retain at least one recording",
+    "N_F": "number of distinct eligible fit participants",
+    "N_F_c": "number of distinct eligible fit participants with official class c, c in {0,1}",
+    "class_factor": "a_c = N_F / (2 * N_F_c)",
+    "early_stop_class_factor": "reuse a_c from fit; never estimate class factors on early_stop or outer_eval",
+    "structural_counts": "within each allowed role independently: R_role recordings, N_role participants, n_ir eligible windows in recording r, W_i=sum_r n_ir",
+    "failures": ["missing class in fit", "participant with zero eligible recordings", "recording with zero valid windows", "duplicate identity", "mixed participant labels", "missing or changed mining inventory", "any outer participant in fit or early_stop role inputs"]
+  },
+  "weights": {
+    "participant_base": "a_yi",
+    "recording_share": "s_ir = n_ir / W_i",
+    "recording_base": "q_ir = a_yi * s_ir",
+    "fit_mining": "m_ir is the exact original own-fold fit recording sample_weight, restricted to {1,2}; verify all required entries; no re-mining or sampling duplication",
+    "early_stop_mining": 1,
+    "unnormalized_recording": "u_ir = q_ir * m_ir",
+    "normalized_recording_coefficient": "w_ir = (R_role / N_role) * u_ir",
+    "prohibited": ["renormalizing by sum of mined weights", "per-batch class balancing", "learning weights from early_stop or outer labels", "using recording count instead of window share", "equalizing participant mass again after mining"]
+  },
+  "presence": {
+    "window_probability": "p_irw = sigmoid(logsumexp(z_irwt over geometry-valid t) - log(number of geometry-valid t)); temperature=1",
+    "recording_probability": "p_ir = arithmetic mean of p_irw over all eligible windows of the recording",
+    "BCE": "ell_ir = -y_i*ln(clip(p_ir,1e-7,1-1e-7)) - (1-y_i)*ln(1-clip(p_ir,1e-7,1-1e-7))",
+    "role_loss": "L_presence_role = sum_ir(w_ir*ell_ir)/R_role = sum_ir(a_yi*s_ir*m_ir*ell_ir)/N_role",
+    "update_group_loss": "L_presence_G = sum_ir_in_G(w_ir*ell_ir)/B_G; B_G is actual number of complete recordings in group, never sum of weights",
+    "unequal_durations": "window counts determine recording shares within a participant, preserving summed R1 window weights; participant base mass is duration-independent before mining; do not introduce seconds weighting, truncate bags, or duplicate short recordings",
+    "inference_participant_probability": "unweighted arithmetic mean of all protocol-eligible recording probabilities for that participant, including recordings excluded from presence supervision where original inference allows them"
+  },
+  "phase": {
+    "training_recording_eligibility": "same fixed supervised recording set as presence; no additional exclusion due TSV validity",
+    "targets_masks": "unchanged official cardiac-state reader and v1 valid/unknown/boundary/padding masks; no synthetic murmur targets",
+    "group_loss": "L_phase_G = sum CE over all valid phase frame exposures in G / count of those exposures; zero when count=0",
+    "role_loss": "sum valid phase CE over role / count valid phase exposures in role; zero when count=0",
+    "weights": "no class, participant, presence, or mining weights on phase CE",
+    "overlap": "existing overlapping-window phase exposures retained; no de-duplication inside loss; duration-weighted reconstruction applies only to export",
+    "coefficient": 0.2
+  },
+  "optimizer_groups": {
+    "unit": "complete recordings",
+    "recordings_per_update": 32,
+    "forward_window_microbatch_max": 32,
+    "epochs": "1 through at most 50; preserve patience 8",
+    "fold_seeds": [43,44,45,46,47],
+    "fit_epoch_order": "sort eligible recording IDs by (SHA256(UTF8('RD-LTMIL-01-v1-B1|fold={fold}|epoch={epoch}|seed={seed}|recording={recording_id}')).hexdigest(), recording_id); decimal fold/epoch/seed without leading zeros",
+    "early_stop_order": "ascending recording_id, invariant across epochs",
+    "window_order": "ascending (integer start_sample, segment_id) within recording",
+    "grouping": "consecutive groups of 32 recording IDs; retain final short group; every recording exactly once per epoch; participants may span groups but never roles",
+    "gradient_accumulation": "precompute group B_G and valid-phase exposure count K_G from metadata/masks; hold weights fixed; process complete recordings sequentially with <=32-window forward microbatches; for each recording accumulate gradient of w_ir*ell_ir/B_G + 0.2*sum(valid phase CE_ir)/K_G (phase term zero when K_G=0); finish every window of a recording before its BCE; no optimizer or clipping between recordings/microbatches",
+    "optimizer_step": "sum float32 gradients across complete group; call existing Adam(learning_rate=0.0001, clipnorm=1.0) exactly once; its clipnorm clips each variable gradient separately once after accumulation, NOT global_clipnorm; do not additionally clip; reset accumulator after step",
+    "memory": "retain at most one recording's differentiable graph plus gradient buffers; never detach window probabilities before recording BCE; no truncated backpropagation",
+    "last_group": "use actual B_G; no padding, oversampling, dropped records or extra update; this is standard variable final minibatch behavior",
+    "amendment": "32 now explicitly denotes recording bags per optimizer update; 32-window microbatches are a separate computational ceiling"
+  },
+  "early_stopping": {
+    "monitor": "L_presence_early_stop + 0.2 * L_phase_early_stop, computed over the entire role at a fixed checkpoint",
+    "aggregation": "sum B_G*L_presence_G then divide by R_early_stop; sum phase numerators and divide by sum valid phase counts; never average batch ratios equally",
+    "selection": "strictly smaller loss improves; preserve first best on tie; patience=8; maximum_epochs=50",
+    "inference_mode": true,
+    "optimizer_updates": 0
+  },
+  "numerics": {
+    "weight_construction": "float64; store at least 17 significant decimal digits; cast coefficients to float32 for model loss",
+    "gradient_dtype": "float32",
+    "weight_invariant_tolerance": 1e-12,
+    "microbatch_gradient_parity": {"atol": 1e-6, "rtol": 1e-5},
+    "invalid_values": "fail closed on nonfinite tensors/loss/gradients or empty presence masks; never silently drop a recording"
+  },
+  "materialized_binding_schema": {
+    "required": ["binding_id", "contract_sha256", "base_spec_sha256", "source_and_dependency_hashes", "role_manifest_sha256", "folds"],
+    "fold_required": ["seed", "fit_class_counts", "fit_class_factors", "checkpoint_sha256", "normalization_sha256", "mining_inventory_sha256", "fit", "early_stop"],
+    "role_required": ["participant_ids", "N_role", "R_role", "recordings", "ordered_group_manifest_hashes"],
+    "recording_required": ["recording_id", "participant_id", "official_label", "window_count", "participant_window_count", "class_factor", "recording_share", "mining_multiplier", "recording_coefficient", "phase_valid_exposure_count", "input_hashes"],
+    "groups": "save all 50 deterministic epoch schedules before any fit; early_stop one immutable schedule; no outer labels/TSVs in materializer inputs"
+  },
+  "acceptance_tests_required": [
+    "before mining: each participant sums to its class factor; fit class totals both N_F/2; fit sum(recording_coefficients)=R_fit",
+    "constant BCE=ln(2), no mining: role fit presence=ln(2)",
+    "mining a recording by 2 doubles its numerator contribution without changing any denominator or any other record coefficient",
+    "duration scale of every recording within a participant leaves its base mass unchanged; within-participant shares track window counts",
+    "group size/count and once-per-epoch identity coverage; final partial group retained; correct role isolation",
+    "global role reporting invariant to partitioning: weight group presence by actual recording count, phase by valid frame count",
+    "fit class factors reused on early_stop regardless of early_stop prevalence; early_stop multipliers all one",
+    "reference full-group gradient matches sequential-record accumulated gradient before clipping and Adam within declared tolerances",
+    "Adam iteration increments once per group; no update or BatchNorm-stat change during validation",
+    "no-phase frames yield zero phase loss without changing presence population; outer inputs rejected",
+    "longest recording, heterogeneous 32-recording group and final short group run without truncation or memory fallback altering objective"
+  ],
+  "compute_acceptance": {
+    "hard_cap_seconds": 43200,
+    "full_training_in_this_task": false,
+    "previous_proxy_certifies_runtime": false,
+    "workload": "materialize actual fit/early_stop groups for all five folds; max-50-epoch record/window/frame/update counts; all-recording calibration and final inference/export counted separately",
+    "bounded_benchmark": "after handoff integration: each fold test first, median-window-load, maximum-window-load and final fit groups (deduplicate; final may be full); corresponding early_stop extremes; one compile/warmup group plus at most 4 timed optimizer groups per fold; existing 600-second probe watchdog per fold including preparation, stop and preserve evidence on timeout; no full epoch; never select by probabilities, errors or outer outcomes",
+    "inference_probe_population": "fit/early_stop recordings only for measured final-inference/export rates; project outer export workload from already verified structural counts, without opening outer labels or TSVs or evaluating outer outcomes",
+    "measure": ["fold-specific cache construction", "working set exceeding 256 verified tensors", "actual weights and complete-recording MIL", "sequential-record gradient accumulation and Adam", "all trainable layers", "validation target/load/loss", "peak allocated/reserved GPU memory and free headroom", "host RSS and mapped-cache usage", "largest recording graph", "disk capacity and content-addressed cache bytes", "compile/retrace overhead", "model plus optimizer checkpoint IO", "final inference and temporal export"],
+    "projection": "use actual group workloads and the slowest measured relevant workload-normalized rates; include cold population of all required fold caches, observed retracing, all 50 validations, up to 250 best checkpoints and final exports; publish uncertainty/headroom and all excluded costs",
+    "GO_requirement": "all mathematical/integration/leakage checks pass AND a defensible conservative final-bound projection including memory/storage acceptance is strictly below 43200 seconds; otherwise NO-GO; never silently shrink folds, epochs, bags or trainable layers"
+  },
+  "evaluation": {
+    "threshold": "unchanged v1: original early_stop participant predictions only, sensitivity>=0.90 then specificity, precision, smaller threshold",
+    "outer_outcomes_forbidden_in_binding": true,
+    "historical_R1_FP128": "historical pooled-OOF reference only, not a matched operating-point comparison",
+    "matched_superiority_claim": "forbidden unless a separately verified exposure-safe compatible comparator exists",
+    "temporal_claim": "cardiac-phase evaluation against official intervals; murmur timestamps exploratory, no onset/offset accuracy without independent interval references"
+  }
+}

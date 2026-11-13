@@ -1,0 +1,70 @@
+{
+  "status": "completed",
+  "experiment_id": "EXP-A101-abdomen-crnn-sed",
+  "model_architecture": "CRNN_SED (Conv2D + BiGRU + TimeDistributed)",
+  "training_time_s": 422.01,
+  "total_epochs": 16,
+  "best_val_loss": 0.1053,
+  "initial_benchmark_collar_100ms": {
+    "onset_threshold": 0.5,
+    "offset_threshold": 0.25,
+    "true_positives": 146.0,
+    "false_positives": 174.0,
+    "false_negatives": 306.0,
+    "precision": 0.4562,
+    "recall_sensitivity": 0.323,
+    "event_f1": 0.3782
+  },
+  "calibrated_screening_profile": {
+    "onset_threshold": 0.55,
+    "offset_threshold": 0.45,
+    "merge_gap_ms": 60.0,
+    "collar_100ms": {
+      "true_positives": 254.0,
+      "false_positives": 412.0,
+      "false_negatives": 198.0,
+      "precision": 0.3814,
+      "recall_sensitivity": 0.5619,
+      "event_f1": 0.4544
+    },
+    "collar_200ms": {
+      "true_positives": 296.0,
+      "false_positives": 370.0,
+      "false_negatives": 156.0,
+      "precision": 0.4444,
+      "recall_sensitivity": 0.6549,
+      "event_f1": 0.5295
+    },
+    "collar_250ms": {
+      "true_positives": 303.0,
+      "false_positives": 363.0,
+      "false_negatives": 149.0,
+      "precision": 0.455,
+      "recall_sensitivity": 0.6704,
+      "event_f1": 0.542
+    }
+  },
+  "calibrated_balanced_profile": {
+    "onset_threshold": 0.6,
+    "offset_threshold": 0.3,
+    "merge_gap_ms": 60.0,
+    "collar_100ms": {
+      "true_positives": 179.0,
+      "false_positives": 170.0,
+      "false_negatives": 273.0,
+      "precision": 0.5129,
+      "recall_sensitivity": 0.396,
+      "event_f1": 0.4469
+    },
+    "collar_250ms": {
+      "true_positives": 215.0,
+      "false_positives": 134.0,
+      "false_negatives": 237.0,
+      "precision": 0.616,
+      "recall_sensitivity": 0.4757,
+      "event_f1": 0.5368
+    }
+  },
+  "detected_events_count": 320,
+  "ground_truth_events_count": 452
+}

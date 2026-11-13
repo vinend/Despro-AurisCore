@@ -1,0 +1,34 @@
+{
+  "status": "completed",
+  "experiment_id": "EXP-A102-abdomen-crnn-residual-se",
+  "model_architecture": "CRNN_SED (RESIDUAL_SE + BiGRU + TimeDistributed)",
+  "training_time_s": 2969.88,
+  "total_epochs": 18,
+  "best_val_loss": 0.1124,
+  "event_metrics_collar_100ms": {
+    "true_positives": 247.0,
+    "false_positives": 452.0,
+    "false_negatives": 205.0,
+    "precision": 0.3534,
+    "recall_sensitivity": 0.5465,
+    "event_f1": 0.4292
+  },
+  "event_metrics_collar_200ms": {
+    "true_positives": 296.0,
+    "false_positives": 403.0,
+    "false_negatives": 156.0,
+    "precision": 0.4235,
+    "recall_sensitivity": 0.6549,
+    "event_f1": 0.5143
+  },
+  "event_metrics_collar_250ms": {
+    "true_positives": 304.0,
+    "false_positives": 395.0,
+    "false_negatives": 148.0,
+    "precision": 0.4349,
+    "recall_sensitivity": 0.6726,
+    "event_f1": 0.5282
+  },
+  "detected_events_count": 699,
+  "ground_truth_events_count": 452
+}

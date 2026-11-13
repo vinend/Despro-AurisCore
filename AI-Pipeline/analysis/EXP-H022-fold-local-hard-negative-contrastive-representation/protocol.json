@@ -1,0 +1,110 @@
+{
+  "config_sha256": "1e482574ca6238023f664a890f4166db363abfff534ddcae6ee9ce0c07c10d8a",
+  "engineering_gates": {
+    "f1": 0.75,
+    "pr_auc": 0.85,
+    "precision": 0.65,
+    "roc_auc": 0.92,
+    "sensitivity": 0.9,
+    "specificity": 0.85
+  },
+  "experiment_id": "EXP-H022-fold-local-hard-negative-contrastive-representation",
+  "failure_condition": "Sensitivity below 0.90 or no meaningful FP/F1 improvement over H021; report negative result without rescue tuning",
+  "fold_seed": "42 + outer fold",
+  "gpu_environment": "CUDA GPU required by launcher; no training during protocol lock",
+  "h021_protocol_sha256": "fc288f92085ab8c0487a98bf6b36298e4c061fe9edc6049f33229fe0a5ee533c",
+  "hard_negative_provenance": {
+    "fold_assignments_sha256": "75354a4188b1f23fd907f3f7a3e5a0cef1e0c83636cd205443c8e50572a5fa9e",
+    "folds": {
+      "1": {
+        "cross_fitted_recordings": 1586,
+        "eligible_absent_fit_recordings": 1052,
+        "hard_negative_count": 211,
+        "inner_assignments_sha256": "756edae22cfb8a5fd58802772fb95d6995cbaa98d8d2730ca8cdd84b38bbfd94",
+        "inventory_sha256": "cafd299e25d44b9a67395610e96c78a7f1e930237a3f07f2040fad92566f0e8a",
+        "outer_early_participants": 91,
+        "outer_eval_participants": 114,
+        "outer_fit_participants": 363,
+        "selected_recording_ids_sha256": "6f64aa6729e1de7eddf944f6b9011fe8b2afda6999d4a2ec0e4ac35277c75724"
+      },
+      "2": {
+        "cross_fitted_recordings": 1586,
+        "eligible_absent_fit_recordings": 1072,
+        "hard_negative_count": 215,
+        "inner_assignments_sha256": "531f5646af2c384746d5aba566fc4adaa81274058d2b5e41f3178027bed41644",
+        "inventory_sha256": "6faec1a0084f17e0cb6446a484763bb6c26e96096e6d1259585d07ca03e63d5a",
+        "outer_early_participants": 91,
+        "outer_eval_participants": 114,
+        "outer_fit_participants": 363,
+        "selected_recording_ids_sha256": "c0a45aa3b37927e09ec6dacc768d0afe6676292860dd2ef842c27eb699e0e263"
+      },
+      "3": {
+        "cross_fitted_recordings": 1584,
+        "eligible_absent_fit_recordings": 1073,
+        "hard_negative_count": 215,
+        "inner_assignments_sha256": "ea2e98f3605cf5c3a7bfa2c68f9a8024b1fdefc60b807e331fca6b45fda718b1",
+        "inventory_sha256": "be418e519fbb4cf5747e1c2b00af4315308558924686578cde5d83a830812312",
+        "outer_early_participants": 91,
+        "outer_eval_participants": 114,
+        "outer_fit_participants": 363,
+        "selected_recording_ids_sha256": "c7485598d679413be52166862be57c1caf7fa6b16661f0ff02e30247ac08e170"
+      },
+      "4": {
+        "cross_fitted_recordings": 1598,
+        "eligible_absent_fit_recordings": 1060,
+        "hard_negative_count": 212,
+        "inner_assignments_sha256": "660e10a3d8dda4600ad34e97ce18ae990fae0f332c6c57db19b85419d554832d",
+        "inventory_sha256": "820f82f15e2ede3d6b5308d121320ada529a3978d9a3820701b03d0d1b08ad07",
+        "outer_early_participants": 91,
+        "outer_eval_participants": 113,
+        "outer_fit_participants": 364,
+        "selected_recording_ids_sha256": "18ebf8f3537cf52cfe5fb4ad8cc4a65135a33bd79dfd216c04fe629dbcc83620"
+      },
+      "5": {
+        "cross_fitted_recordings": 1586,
+        "eligible_absent_fit_recordings": 1036,
+        "hard_negative_count": 208,
+        "inner_assignments_sha256": "82a6923ab722a44e8d7030150242a75d545ad0534101661a8b121f66555d75e2",
+        "inventory_sha256": "0004679ab5713bd7be3fd678793bf6e09b6d67dc764513b9f7418e0c51decb42",
+        "outer_early_participants": 91,
+        "outer_eval_participants": 113,
+        "outer_fit_participants": 364,
+        "selected_recording_ids_sha256": "0869855d4689b148a58f19a8859fec80ff2dae6b4dda83f2d4627b0187471160"
+      }
+    },
+    "h021_protocol_sha256": "fc288f92085ab8c0487a98bf6b36298e4c061fe9edc6049f33229fe0a5ee533c"
+  },
+  "hard_negative_recording_weight": 2.0,
+  "hard_negative_unit": "recording; selected H021 fold-local inner cross-fitted top 20% of fit-role Absent; all eligible segments inherit flag/weight",
+  "hypothesis": "H021 hard-negative weighting helped, but mined Absent embeddings still overlap declared-site Present embeddings",
+  "initialization": "from_scratch per outer fold; no H014/H021 learned weights reused",
+  "inner_fold_policy": "reuse exact H021 5-fold cross-fitted mining scores and selected recording IDs; no new mining CNN runs",
+  "loss_temperature": 0.1,
+  "master_seed": 42,
+  "ordinary_recording_weight": 1.0,
+  "outer_fold_assignments_sha256": "75354a4188b1f23fd907f3f7a3e5a0cef1e0c83636cd205443c8e50572a5fa9e",
+  "outer_fold_policy": "reuse H015 exact participant folds; outer_eval excluded from fit, early stop, and hard-negative discovery",
+  "parent_experiment": "EXP-H021-fold-local-hard-negative-acoustic-mining",
+  "positive_supervision": "only H014 source-declared murmur-site Present recordings; undeclared Present sites excluded from Stage-1",
+  "representation_loss_equation": "L_rep=mean over valid mined Absent anchors i of -log[sum_{j!=i,y_j=Absent} exp(cos(z_i,z_j)/0.10) / sum_{j!=i} exp(cos(z_i,z_j)/0.10)]; z is L2-normalized 64-D embedding; empty-valid-anchor batches contribute zero; L_total=weighted H021 BCE + 0.10*L_rep",
+  "representation_loss_weight": 0.1,
+  "sealed_test_boundary": "sealed test remains closed and is never enumerated",
+  "single_change": "add hard-negative supervised contrastive term at H014 64-D acoustic representation",
+  "software_environment": {
+    "python_executable": "/home/rowen/.venvs/auriscore-gpu-tf220/bin/python",
+    "python_version": "3.13.16",
+    "tensorflow_required": "2.20.0"
+  },
+  "source_sha256": {
+    "scripts/h022_preflight.py": "9a6fe19c96151c67330c04f7bdec1e2cc1f74fcb5330564b09e47fb621c7a33f",
+    "scripts/start_h022.sh": "e471fbb0074544d726785e3609b5955094b115d43274d26ec457619a7a17dc05",
+    "scripts/train_h022_contrastive.py": "53beb7c77ad257dfbf0e58dc1370edb591cd112c8da963ee215027120bc3d031",
+    "src/auriscore/cnn.py": "f55a25f8a08a25777e9aa624ad88c507493af802d6291091dd459ae9cdfaf68d",
+    "src/auriscore/contrastive_acoustic.py": "93f3249af693ebcf5b065e22383c9d56f6e6892f88f08811aad6e22747f363e1",
+    "src/auriscore/linear_head.py": "4a760f3c2b2a8d7b5a591adfc73460191380f8f9de94f02847f3d5c1ac390735",
+    "src/auriscore/spectrogram.py": "3aa28c6f8cd6afd845d5b057432d54916aa2851bd201a37b3f7163223b67a769"
+  },
+  "threshold_rule": "TRAIN OOF sensitivity>=0.90, maximize F1, tie higher specificity then precision",
+  "unchanged": "H021 TRAIN population/folds, fit/early roles, from-scratch H014 compact CNN, sample rate/window/log-mel/normalization/augmentation, optimizer 0.001, max 50 epochs/patience 8 val_loss, selected hard-negative IDs and 2.0 weighting, uniform participant pooling, H020 scaler/L2 balanced logistic nested C selection",
+  "validation_boundary": "external validation remains closed during H022"
+}

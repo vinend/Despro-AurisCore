@@ -426,3 +426,13 @@ preserving the existing interval schema. Missing fields retain legacy v1 rules;
 unknown decoder versions are rejected. Research-only WAV exports use the separate
 `lung-localization-research-v1` JSON schema and cannot activate production models.
 See AI-Pipeline/docs/lung_localization.md for command/output contracts.
+
+## Continuous PCM analysis
+
+`POST /api/analysis/live?mode=heart|lung|abdomen` accepts raw mono PCM16LE at
+8 kHz (`application/octet-stream`) and an `X-AurisCore-Start-Sample` header.
+Transport windows are 10 s Heart, 30 s Lung and 5 s Abdomen. The response
+contains `startSample`, exclusive `endSample` and the existing
+`organ-analysis-v1` as `result`. Bounds are relative to the current
+contiguous buffer; event times inside the result are relative to that window.
+HTTP 429 means skip this window because the shared worker is busy.

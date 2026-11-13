@@ -391,3 +391,13 @@ Lung research localization uses a shared versioned frame decoder in
 `lung_localization.py`. Existing live packages select their decoder from frozen
 evaluation evidence. Research WAV commands never register a backend or change
 eligibility. See AI-Pipeline/docs/lung_localization.md.
+
+## Continuous inference preview
+
+Validated WebSocket packets feed a bounded browser PCM ring when the operator
+enables **Prediksi langsung**. A window is offered roughly every second after
+warm-up, with at most one in-flight request per browser hook. The binary PCM
+endpoint calls the retained Python worker's existing PCM path, preserving
+package checks, preprocessing, tensor geometry and thresholds. Gaps, stalls
+and organ changes invalidate old results. Preview results are not saved in
+recorded-session history.

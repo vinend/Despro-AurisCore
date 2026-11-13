@@ -1,0 +1,34 @@
+{
+  "status": "completed",
+  "experiment_id": "EXP-A103-abdomen-crnn-hard-negatives",
+  "model_architecture": "CRNN_SED (RESIDUAL_SE + BiGRU + TimeDistributed)",
+  "training_time_s": 4764.03,
+  "total_epochs": 27,
+  "best_val_loss": 0.1192,
+  "event_metrics_collar_100ms": {
+    "true_positives": 246.0,
+    "false_positives": 427.0,
+    "false_negatives": 206.0,
+    "precision": 0.3655,
+    "recall_sensitivity": 0.5442,
+    "event_f1": 0.4373
+  },
+  "event_metrics_collar_200ms": {
+    "true_positives": 291.0,
+    "false_positives": 382.0,
+    "false_negatives": 161.0,
+    "precision": 0.4324,
+    "recall_sensitivity": 0.6438,
+    "event_f1": 0.5173
+  },
+  "event_metrics_collar_250ms": {
+    "true_positives": 299.0,
+    "false_positives": 374.0,
+    "false_negatives": 153.0,
+    "precision": 0.4443,
+    "recall_sensitivity": 0.6615,
+    "event_f1": 0.5316
+  },
+  "detected_events_count": 673,
+  "ground_truth_events_count": 452
+}
