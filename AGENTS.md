@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## Active research handoff on progress_heart
+
+For Heart training follow the mandatory startup sequence, then read
+[the remote GPU handoff](AI-Pipeline/research/h022_temporal/README.md) and
+[the experiment instructions](AI-Pipeline/research/h022_temporal/AGENTS.md).
+RD-H022-TMIL-P1 is a new TRAIN-only experiment for a separate computer.
+Historical H021/R1/B1 GO decisions and launch commands apply only to their archived experiments.
+
 ## Purpose
 
 This file defines mandatory behavior for AI coding agents and human contributors working inside the AurisCore repository.

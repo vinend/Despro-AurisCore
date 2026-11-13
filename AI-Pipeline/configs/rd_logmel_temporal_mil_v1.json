@@ -1,0 +1,82 @@
+{
+  "experiment_id": "RD-LTMIL-01-v1",
+  "status": "FROZEN_DESIGN_NOT_LAUNCHABLE",
+  "assets": {
+    "/home/rowen/research-readiness/RD-H021-R1-v1/analysis/EXP-H015-heart-site-aware-mil/fold_assignments.csv": "75354a4188b1f23fd907f3f7a3e5a0cef1e0c83636cd205443c8e50572a5fa9e",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/stage1/best_model.keras": "ad95c092edb336e33ed602a1ca17a3247d0192c15f888c0b000d74257d5c66d9",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-1/stage1/normalization_config.json": "0d00788e95c721b7e819e04f9cc4494eff89d077d2631b3eae9aa4e99a30427b",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_1.csv": "cafd299e25d44b9a67395610e96c78a7f1e930237a3f07f2040fad92566f0e8a",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/stage1/best_model.keras": "30ca1a07ef1695363d445d35c17fc2252d3371397e0b025382d5f561f2d9704c",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-2/stage1/normalization_config.json": "9922d9a73c10305e17075b87b6ae8dfd41fb00d7439e268e48b9af95c9abe72b",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_2.csv": "6faec1a0084f17e0cb6446a484763bb6c26e96096e6d1259585d07ca03e63d5a",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/stage1/best_model.keras": "9ab112695c0395b698406b69951f4a63b50d9baf036e7e4dca445a0e3859cba7",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-3/stage1/normalization_config.json": "45c2128f9ce26b9f7dcfd9af2aae1cc894d4205e1995677b7f93b8eb45c1a94e",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_3.csv": "be418e519fbb4cf5747e1c2b00af4315308558924686578cde5d83a830812312",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/stage1/best_model.keras": "00d86e93416c27863e3b32a5878c84676d9e4cb39dda1805eabcad52a84b9673",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-4/stage1/normalization_config.json": "11b762c81b65ff3bc882ecbe6cdcae99653b79f112ed8600b87b884d769bfec3",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_4.csv": "820f82f15e2ede3d6b5308d121320ada529a3978d9a3820701b03d0d1b08ad07",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/stage1/best_model.keras": "1abd950bd939ba1c5651341e9104f9487d72b4d073b6dc0bdc475fb468d5185f",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/results/EXP-H021-fold-local-hard-negative-acoustic-mining/folds/fold-5/stage1/normalization_config.json": "037861a18c3598116a4b2f847012deda970268a3415ef3fe83f9bd2328550efc",
+    "/home/rowen/research-readiness/RD-H021-R1-v1/analysis/EXP-H021-fold-local-hard-negative-acoustic-mining/hard_negative_inventory/fold_5.csv": "0004679ab5713bd7be3fd678793bf6e09b6d67dc764513b9f7418e0c51decb42"
+  },
+  "preprocessing": {
+    "sample_rate": 8000,
+    "window_samples": 40000,
+    "hop_samples": 20000,
+    "n_fft": 512,
+    "hop_length": 128,
+    "n_mels": 40,
+    "fmax": 2000,
+    "center": true,
+    "normalization": "exact R1 fold config",
+    "augmentation": false
+  },
+  "model": {
+    "trunk": "R1 three Conv2D blocks; last convolution trainable; all BN frozen/inference",
+    "temporal_shape": [
+      39,
+      64
+    ],
+    "head": "Conv1D(32,1,relu); Dense(1) murmur logits; Dense(4) phase logits",
+    "mil": "normalized logmeanexp logits temperature=1; sigmoid; mean windows per recording; mean recordings per participant"
+  },
+  "loss": {
+    "presence": "binary crossentropy recording labels; declared-positive supervision only; R1 inventory recording multiplier; equal participant weights",
+    "phase": "masked official-state CE; invalid TSV gives zero phase loss but presence retained",
+    "phase_weight": 0.2,
+    "presence_weight": 1.0
+  },
+  "optimizer": {
+    "name": "Adam",
+    "learning_rate": 0.0001,
+    "clipnorm": 1.0
+  },
+  "seeds": [
+    43,
+    44,
+    45,
+    46,
+    47
+  ],
+  "max_epochs": 50,
+  "patience": 8,
+  "monitor": "early_stop total loss",
+  "batch_size": 32,
+  "budget_seconds": 43200,
+  "threshold": "per-fold early_stop participant threshold: sensitivity>=.90 then specificity, precision, smaller threshold; no outer labels",
+  "comparison": "R1 330/128/11/99 is historical only; matched R1 early-stop participant scores unavailable; no direct compatible gate comparison yet",
+  "artifact_schema": [
+    "protocol+hash",
+    "roles+hash",
+    "source+dependency lock",
+    "init+normalization hashes",
+    "checkpoint",
+    "history",
+    "recording and participant predictions",
+    "phase logits and absolute frame times and masks",
+    "exploratory murmur candidates",
+    "threshold source roles",
+    "runtime+budget status",
+    "metrics+per-fold+paired intervals"
+  ]
+}

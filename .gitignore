@@ -100,3 +100,11 @@ Firmware/**/sdkconfig
 Firmware/**/sdkconfig.old
 Firmware/**/managed_components/
 Firmware/**/dependencies.lock
+
+# Private TRAIN transport and local GPU results
+AurisCore-H022T1-TRAIN-private.tar
+heart-train/
+RD-H022-TMIL-P1/
+RD-H022-TMIL-P1-watchdog/
+RD-H022-TMIL-P1-evaluation/
+RD-H022-TMIL-P1.claim
