@@ -229,6 +229,64 @@ specificity and localization metrics on development data. Do not select solely
 for epoch count. Official test stays sealed. This implementation did not start
 training; the second command above explicitly starts it on the Linux machine.
 
+### Alignment review and EXP-L006: longer temporal context
+
+The supplied EXP-L005 diagnostics show almost-always-positive phase/crackle
+outputs: inhalation F1 gains only 0.0019 over always-positive, and 87.3% of jointly
+supervised frames predict both phases versus 1.1% target overlap. Dropout alone
+did not resolve this. Check source alignment before fitting another model:
+
+```bash
+CACHE=data/processed/lung/cache/fa2fc598295d3e8b71d8e34cee4ecc7c21866cb658f57367ca9aa5ff546cee14
+python scripts/review_lung_alignment.py --cache "$CACHE" \
+  --output artifacts/lung-launch/alignment-context-v1
+python -m json.tool artifacts/lung-launch/alignment-context-v1/report.json
+xdg-open artifacts/lung-launch/alignment-context-v1/review.html
+```
+
+The immutable output includes original development WAV copies, waveform and
+annotation lanes on a common seconds axis, and source/cache comparison evidence.
+Defaults sample one recording per split/device and additional stridor/rhonchi
+examples if available; repeat `--recording-id <id>` to select specific cached
+development records. The tool verifies audited audio/label hashes, reparses source
+annotations and regenerates every window for each selected recording, comparing
+features (tolerance 1e-5), targets, masks, timestamps and start samples. Test and
+quarantine identities are rejected before their audio/label files are opened.
+Preflight verifies manifest/cache provenance. A sample agreement is not a whole
+dataset or independent acoustic annotation audit. Listen for phase changes and
+annotated event boundaries; `acoustic_alignment_verified` stays false. Do not
+shift/relabel annotations automatically or train if mismatches are unresolved.
+
+`configs/lung_training_context.json` uses v3 policy with temporal Conv1D dilation
+16, dropout 0.2 and constant LR 0.001. Compare with EXP-L003: the sole model change
+is dilation of the existing 5-wide Conv1D (no extra layers or parameters).
+Theoretical receptive field grows from 11 to 71 feature frames: 224 ms to 1.184 s
+including the 64-ms FFT at 16-ms hops. These are context spans, not a promise of
+uniform dependence on every frame. Frequency processing, loss, labels/masks,
+cache, split, thresholds and early stopping stay unchanged. Padding is still
+`same`, preserving time alignment; near window boundaries the larger context
+includes zeros. This symmetric context requires future samples and does not
+establish causal low-latency device behavior. Offline localization uses the saved
+model directly; legacy models retain dilation 1. Final fitting must freeze v3
+policy to reproduce dilation. No package or API changes/activation occur.
+
+After reviewing alignment, explicitly start the separate Linux experiment:
+
+```bash
+python scripts/train_lung_cnn.py --cache "$CACHE" \
+  --training-policy configs/lung_training_context.json
+mkdir -p artifacts/lung-launch
+set -o pipefail
+python -u scripts/train_lung_cnn.py --cache "$CACHE" \
+  --training-policy configs/lung_training_context.json --progress-interval 10 \
+  --output results/EXP-L006-temporal-cnn-context --authorized-training \
+  2>&1 | tee artifacts/lung-launch/EXP-L006.log
+```
+
+Use a fresh experiment directory. Compare phase conflict, per-class discrimination
+and one-to-one localization metrics against development baselines, preserving the
+official test. Improved generalization or useful epoch count remains unmeasured.
+
 Temporal checkpoint outputs are available now through the research WAV and
 saved-development localization commands. Existing temporal checkpoints need no
 retraining to produce onset/offset candidates. See

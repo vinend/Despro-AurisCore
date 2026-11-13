@@ -7,6 +7,15 @@ import numpy as np
 
 POLICY_SCHEMA = "lung-training-policy-v1"
 MODEL_POLICY_SCHEMA = "lung-training-policy-v2"
+CONTEXT_POLICY_SCHEMA = "lung-training-policy-v3"
+
+
+def model_dilation(policy: dict) -> int:
+    """Resolve the frozen temporal dilation; historical models use one."""
+    value = policy.get("model", {}).get("temporal_dilation", 1)
+    if type(value) is not int or not 1 <= value <= 16:
+        raise ValueError("Temporal dilation must be an integer from 1 to 16")
+    return value
 
 
 def validate_dropout(value: float) -> float:
@@ -32,15 +41,17 @@ def validate_policy(policy: dict, config: dict) -> dict:
         raise ValueError("Invalid Lung training policy schema")
     version = policy.get("schema_version")
     required = {"schema_version", "learning_rate_schedule"}
-    if version == MODEL_POLICY_SCHEMA:
+    if version in (MODEL_POLICY_SCHEMA, CONTEXT_POLICY_SCHEMA):
         required.add("model")
-    if (version not in {POLICY_SCHEMA, MODEL_POLICY_SCHEMA} or set(policy) != required
+    if (version not in (POLICY_SCHEMA, MODEL_POLICY_SCHEMA, CONTEXT_POLICY_SCHEMA) or set(policy) != required
             or not isinstance(policy["learning_rate_schedule"], dict)):
         raise ValueError("Invalid Lung training policy schema")
-    if version == MODEL_POLICY_SCHEMA:
-        if not isinstance(policy["model"], dict) or set(policy["model"]) != {"dropout"}:
-            raise ValueError("Explicit dropout-only model policy required")
+    if version in (MODEL_POLICY_SCHEMA, CONTEXT_POLICY_SCHEMA):
+        model_keys = {"dropout", "temporal_dilation"} if version == CONTEXT_POLICY_SCHEMA else {"dropout"}
+        if not isinstance(policy["model"], dict) or set(policy["model"]) != model_keys:
+            raise ValueError("Explicit versioned model policy required")
         model_dropout(policy)
+        model_dilation(policy)
     schedule = policy["learning_rate_schedule"]
     if schedule == {"type": "constant"}:
         return json.loads(json.dumps(policy))

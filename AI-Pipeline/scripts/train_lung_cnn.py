@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 import _bootstrap  # noqa: F401
 from auriscore.lung_training import preflight, train, train_final
-from auriscore.lung_training_policy import load_policy, model_dropout
+from auriscore.lung_training_policy import load_policy, model_dropout, model_dilation
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
@@ -34,5 +34,5 @@ if __name__ == "__main__":
         policy = load_policy(a.training_policy, config)
         print(json.dumps({"status": "preflight_only", "windows": len(index), "classes": config["classes"],
             "training_policy": policy, "initial_learning_rate": config["learning_rate"],
-            "model_dropout": model_dropout(policy),
+            "model_dropout": model_dropout(policy), "temporal_dilation": model_dilation(policy),
             "training_started": False, "cpu_count": os.cpu_count(), "free_bytes": shutil.disk_usage(a.cache).free}))

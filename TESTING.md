@@ -468,3 +468,18 @@ dataset, lifecycle, localization, diagnostics, core and inference), with Keras
 NumPy array-copy deprecation warnings. Real-cache v2 preflight accepted 46,308
 windows, dropout 0.4 and constant LR 0.001, reporting training_started=false.
 No official test labels were opened and no weights were optimized.
+
+Context/alignment verification uses `test_lung_context.py` and
+`test_lung_alignment.py`: invalid/legacy/frozen dilation policy, identical model
+parameter count and temporal output shape, saved-model parity, source/annotation
+hash rejection, regenerated cache targets including deliberate shifted-target
+detection, immutable review output, listenable WAV copies and exclusion of
+non-development IDs. Trainer stubs verify v3 dilation reaches development and
+final builders. No optimizer steps or official-test annotation reads are needed.
+
+Verified 2026-10-10: 85 focused Lung tests passed, with Keras NumPy array-copy
+deprecation warnings. The real local development review selected six recordings
+covering TRAIN/validation devices plus stridor/rhonchi examples, regenerated 36
+windows and found zero source/cache mismatches. Listening-based acoustic alignment
+remains unverified. Evidence is ignored under artifacts/lung-launch; no model
+fitting or official-test opening was performed.

@@ -486,3 +486,14 @@ Historical v1/default policies keep 0.2. Both development and final builders use
 the policy's frozen dropout, retained in the saved Keras model and process logs.
 EXP-L004 selected epoch 2 before any LR reduction; its later schedule did not
 produce a better checkpoint. Stronger dropout is unmeasured pending Linux fitting.
+
+Lung EXP-L006 freezes v3 temporal dilation 16, default dropout 0.2 and constant
+LR to isolate context span against EXP-L003. The existing Conv1D weights/shapes
+and parameter count are unchanged; theoretical context spans 71 frames/1.184 s
+instead of 11 frames/224 ms. Frame outputs/cache/splits/loss remain fixed; saved
+models preserve dilation, and final selections must retain the v3 policy.
+Symmetric padding includes future samples and boundary zeros, so this does not
+claim causal streaming inference. `review_lung_alignment.py` first creates sampled
+source/cache checks plus listenable development timelines. Mechanical agreement
+does not verify acoustic annotations; human review is required before the next
+authorized Linux run. No test labels or model fitting are involved in the review.
