@@ -14,13 +14,46 @@ def build_crnn_sed_model(input_shape: tuple[int, int, int], config: dict[str, An
     inputs = tf.keras.Input(shape=input_shape, name="spectrogram")
     x = inputs
 
-    # 1. Convolutional feature extractor (pooling along frequency ONLY, keeping time resolution)
+    architecture = str(config.get("crnn_architecture", "compact"))
     filters_list = (32, 64, 64)
-    for filters in filters_list:
-        x = tf.keras.layers.Conv2D(filters, 3, padding="same", use_bias=False)(x)
+
+    # 1. Convolutional feature extractor (pooling along frequency ONLY, keeping time resolution)
+    if architecture == "compact":
+        for filters in filters_list:
+            x = tf.keras.layers.Conv2D(filters, 3, padding="same", use_bias=False)(x)
+            x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.keras.layers.Activation("relu")(x)
+            x = tf.keras.layers.MaxPooling2D(pool_size=(2, 1))(x)  # Pool freq / 2, keep time
+    elif architecture == "residual_se":
+        ratio = max(2, int(config.get("cnn_se_ratio", 8)))
+        # Stem
+        x = tf.keras.layers.Conv2D(filters_list[0], 3, padding="same", use_bias=False)(x)
         x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.Activation("relu")(x)
-        x = tf.keras.layers.MaxPooling2D(pool_size=(2, 1))(x)  # Pool freq / 2, keep time
+        # Residual SE blocks
+        for filters in filters_list:
+            shortcut = x
+            x = tf.keras.layers.SeparableConv2D(filters, 3, padding="same", use_bias=False)(x)
+            x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.keras.layers.Activation("relu")(x)
+            x = tf.keras.layers.SeparableConv2D(filters, 3, padding="same", use_bias=False)(x)
+            x = tf.keras.layers.BatchNormalization()(x)
+            if int(shortcut.shape[-1]) != filters:
+                shortcut = tf.keras.layers.Conv2D(filters, 1, padding="same", use_bias=False)(shortcut)
+                shortcut = tf.keras.layers.BatchNormalization()(shortcut)
+            x = tf.keras.layers.Add()([x, shortcut])
+            x = tf.keras.layers.Activation("relu")(x)
+
+            # Squeeze-and-Excitation across frequency & channels
+            squeeze = tf.keras.layers.GlobalAveragePooling2D(keepdims=True)(x)
+            squeeze = tf.keras.layers.Conv2D(max(4, filters // ratio), 1, activation="relu")(squeeze)
+            squeeze = tf.keras.layers.Conv2D(filters, 1, activation="sigmoid")(squeeze)
+            x = tf.keras.layers.Multiply()([x, squeeze])
+
+            # Pool frequency only, keeping time dimension intact
+            x = tf.keras.layers.MaxPooling2D(pool_size=(2, 1))(x)
+    else:
+        raise ValueError(f"Unsupported crnn_architecture: {architecture}")
 
     # x shape is now: (batch, freq // 8, time_frames, 64) e.g. (batch, 5, 313, 64)
     # Permute to (batch, time_frames, freq // 8, 64)

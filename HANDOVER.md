@@ -204,3 +204,23 @@ git push origin feat/abdomen-crnn-sed
   * Event Recall / Sensitivity: **32.30%**
   * Event F1-Score: **37.82%**
 * **Full Milestone Report:** `AI-Pipeline/docs/abdomen_crnn_sed_training.md`
+
+### F. Post-Hoc Calibrated Operating Profile (Active Decision)
+* **Screening Baseline:** `Onset: 0.55 / Offset: 0.45` with tight hysteresis (avoids false merge of adjacent bursts).
+* **Calibrated Metrics:**
+  * **Collar 100 ms:** Recall **56.19%** (up from 32.30%), Event F1 **45.44%**, TP = 254.
+  * **Collar 200 ms:** Recall **65.49%**, Event F1 **52.95%**, TP = 296.
+  * **Collar 250 ms:** Recall **67.04%**, Event F1 **54.20%**, TP = 303.
+* **Balanced Profile Alternative:** `Onset: 0.60 / Offset: 0.30` -> Precision **51.29%** (100 ms) / **61.60%** (250 ms).
+* **Code Implementation:** Active in `auriscore.sed_postprocessing.SED_CALIBRATED_PROFILES`. Designated as the primary focus for ongoing Abdomen AI development.
+
+### G. Hard Negative Mining & Production Selection (EXP-A103 - Locked Decision)
+* **EXP-A102 (Residual-SE CRNN):** 261k params, SeparableConv2D + Residual Skips + Squeeze-and-Excitation. Best Val Loss `0.1124`. High Precision profile reaches Precision `58.04%` / Recall `51.11%` at Collar 250ms.
+* **EXP-A103 (Residual-SE + Hard Negatives):**
+  * Ingested 10 physical hardware recordings (360 5.0s segments) from `D:\Despro\Prapemrosesan_Tubuh` as negative labels (`Absent = 0`).
+  * 2,161 training segments (+20% data). Validation and test sets 100% clean and untouched.
+  * Training completed: 27 epochs, best val loss `0.1192`.
+  * **Result:** False Positives reduced from 452 down to **427** (-25 FP) at Collar 100ms; Collar 250ms Precision reached **44.43%** (Recall **66.15%**, F1 **53.16%**); High-Precision profile reached **63.04%** Precision.
+* **Locked Production Candidate:** **`EXP-A103`** selected as the production model for `abdomen-analysis-v1` due to demonstrated robustness against real-world stethoscope acoustic artifacts.
+
+

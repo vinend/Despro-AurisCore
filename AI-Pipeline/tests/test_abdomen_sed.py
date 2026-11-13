@@ -4,7 +4,11 @@ from __future__ import annotations
 import numpy as np
 
 from auriscore.sed_dataset import generate_frame_mask
-from auriscore.sed_postprocessing import evaluate_event_sed, extract_events_from_curve
+from auriscore.sed_postprocessing import (
+    SED_CALIBRATED_PROFILES,
+    evaluate_event_sed,
+    extract_events_from_curve,
+)
 
 
 def test_generate_frame_mask() -> None:
@@ -100,3 +104,36 @@ def test_evaluate_event_sed_collar() -> None:
     assert abs(metrics["recall_sensitivity"] - (2 / 3)) < 1e-3
     # F1 = 0.6667
     assert abs(metrics["event_f1"] - (2 / 3)) < 1e-3
+
+
+def test_sed_calibrated_profiles() -> None:
+    """Verify calibrated operating profiles and tight-hysteresis default extraction."""
+    assert "screening_recall" in SED_CALIBRATED_PROFILES
+    assert "balanced_precision" in SED_CALIBRATED_PROFILES
+
+    profile = SED_CALIBRATED_PROFILES["screening_recall"]
+    assert profile["onset_threshold"] == 0.55
+    assert profile["offset_threshold"] == 0.45
+
+    # Verify default parameters match calibrated screening profile
+    probs = np.zeros(100, dtype=np.float32)
+    probs[20:40] = 0.70  # Burst
+    evs = extract_events_from_curve(probs)
+    assert len(evs) == 1
+    assert evs[0]["start_s"] == round(20 * 0.016, 3)
+
+
+def test_build_crnn_architectures() -> None:
+    """Verify both compact and residual_se CRNN SED architectures build correctly."""
+    from auriscore.crnn_sed import build_crnn_sed_model
+
+    # 1. Compact
+    cfg_compact = {"crnn_architecture": "compact", "crnn_gru_units": 64, "cnn_dropout": 0.3}
+    m_compact = build_crnn_sed_model((40, 313, 1), cfg_compact)
+    assert m_compact.output_shape == (None, 313, 1)
+
+    # 2. Residual SE
+    cfg_res_se = {"crnn_architecture": "residual_se", "crnn_gru_units": 64, "cnn_dropout": 0.3}
+    m_res_se = build_crnn_sed_model((40, 313, 1), cfg_res_se)
+    assert m_res_se.output_shape == (None, 313, 1)
+

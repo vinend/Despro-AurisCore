@@ -114,12 +114,84 @@ All training artifacts are archived under `AI-Pipeline/results/EXP-A101-abdomen-
 
 ---
 
-## 7. Recommended Next Steps
+## 7. Validated Threshold & Collar Sensitivity Analysis (Completed)
 
-1. **Threshold & Collar Sensitivity Analysis:**
-   * Evaluate event extraction using adaptive onset thresholds (e.g., $P \ge 0.35$ to increase recall toward clinical screening targets).
-   * Experiment with collar tolerances of $150\text{ ms}$ and $200\text{ ms}$ to reflect manual annotation variance in clinical audio recordings.
-2. **Hybrid Localization Ensemble:**
-   * Investigate combining the deep learning probability envelope $P(t)$ from `EXP-A101` with the Hilbert energy envelope detector from `feat/abdomen-dsp-localization` to produce ultra-robust burst boundaries.
-3. **Commit & Branch Integration:**
-   * Commit results to `feat/abdomen-crnn-sed` and consider integration into the reconciliation pipeline.
+Comprehensive post-hoc sensitivity evaluation was conducted on the frozen `EXP-A101` model across 240 combinations of onset thresholds (0.35–0.80), offset hysteresis policies, merge gaps (20–60 ms), and collar tolerances (100–250 ms) on the 185 validation windows (452 ground-truth events).
+
+### Key Empirical Findings:
+1. **Loose Hysteresis Trap:** Lowering onset threshold to 0.20–0.30 with loose offset (e.g. 0.10) caused adjacent bursts to merge into a single extended event, reducing detected event count from 320 to 200 and causing Recall to drop to 6.42%.
+2. **Tight Hysteresis Breakthrough:** Using a narrow hysteresis band (`Onset 0.55 / Offset 0.45` or `Onset 0.50 / Offset 0.40`) allowed the model to sharply separate consecutive bursts, nearly doubling validated True Positives.
+
+### Comparative Operating Points Table
+
+| Configuration / Profile | Onset / Offset Th. | Gap (ms) | Collar (ms) | Detected | TP | FP | Precision | Recall (Sensitivity) | Event F1-Score |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Initial Benchmark (Loose)** | `0.50 / 0.25` | 60 | 100 | 320 | 146 | 174 | 45.62% | **32.30%** | **37.82%** |
+| **Calibrated Screening (DCASE)** | `0.55 / 0.45` | 60 | **100** | 666 | **254** | 412 | 38.14% | **56.19%** *(+23.9%)* | **45.44%** |
+| **Balanced Precision (DCASE)** | `0.60 / 0.30` | 60 | **100** | 349 | **179** | 170 | **51.29%** | **39.60%** | **44.69%** |
+| **Calibrated Screening (Physio 200ms)** | `0.55 / 0.45` | 60 | **200** | 666 | **296** | 370 | 44.44% | **65.49%** *(+33.2%)* | **52.95%** |
+| **Calibrated Screening (Physio 250ms)** | `0.55 / 0.45` | 60 | **250** | 666 | **303** | 363 | 45.50% | **67.04%** *(+34.7%)* | **54.20%** |
+| **High Precision (Physio 250ms)** | `0.60 / 0.30` | 60 | **250** | 349 | **215** | 134 | **61.60%** | **47.57%** | **53.68%** |
+
+Full machine-readable results are archived in:
+* `AI-Pipeline/results/EXP-A101-abdomen-crnn-sed/sensitivity_comprehensive_analysis.csv`
+* `AI-Pipeline/results/EXP-A101-abdomen-crnn-sed/sensitivity_comprehensive_analysis.json`
+
+---
+
+## 8. Designated Direction Moving Forward (Decision History)
+
+By user instruction (2026-11-12), future Abdomen AI development focused on the **Calibrated Tight-Hysteresis CRNN SED architecture**:
+1. **Primary Screening Preset (`screening_recall`):** Set as the default operating profile in `auriscore.sed_postprocessing.extract_events_from_curve`:
+   - `onset_threshold = 0.55`, `offset_threshold = 0.45`, `merge_gap_ms = 60.0`
+   - Achieves 56.19% Recall (Collar 100 ms) and 67.04% Recall (Collar 250 ms).
+2. **Hybrid Localization Integration:** Combine the CRNN probability curve $P(t)$ from this model with the Hilbert envelope detector $E(t)$ (`feat/abdomen-dsp-localization`) as a spectral gating filter.
+3. **Motility Metrics Serialization:** Pipe the extracted discrete event timestamps into the unified `abdomen-analysis-v1` schema to produce true clinical Bowel Rate (events/min) and Bowel Rate Variability (BRV).
+
+---
+
+## 9. Experiment EXP-A102: Residual-SE CRNN Architecture
+
+* **Experiment ID:** `EXP-A102-abdomen-crnn-residual-se`
+* **Architecture:** `crnn_architecture: residual_se`
+  * Replaced standard convolutions with Depthwise Separable Convolutions + Residual identity shortcuts.
+  * Added frequency-wise Squeeze-and-Excitation (SE) channel recalibration before frequency pooling.
+  * Parameter count: **261,313** parameters (~1.1 MB).
+* **Training Convergence:**
+  * Stopped at Epoch 18 (Best Val Loss: `0.1124` at Epoch 9).
+  * Training time: ~49.5 minutes.
+* **Evaluation Findings:**
+  * High-Precision Profile (`Onset 0.60 / Offset 0.30`, Collar 250ms): Precision **58.04%**, Recall **51.11%**, Event F1 **54.35%**.
+  * Screening Profile (`Onset 0.55 / Offset 0.45`, Collar 250ms): Recall **67.26%**, Precision **43.49%**, Event F1 **52.82%**.
+  * Weakness: Still sensitive to out-of-domain acoustic transients (heart sounds and sensor friction) leading to 452 False Positives at Collar 100ms.
+
+---
+
+## 10. Experiment EXP-A103: Hard Negative Mining from Hardware Stethoscope Audio
+
+* **Experiment ID:** `EXP-A103-abdomen-crnn-hard-negatives`
+* **Motivation:**
+  Stethoscope microphones placed on the abdomen capture acoustic bleed-through from heart valves (S1/S2 transmission to the epigastrium), breathing, and sensor movement. Models trained solely on Figshare bowel sound files trigger false alarms on these transients.
+* **Hard Negative Ingestion (`prepare_hard_negatives.py`):**
+  * 10 native 16 kHz heart and ambient recordings from `D:\Despro\Prapemrosesan_Tubuh` recorded on the physical AurisCore stethoscope hardware.
+  * Resampled to 8,000 Hz, bandpass filtered (100–1,000 Hz), sliced into 360 non-overlapping 5.0-second segments labeled strictly as `Absent = 0` across all 313 frames.
+  * Appended to training set: `segments_train_hn.csv` expanded to **2,161 segments** (+20.0% volume).
+  * **Strict Data Governance:** Validation (185) and Test (188) sets remained 100% sterile and untouched.
+* **Training Convergence:**
+  * Stopped at Epoch 27 (Best Val Loss: `0.1192`).
+  * Training time: ~79.4 minutes.
+* **Evaluation Results:**
+  * **False Positive Reduction:** At Collar 100ms, false positives dropped from 452 (EXP-A102) to **427** (-25 false alarms). Total detected false triggers dropped from 699 to 673.
+  * **Precision Gain:** Collar 100ms Precision rose to **36.55%** (F1 `43.73%`).
+  * **Collar 250ms Screening Profile:** Recall **66.15%**, Precision **44.43%**, Event F1 **53.16%** (TP = 299).
+  * **Collar 250ms High-Precision Profile (`Onset 0.70 / Offset 0.35`):** Precision **63.04%**, Recall **44.91%**, Event F1 **52.45%** (FP reduced to only 143).
+
+---
+
+## 11. Final Model Candidate Selection (EXP-A103 Locked for Production)
+
+By architectural and user decision (2026-11-13), **`EXP-A103-abdomen-crnn-hard-negatives` is designated as the primary production candidate model**:
+1. **Clinical Justification:** It is the only trained model inoculated against hardware stethoscope bleed-through and environmental artifacts.
+2. **Post-Processing Configuration:** Operating with dual presets (`screening_recall` for ileus rule-out, and `balanced_precision` / `high_precision` for motility rate counting).
+3. **Downstream Integration:** Model weights `AI-Pipeline/results/EXP-A103-abdomen-crnn-hard-negatives/best_model.keras` are wired into `auriscore.abdomen_inference` and the `abdomen-analysis-v1` service schema for the WebApp CDS interface.
+

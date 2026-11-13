@@ -24,11 +24,17 @@ from auriscore.visualization import plot_history
 LOG = logging.getLogger(__name__)
 
 
-def train_sed_model(root: Path, config: dict[str, Any], exp_name: str = "EXP-A101-abdomen-crnn-sed") -> dict[str, Any]:
+def train_sed_model(
+    root: Path,
+    config: dict[str, Any],
+    exp_name: str = "EXP-A101-abdomen-crnn-sed",
+    segments_file: str | None = None,
+) -> dict[str, Any]:
     tf = require_tensorflow()
     root = root.resolve()
 
-    segments_path = root / "data/processed/segments.csv"
+    rel_segments = segments_file or config.get("segments_path", "data/processed/segments.csv")
+    segments_path = root / rel_segments
     if not segments_path.exists():
         raise FileNotFoundError(
             f"Segments not found at {segments_path}. Run python scripts/preprocess_abdomen_dataset.py first."
@@ -144,18 +150,25 @@ def train_sed_model(root: Path, config: dict[str, Any], exp_name: str = "EXP-A10
         gt_in_win = [e for e in gt_events if e["start_sec"] >= win_start_s and e["end_sec"] <= win_end_s]
         all_val_events_gt.extend(gt_in_win)
 
-    # Event-based metrics (DCASE standard: collar = 100 ms)
-    event_metrics = evaluate_event_sed(all_val_events_pred, all_val_events_gt, collar_s=0.100)
+    # Event-based metrics across standard and physiological collars
+    event_metrics_100ms = evaluate_event_sed(all_val_events_pred, all_val_events_gt, collar_s=0.100)
+    event_metrics_200ms = evaluate_event_sed(all_val_events_pred, all_val_events_gt, collar_s=0.200)
+    event_metrics_250ms = evaluate_event_sed(all_val_events_pred, all_val_events_gt, collar_s=0.250)
+
+    arch_name = str(config.get("crnn_architecture", "compact"))
+    model_arch_desc = f"CRNN_SED ({arch_name.upper()} + BiGRU + TimeDistributed)"
 
     # Save summary metrics
     metrics = {
         "status": "completed",
         "experiment_id": exp_name,
-        "model_architecture": "CRNN_SED (Conv2D + BiGRU + TimeDistributed)",
+        "model_architecture": model_arch_desc,
         "training_time_s": round(duration, 2),
         "total_epochs": stopped_epoch,
         "best_val_loss": round(best_loss, 4),
-        "event_metrics_collar_100ms": event_metrics,
+        "event_metrics_collar_100ms": event_metrics_100ms,
+        "event_metrics_collar_200ms": event_metrics_200ms,
+        "event_metrics_collar_250ms": event_metrics_250ms,
         "detected_events_count": len(all_val_events_pred),
         "ground_truth_events_count": len(all_val_events_gt),
     }
@@ -175,9 +188,9 @@ def train_sed_model(root: Path, config: dict[str, Any], exp_name: str = "EXP-A10
     print("  CRNN SED Training Completed Successfully!")
     print(f"  Best Val Loss  : {best_loss:.4f} (Epoch {stopped_epoch})")
     print(f"  Detected Events: {len(all_val_events_pred)} (GT: {len(all_val_events_gt)})")
-    print(f"  Event F1-Score : {event_metrics['event_f1'] * 100:.2f}% (Collar 100 ms)")
-    print(f"  Event Recall   : {event_metrics['recall_sensitivity'] * 100:.2f}%")
-    print(f"  Event Precision: {event_metrics['precision'] * 100:.2f}%")
+    print(f"  Event F1-Score : {event_metrics_100ms['event_f1'] * 100:.2f}% (Collar 100 ms) | {event_metrics_250ms['event_f1'] * 100:.2f}% (Collar 250 ms)")
+    print(f"  Event Recall   : {event_metrics_100ms['recall_sensitivity'] * 100:.2f}% (100 ms) | {event_metrics_250ms['recall_sensitivity'] * 100:.2f}% (250 ms)")
+    print(f"  Event Precision: {event_metrics_100ms['precision'] * 100:.2f}% (100 ms) | {event_metrics_250ms['precision'] * 100:.2f}% (250 ms)")
     print(f"  Artifacts      : {exp_dir}")
     print("======================================================================\n")
 
@@ -189,6 +202,7 @@ def main() -> None:
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--config", type=Path, default=Path("configs/abdomen_sed_crnn.yaml"))
     parser.add_argument("--name", default="EXP-A101-abdomen-crnn-sed")
+    parser.add_argument("--segments", default=None, help="Path to custom segments CSV")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -196,7 +210,7 @@ def main() -> None:
     config_path = args.config if args.config.is_absolute() else root / args.config
     config = load_config(config_path)
 
-    train_sed_model(root, config, args.name)
+    train_sed_model(root, config, args.name, segments_file=args.segments)
 
 
 if __name__ == "__main__":

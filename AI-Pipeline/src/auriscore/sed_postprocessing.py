@@ -7,16 +7,37 @@ import numpy as np
 from scipy.ndimage import median_filter
 
 
+# Calibrated operating profiles empirically validated from EXP-A101 sensitivity analysis
+SED_CALIBRATED_PROFILES: dict[str, dict[str, Any]] = {
+    "screening_recall": {
+        "onset_threshold": 0.55,
+        "offset_threshold": 0.45,
+        "merge_gap_ms": 60.0,
+        "description": "Sensitivity-first clinical screening profile (Collar 100ms: Recall 56.19%, F1 45.44%; Collar 250ms: Recall 67.04%, F1 54.20%)",
+    },
+    "balanced_precision": {
+        "onset_threshold": 0.60,
+        "offset_threshold": 0.30,
+        "merge_gap_ms": 60.0,
+        "description": "Precision-focused profile (Collar 100ms: Precision 51.29%, F1 44.69%; Collar 250ms: Precision 61.60%, F1 53.68%)",
+    },
+}
+
+
 def extract_events_from_curve(
     probabilities: np.ndarray,
     hop_s: float = 0.016,
     window_start_s: float = 0.0,
-    onset_threshold: float = 0.50,
-    offset_threshold: float = 0.25,
+    onset_threshold: float = 0.55,
+    offset_threshold: float = 0.45,
     min_duration_ms: float = 25.0,
     merge_gap_ms: float = 60.0,
 ) -> list[dict[str, Any]]:
-    """Convert frame probability curve P(t) into discrete events using hysteresis thresholding."""
+    """Convert frame probability curve P(t) into discrete events using hysteresis thresholding.
+
+    Defaults use the calibrated tight-hysteresis screening profile (onset 0.55, offset 0.45)
+    established from EXP-A101 sensitivity evaluation.
+    """
     probs = np.asarray(probabilities, dtype=np.float32).reshape(-1)
     if len(probs) == 0:
         return []
