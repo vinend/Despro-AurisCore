@@ -1,0 +1,444 @@
+{
+  "schema_version": "lung-research-release-v1",
+  "release_url": "https://github.com/vinend/Despro-AurisCore/releases/tag/lung-research-models",
+  "role": "development_only",
+  "deployment_eligible": false,
+  "official_test_used": false,
+  "evaluation_group_identifiers_omitted": true,
+  "unavailable_runs": {
+    "L001": "No saved model",
+    "L002-L005": "Model files unavailable in the local inventory"
+  },
+  "assets": [
+    {
+      "experiment_id": "EXP-L006-temporal-cnn-context",
+      "asset": "EXP-L006-temporal-cnn-context.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L006-temporal-cnn-context.zip",
+      "bytes": 5715006,
+      "sha256": "faf89db277d6814ed7e4cc47581b981387f506086f0ffaad80eba0f587ee66fc",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "fcb29b63ae77004132ad5e4350636a80e8bb3616523773c6e21b169353c228c2"
+        }
+      ],
+      "classes": [
+        "inhalation",
+        "exhalation",
+        "wheeze",
+        "rhonchi",
+        "stridor",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L007-lower-initial-lr",
+      "asset": "EXP-L007-lower-initial-lr.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L007-lower-initial-lr.zip",
+      "bytes": 5854915,
+      "sha256": "be0ba75fa932c3cbd67a5688d029b290375a88dd33e6554f817d78120ecc2ce6",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "848f10be82433d124c549346a5e8afe31165aecf5cad71c9bae282309b1802d4"
+        }
+      ],
+      "classes": [
+        "inhalation",
+        "exhalation",
+        "wheeze",
+        "rhonchi",
+        "stridor",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L008-weight-decay",
+      "asset": "EXP-L008-weight-decay.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L008-weight-decay.zip",
+      "bytes": 5662690,
+      "sha256": "68011b903a5911e80da30d0d56f685d6c05976ae8f19b761d7046ebd20760adb",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "b6d8ad9a786f92e89b16331b728ccb734bb8365992affce58c1d0f1239e03f94"
+        }
+      ],
+      "classes": [
+        "inhalation",
+        "exhalation",
+        "wheeze",
+        "rhonchi",
+        "stridor",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L009-frequency-mask",
+      "asset": "EXP-L009-frequency-mask.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L009-frequency-mask.zip",
+      "bytes": 5455036,
+      "sha256": "a60e5bfc4f77d3b855da10081a4cc88a197b42af0459277dd86088edbf89dcb7",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "8f1baf44321985c87afeec0055aa76b68dde730c0cba3f8c0aa5ba88db4cd7a7"
+        }
+      ],
+      "classes": [
+        "inhalation",
+        "exhalation",
+        "wheeze",
+        "rhonchi",
+        "stridor",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L010-phase-only",
+      "asset": "EXP-L010-phase-only.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L010-phase-only.zip",
+      "bytes": 5669395,
+      "sha256": "2846b342c30816b7da9e3b95bcde57e903215fab1546eec419fedad416e0b93f",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "1cd017e170e88daf754a3e8b594aa6cd9278985826fecc8cdd8b7323220a9a7f"
+        }
+      ],
+      "classes": [
+        "inhalation",
+        "exhalation"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L011-sound-only",
+      "asset": "EXP-L011-sound-only.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L011-sound-only.zip",
+      "bytes": 5699770,
+      "sha256": "fb0320ea5d68003e626f62fecde2e17398c6aa69c8cce602a0bdcfc6af336b9c",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "fd5e912b711262bfb1ae765d09b6ffcb62427f9a79942e5a9c0c2fa8e84a7f19"
+        }
+      ],
+      "classes": [
+        "wheeze",
+        "rhonchi",
+        "stridor",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L012-hf-sprsound-context",
+      "asset": "EXP-L012-hf-sprsound-context.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L012-hf-sprsound-context.zip",
+      "bytes": 5656705,
+      "sha256": "23754b493b64d69d87a9f59ce63d665cd6adfa3d6c5406625b455c8e127d0f76",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "b1105c6c64968528fe0b7d603a3cc1392e9c884e758bfba50e0ca27e7f4a7cf0"
+        }
+      ],
+      "classes": [
+        "inhalation",
+        "exhalation",
+        "wheeze",
+        "rhonchi",
+        "stridor",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L013-compact-phase",
+      "asset": "EXP-L013-compact-phase.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L013-compact-phase.zip",
+      "bytes": 2094547,
+      "sha256": "0ba643c0ad79edfb6e1ac131123c712d0d15c41cfd9dedf0f1052356e37d87ce",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "737a506622ea48479b520f6eaa714cb116df2fc199f1a5cfbd95059b0690fb47"
+        }
+      ],
+      "classes": [
+        "inhalation",
+        "exhalation"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L014-compact-sound",
+      "asset": "EXP-L014-compact-sound.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L014-compact-sound.zip",
+      "bytes": 2076038,
+      "sha256": "778900f0ca2b852835ff76613c543202f9d41ccefa13e8ee5eebbdcf95ba21f6",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "a7d9fb202704c19565de275a07ef5848760c36dcda0f7c425c4a4ad4abbd3893"
+        }
+      ],
+      "classes": [
+        "wheeze",
+        "rhonchi",
+        "stridor",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L015-three-sound",
+      "asset": "EXP-L015-three-sound.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L015-three-sound.zip",
+      "bytes": 5658140,
+      "sha256": "e50f93b04c3597b9cf81f51ffbef54a46acb845ca584d0fc1845058bcb807571",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "ffa568ae4dc808a6cce2e219bad113b38f0bd95ba0da3567df4b0c600f768d82"
+        }
+      ],
+      "classes": [
+        "wheeze",
+        "rhonchi",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L016-numerical-contract",
+      "asset": "EXP-L016-numerical-contract.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L016-numerical-contract.zip",
+      "bytes": 6110872,
+      "sha256": "e3cd75e9e3d612755208c7e98ece28b70e1100fbb4de6bea91dcc1a3075a1b55",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "6390242b0ea0edc3adb17532754e3783cb919984e9517111dda6baaa9e19900c"
+        }
+      ],
+      "classes": [
+        "wheeze",
+        "rhonchi",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L017-window-objective",
+      "asset": "EXP-L017-window-objective.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L017-window-objective.zip",
+      "bytes": 6084137,
+      "sha256": "113d3d5b8d14f1bb102e5403c90b761bbc90548b9188de46720edd4a58000367",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "58af3d2a9e2b6e8009d1b7df7c956a300bd2bd3be36c7b23d400020a28318e04"
+        }
+      ],
+      "classes": [
+        "wheeze",
+        "rhonchi",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L018-supervised-windows",
+      "asset": "EXP-L018-supervised-windows.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L018-supervised-windows.zip",
+      "bytes": 6060276,
+      "sha256": "d93bea7baa15532007abfd526143eb6adb6cd88800b899af210788c5e70e7efe",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "150229c745fd499954b129f008de35ef28f6d914565e25208dcb2243c2ff8c5e"
+        }
+      ],
+      "classes": [
+        "wheeze",
+        "rhonchi",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 0,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json"
+      ]
+    },
+    {
+      "experiment_id": "EXP-L019-fixed-reference",
+      "asset": "EXP-L019-fixed-reference.zip",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models/EXP-L019-fixed-reference.zip",
+      "bytes": 33438576,
+      "sha256": "571ce0f556d4dd040ff46307e788a547517edf115f8bc059aeb0f76ddee3ec8e",
+      "models": [
+        {
+          "path": "fold-0/model.keras",
+          "sha256": "37c14ef60f4aa50b1189802d41ff1dfcccc9c641536d8e833bb2a41e4c41e97d"
+        }
+      ],
+      "classes": [
+        "wheeze",
+        "rhonchi",
+        "crackle"
+      ],
+      "epoch_weight_snapshots": 9,
+      "files": [
+        "source.json",
+        "status.json",
+        "fold-0/model.keras",
+        "fold-0/best.weights.h5",
+        "fold-0/normalization.npz",
+        "fold-0/evaluation.json",
+        "fold-0/history.csv",
+        "fold-0/history.json",
+        "fold-0/trajectory/epoch-0001/weights.weights.h5",
+        "fold-0/trajectory/epoch-0002/weights.weights.h5",
+        "fold-0/trajectory/epoch-0003/weights.weights.h5",
+        "fold-0/trajectory/epoch-0004/weights.weights.h5",
+        "fold-0/trajectory/epoch-0005/weights.weights.h5",
+        "fold-0/trajectory/epoch-0006/weights.weights.h5",
+        "fold-0/trajectory/epoch-0007/weights.weights.h5",
+        "fold-0/trajectory/epoch-0008/weights.weights.h5",
+        "fold-0/trajectory/epoch-0009/weights.weights.h5"
+      ]
+    }
+  ]
+}
