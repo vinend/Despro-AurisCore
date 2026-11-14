@@ -89,6 +89,7 @@ class BackendDefinition:
     model_version: str | None = None
     requires_model: bool = False
     deployment_eligible: bool = False
+    engineering_test_only: bool = False
 
 
 def candidate_backend(package: Path, factory: Callable[[], OrganBackend]) -> BackendDefinition:
@@ -138,13 +139,16 @@ class AnalysisService:
     """Reusable synchronous service; one instance per worker/application process."""
 
     def __init__(self, *, backends: list[BackendDefinition] | None = None,
-                 policy: AudioPolicy = AudioPolicy()):
+                 policy: AudioPolicy = AudioPolicy(), allow_engineering: bool = False):
         definitions = backends if backends is not None else [BackendDefinition(
             "heart", "heart-dsp-prototype-0.1.0", HeartDSPBackend)]
         self.policy = policy
+        if not isinstance(allow_engineering, bool):
+            raise ValueError("Engineering authorization must be explicit boolean")
+        self.allow_engineering = allow_engineering
         self._slots: dict[str, BackendSlot] = {}
         for definition in definitions:
-            if not isinstance(definition.requires_model, bool) or not isinstance(definition.deployment_eligible, bool):
+            if not isinstance(definition.requires_model, bool) or not isinstance(definition.deployment_eligible, bool) or not isinstance(definition.engineering_test_only, bool):
                 raise ValueError("Backend eligibility flags must be booleans")
             if (definition.mode not in MODES or definition.mode in self._slots
                     or not isinstance(definition.backend_version, str) or not definition.backend_version):
@@ -233,8 +237,11 @@ class AnalysisService:
             return self._error(result, "MODEL_UNAVAILABLE", "No analysis backend is configured for this mode.", mode, status="unavailable")
         definition = slot.definition
         result.update(backend_version=definition.backend_version, model_version=definition.model_version)
-        if definition.requires_model and not definition.deployment_eligible:
+        if definition.requires_model and not definition.deployment_eligible and not (
+                self.allow_engineering and definition.engineering_test_only):
             return self._error(result, "MODEL_NOT_AUTHORIZED", "Configured model has no deployment eligibility decision.", mode, status="unavailable")
+        if definition.engineering_test_only:
+            result["usage_scope"] = "engineering_test_only"
         audio.setflags(write=False)
         try:
             output = slot.run(audio, int(sample_rate))

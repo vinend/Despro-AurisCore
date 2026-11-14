@@ -45,6 +45,7 @@ def main() -> None:
     if (args.wav or args.stdin) and not args.mode:
         parser.error("WAV input requires --mode")
     definitions = [BackendDefinition("heart", "heart-dsp-prototype-0.1.0", HeartDSPBackend)]
+    engineering = os.environ.get("AURISCORE_ENGINEERING_MODELS")
     try:
         if args.heart_package:
             from auriscore.heart_inference import heart_backend_definition
@@ -55,7 +56,14 @@ def main() -> None:
         if args.lung_package:
             from auriscore.lung_inference import lung_backend_definition
             definitions.append(lung_backend_definition(args.lung_package))
-        service = AnalysisService(backends=definitions)
+        if engineering:
+            if args.heart_package or args.abdomen_package:
+                raise ValueError("Choose engineering configuration or deployment packages")
+            from auriscore.engineering_inference import definitions as engineering_definitions
+            local_definitions = engineering_definitions(engineering)
+            modes = {definition.mode for definition in local_definitions}
+            definitions = [definition for definition in definitions if definition.mode not in modes] + local_definitions
+        service = AnalysisService(backends=definitions, allow_engineering=bool(engineering))
     except (OSError, ValueError, TypeError, KeyError):
         parser.exit(2, "Deployment package is missing, ineligible or invalid.\n")
     if args.wav or args.stdin:

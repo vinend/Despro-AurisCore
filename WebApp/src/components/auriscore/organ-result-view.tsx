@@ -1,15 +1,16 @@
 import { analysisNotice, type OrganAnalysisResult } from "@/lib/auriscore/analysis-result";
 import { HeartResultView } from "./heart-result-view";
 import { LungResultView } from "./lung-result-view";
+import { EvidenceTimeline } from "./evidence-timeline";
 
-export function OrganResultView({ result }: { result: OrganAnalysisResult }) {
+export function OrganResultView({ result, timeOffset = 0 }: { result: OrganAnalysisResult; timeOffset?: number }) {
   const notice = analysisNotice(result);
   if (result.mode === "heart") return <>
     {notice && <p className="auris-heart-warning" role="status">{notice}</p>}
-    {result.analysis && <HeartResultView result={result.analysis} />}
+    {result.analysis && <HeartResultView result={result.analysis} timeOffset={timeOffset} />}
   </>;
   if (result.mode === "lung") return <>{notice && <p role="status" className="auris-heart-warning">{notice}</p>}
-    {result.analysis && <LungResultView result={result.analysis} />}</>;
+    {result.analysis && <LungResultView result={result.analysis} timeOffset={timeOffset} />}</>;
   const activity = result.analysis?.activity;
   return <div className="auris-heart-result" aria-label="Hasil analisis Abdomen">
     <h3>Hasil Abdomen</h3>
@@ -24,10 +25,14 @@ export function OrganResultView({ result }: { result: OrganAnalysisResult }) {
         <div><dt>Versi model</dt><dd>{activity.model_version}</dd></div>
       </dl>
       <p>Jendela saling tumpang tindih. Fraksi ini bukan persentase durasi aktif atau jumlah kejadian usus.</p>
+      <EvidenceTimeline timeOffset={timeOffset} title="Waktu aktivitas akustik Abdomen" duration={activity.analyzed_duration_s + activity.discarded_tail_s}
+        intervals={activity.windows.filter(w => w.label === "present").map(w => ({...w, label: "Aktivitas usus per jendela"}))}
+        explanation={`Rentang mengikuti jendela model ${activity.window_seconds} detik. Awal dan akhir burst individual belum ditentukan. Sisa ${activity.discarded_tail_s.toFixed(2)} detik tidak dianalisis.`}
+        emptyMessage="Tidak ada jendela yang ditandai aktif oleh model." />
       <div className="auris-history-scroll"><table>
         <caption>Aktivitas akustik per jendela — skor model belum dikalibrasi sebagai probabilitas</caption>
         <thead><tr><th scope="col">Waktu</th><th scope="col">Skor</th><th scope="col">Temuan akustik</th></tr></thead>
-        <tbody>{activity.windows.map(w => <tr key={w.start_s}><td>{w.start_s.toFixed(2)}–{w.end_s.toFixed(2)} s</td>
+        <tbody>{activity.windows.map(w => <tr key={w.start_s}><td>{(w.start_s + timeOffset).toFixed(2)}–{(w.end_s + timeOffset).toFixed(2)} s</td>
           <td>{w.score.toFixed(3)}</td><td>{w.label === "present" ? "Aktivitas terdeteksi" : "Aktivitas tidak terdeteksi"}</td></tr>)}</tbody>
       </table></div>
     </>}

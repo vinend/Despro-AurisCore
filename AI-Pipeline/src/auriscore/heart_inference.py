@@ -238,7 +238,7 @@ class RecordingMurmurScorer:
                 except Exception:
                     self._load_failed = True
                     raise MurmurInferenceError("MODEL_LOAD_FAILED") from None
-            scores, batch = [], []
+            scores, batch, windows = [], [], []
 
             def evaluate() -> None:
                 tensor = np.stack(batch)[..., None]
@@ -249,7 +249,9 @@ class RecordingMurmurScorer:
                 batch.clear()
 
             try:
-                for _, window, _ in segment(processed, config["sample_rate"], config["window_seconds"], config["overlap"]):
+                for start, window, valid in segment(processed, config["sample_rate"], config["window_seconds"], config["overlap"]):
+                    windows.append({"start_s": start / config["sample_rate"],
+                                    "end_s": (start + valid) / config["sample_rate"]})
                     batch.append(extract_spectrogram_tensor(window, config))
                     if len(batch) == self.batch_size:
                         evaluate()
@@ -257,7 +259,12 @@ class RecordingMurmurScorer:
                     evaluate()
             except Exception:
                 raise MurmurInferenceError("INFERENCE_FAILED") from None
-            return {"score": float(np.mean(scores)), "window_count": len(scores)}
+            for window, score in zip(windows, scores, strict=True):
+                window["score"] = score
+            duration = len(processed) / config["sample_rate"]
+            return {"score": float(np.mean(scores)), "window_count": len(scores),
+                    "windows": windows, "duration_s": duration,
+                    "discarded_tail_s": max(0., duration - windows[-1]["end_s"])}
 
 
 class HeartInferenceBackend:
@@ -286,6 +293,12 @@ class HeartInferenceBackend:
         result["murmur"].update(inference_unit="recording", aggregation="mean_window_score",
                                 window_count=scoring["window_count"], score_kind="uncalibrated_sigmoid",
                                 probability_is_calibrated=False)
+        result["murmur"]["temporal_evidence"] = {
+            "version": "heart-window-evidence-v1", "kind": "exploratory_window_scores",
+            "threshold_scope": "recording_reference_only", "duration_s": scoring["duration_s"],
+            "discarded_tail_s": scoring["discarded_tail_s"],
+            "windows": scoring["windows"],
+        }
         return BackendOutput(result)
 
 

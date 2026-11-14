@@ -117,8 +117,14 @@ def test_frozen_tensor_pipeline_matches_existing_implementation(inputs):
     config = metadata['config']
     expected = np.stack([extract_spectrogram_tensor(window, config) for _, window, _ in
                         segment(preprocess(audio, 16000, config), 8000, 5, .5)])[..., None]
-    assert result == {'score': .4, 'window_count': 4}
+    assert result['score'] == .4 and result['window_count'] == 4
+    assert result['windows'] == [
+        {'start_s': start, 'end_s': start + 5., 'score': .4} for start in (0., 2.5, 5., 7.5)]
+    assert result['duration_s'] == 12.5 and result['discarded_tail_s'] == 0.
     np.testing.assert_array_equal(np.concatenate(model.batches), expected)
+    tail = scorer.score(signal(12.8, 16000), 16000)
+    assert tail['windows'][-1]['end_s'] == 12.5
+    assert tail['discarded_tail_s'] == pytest.approx(.3)
     scorer.score(audio, 16000)
     assert len(loads) == 1
 
@@ -245,4 +251,7 @@ def test_real_saved_cnn_runs_raw_recording_inference_without_deployment_claim():
     scorer = RecordingMurmurScorer(SOURCE / 'heart_cnn.keras', metadata)
     result = scorer.score(signal(7.5), 8000)
     assert result['window_count'] == 2 and 0 <= result['score'] <= 1
-    assert set(result) == {'score', 'window_count'}  # No threshold, label, or deployment promotion.
+    assert set(result) == {'score', 'window_count', 'windows', 'duration_s', 'discarded_tail_s'}
+    assert result['windows'][0]['start_s'] == 0.
+    assert result['windows'][-1]['end_s'] == 7.5
+    assert 'threshold' not in result and 'label' not in result

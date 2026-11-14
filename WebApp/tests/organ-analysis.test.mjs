@@ -1,3 +1,4 @@
+import { EvidenceTimeline } from "../src/components/auriscore/evidence-timeline.tsx";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
@@ -141,9 +142,11 @@ test("Abdomen result view renders acoustic windows and unavailable states", () =
   const module = { exports: {} };
   runInNewContext(js, { module, exports: module.exports, require: name => name.includes("analysis-result")
     ? { analysisNotice } : name === "./heart-result-view" ? { HeartResultView: () => null }
-    : name === "./lung-result-view" ? { LungResultView: () => null } : require(name) });
+    : name === "./lung-result-view" ? { LungResultView: () => null } : name === "./evidence-timeline" ? { EvidenceTimeline } : require(name) });
   const View = module.exports.OrganResultView;
   const html = renderToStaticMarkup(createElement(View, { result: parseOrganAnalysisResult(result()) }));
+  assert.match(html, /Waktu aktivitas akustik Abdomen/);
+  assert.match(html, /detik/);
   assert.match(html, /50\.0%/); assert.match(html, /Aktivitas terdeteksi/); assert.match(html, /bukan diagnosis/);
   assert.match(html, /belum dikalibrasi/); assert.doesNotMatch(html, /BPM/);
   const unavailable = renderToStaticMarkup(createElement(View, { result: parseOrganAnalysisResult(result("abdomen", "unavailable")) }));

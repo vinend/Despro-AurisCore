@@ -401,3 +401,30 @@ endpoint calls the retained Python worker's existing PCM path, preserving
 package checks, preprocessing, tensor geometry and thresholds. Gaps, stalls
 and organ changes invalidate old results. Preview results are not saved in
 recorded-session history.
+
+Device workspace update (2026-11-14): the public main screen uses only the
+physical gateway adapter, initially disconnected until pairing is submitted.
+Simulator adapters remain isolated development/test tools. The LAN launcher
+passes its selected IP to Next's development-origin allowlist. This does not
+change the signal-processing, model, native mobile or result-schema boundaries.
+
+Client diagnostics keep the rolling PCM level/saturation meter separate from
+backend quality decisions. Gateway RTT uses authenticated application echoes
+on the existing control channel; inference timing retains the existing live
+request timer. Neither is presented as full sensor-to-result latency.
+
+
+The organ result views share EvidenceTimeline for explicit absolute start/end
+times. Heart exports pre-aggregation CNN window scores through its existing
+backend. Abdomen uses existing classifier activity windows, and Lung keeps its
+frame interval decoder. Each timeline describes its temporal evidence and
+unavailable/empty state. Research model activation remains a separate decision.
+
+## Local Lung research release integration
+
+The optional engineering backend supports a hash-bound Lung release using the
+same source config, normalization and saved thresholds. It reuses the research
+frame decoder for exploratory intervals and retains partial respiratory states.
+It does not create a final deployment package or modify weights. The main UI
+now uses only device streaming/capture, while file endpoints remain available
+for engineering verification.

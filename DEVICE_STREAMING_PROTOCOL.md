@@ -75,6 +75,16 @@ audio stall becomes an error and disconnects the device. Acquisition failures us
 watchdog also detects a connected but non-producing source. Detached controllers
 close their publisher connection so it cannot stream unattended indefinitely.
 
+Optional browser diagnostics (2026-11-14): an authenticated browser may send
+`{type:"heartbeat",id:"correlation-id"}`; the gateway returns
+`{type:"heartbeat_ack",id:"correlation-id"}`. The same 1–64 character ID rule
+applies. Heartbeats without IDs remain accepted; no firmware change is required.
+The browser measures RTT on its own monotonic clock, probes every two seconds,
+and clears the reading on disconnect or a five-second missing acknowledgement.
+This is browser–gateway round-trip time, not one-way sensor/speaker latency.
+Controller disconnect now terminates the publisher socket immediately so a
+stalled close handshake cannot block another browser from taking control.
+
 Browser decoder normalizes frames for existing waveform/capture without resampling
 original PCM; unknown signal quality is explicit. Hardware battery/BPM remain null
 until actually measured. Live AudioWorklet output resampling/concealment is separate

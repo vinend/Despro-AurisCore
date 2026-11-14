@@ -82,6 +82,12 @@ export function createDeviceGateway(options: GatewayOptions) {
             if (message.command === "stop_stream") { active = false; ready = false; continuity = null; state("ready"); }
             broadcast({ type: "command_ack", id: message.id, command: message.command, ok: message.ok }); return;
           }
+          if (role === "browser" && message.type === "indicator") {
+            if (!["heart", "lung", "abdomen"].includes(message.mode)
+              || !["idle", "recording", "processing", "done", "error"].includes(message.phase)) throw Error("Invalid indicator state");
+            if (device && hello?.indicatorProtocol === 1) send(device, { type: "indicator", mode: message.mode, phase: message.phase });
+            return;
+          }
           if (role === "browser" && message.type === "command") {
             if (!device || !hello || commands.size || !/^[\w-]{1,64}$/.test(message.id)
               || !["start_stream", "stop_stream"].includes(message.command)) throw Error("Device/control command unavailable");
@@ -89,7 +95,15 @@ export function createDeviceGateway(options: GatewayOptions) {
             commands.set(message.id, { command: message.command, timer }); send(device, message); return;
           }
           if (role === "device" && message.type === "source_error") { stop("Device audio source failed or overflowed"); return; }
-          if (message.type !== "heartbeat") throw Error("Unsupported message");
+          if (message.type === "heartbeat") {
+            // Optional browser RTT probe: no device-clock synchronization claim.
+            if (role === "browser" && message.id !== undefined) {
+              if (typeof message.id !== "string" || !/^[\w-]{1,64}$/.test(message.id)) throw Error("Invalid heartbeat ID");
+              send(ws, { type: "heartbeat_ack", id: message.id });
+            }
+            return;
+          }
+          throw Error("Unsupported message");
         } catch { if (ws === device && active) stop("Malformed audio/control or interrupted sample clock"); ws.close(1008, "Invalid protocol message"); }
       });
       ws.on("close", () => {
@@ -97,7 +111,10 @@ export function createDeviceGateway(options: GatewayOptions) {
         if (controller === ws) {
           controller = null;
           // A detached browser must not leave the source streaming indefinitely.
-          if (device) device.close(1000, "Controller disconnected");
+          // Release immediately: serial publishers may not finish a WebSocket
+          // close handshake while their receive thread is draining USB audio.
+          // Waiting for that handshake otherwise blocks the next controller.
+          if (device) device.terminate();
         }
         if (device === ws) {
           device = null; hello = null; active = false; ready = false; continuity = null;

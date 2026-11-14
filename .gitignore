@@ -108,3 +108,8 @@ RD-H022-TMIL-P1/
 RD-H022-TMIL-P1-watchdog/
 RD-H022-TMIL-P1-evaluation/
 RD-H022-TMIL-P1.claim
+
+# Private hosting configuration, bundles, and isolated production build checks
+hosting/hosting.env
+hosting/models/
+WebApp/.next-hosting-check/

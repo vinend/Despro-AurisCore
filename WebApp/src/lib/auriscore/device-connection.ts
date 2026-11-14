@@ -13,11 +13,19 @@ export class DeviceConnection {
   private attempt = 0;
   private started = false;
   private packetSequence = 0;
+  private commandSequence = 0;
+  private authenticated = false;
+  private ping: { id: string; sentAt: number } | null = null;
+  private lastPingAt = -Infinity;
   private currentState: PcgConnectionState = "disconnected";
-  constructor(private options: DeviceConnectionOptions, private handlers: PcgConnectionHandlers & { onError?: (message: string) => void }) {}
+  constructor(private options: DeviceConnectionOptions, private handlers: PcgConnectionHandlers & {
+    onError?: (message: string) => void; onLatency?: (milliseconds: number | null) => void;
+  }) {}
   private state(state: PcgConnectionState) { if (this.currentState !== state) { this.currentState = state; this.handlers.onStateChange?.(state); } }
   connect() {
     this.closed = false; this.state("connecting");
+    this.authenticated = false; this.ping = null; this.lastPingAt = -Infinity;
+    this.handlers.onLatency?.(null);
     const socket = new WebSocket(this.options.url); this.socket = socket; socket.binaryType = "arraybuffer";
     socket.onopen = () => { socket.send(JSON.stringify({ type: "authenticate", token: this.options.token })); };
     socket.onmessage = event => {
@@ -36,6 +44,16 @@ export class DeviceConnection {
           return;
         }
         const message = JSON.parse(event.data);
+        if (message.type === "authenticated") {
+          this.authenticated = true; this.probeLatency(); return;
+        }
+        if (message.type === "heartbeat_ack") {
+          if (this.ping && message.id === this.ping.id) {
+            this.handlers.onLatency?.(Math.max(0, performance.now() - this.ping.sentAt));
+            this.ping = null;
+          }
+          return;
+        }
         if (message.type === "device_hello") {
           this.hello = parseDeviceHello(message); this.continuity = new AudioContinuity(this.hello.streamId);
           this.packetSequence = 0; this.started = false; this.lastAudio = 0;
@@ -62,18 +80,38 @@ export class DeviceConnection {
         this.closed = true; this.handlers.onError?.("Pairing atau kontrol gateway ditolak. Periksa kode pairing dan koneksi browser lain.");
       }
       this.state("disconnected"); this.hello = null; this.continuity = null; this.started = false;
+      this.authenticated = false; this.ping = null; this.handlers.onLatency?.(null);
       if (!this.closed) this.retry = setTimeout(() => this.connect(), Math.min(5000, 1000 * 2 ** this.attempt++));
     };
     if (!this.watchdog) this.watchdog = setInterval(() => {
+      if (this.ping && performance.now() - this.ping.sentAt > 5000) {
+        this.ping = null; this.handlers.onLatency?.(null);
+      }
+      if (performance.now() - this.lastPingAt >= 2000) this.probeLatency();
       if (this.lastAudio && Date.now() - this.lastAudio > 2000) {
         this.lastAudio = 0; this.state("disconnected"); this.handlers.onError?.("Audio perangkat berhenti; ulangi rekaman.");
       }
     }, 500);
   }
+  private probeLatency() {
+    if (!this.authenticated || this.closed || this.ping || this.socket?.readyState !== WebSocket.OPEN) return;
+    const id = `ping-${Date.now()}-${++this.commandSequence}`;
+    const now = performance.now();
+    this.ping = { id, sentAt: now }; this.lastPingAt = now;
+    this.socket.send(JSON.stringify({ type: "heartbeat", id }));
+  }
   private startStream() {
     if (!this.started && this.socket?.readyState === WebSocket.OPEN) {
       this.started = true;
-      this.socket.send(JSON.stringify({ type: "command", id: crypto.randomUUID(), command: "start_stream" }));
+      // Correlation ID only; authentication still uses the pairing token.
+      // randomUUID is unavailable on HTTP LAN origins in mobile browsers.
+      const id = `stream-${Date.now()}-${++this.commandSequence}`;
+      this.socket.send(JSON.stringify({ type: "command", id, command: "start_stream" }));
+    }
+  }
+  setIndicator(mode: "heart" | "lung" | "abdomen", phase: "idle" | "recording" | "processing" | "done" | "error") {
+    if (this.authenticated && this.hello?.indicatorProtocol === 1 && this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ type: "indicator", mode, phase }));
     }
   }
   setMode() {} // Location is browser examination metadata, not a fabricated hardware command.
@@ -81,6 +119,7 @@ export class DeviceConnection {
   close() {
     this.closed = true; if (this.retry) clearTimeout(this.retry); if (this.watchdog) clearInterval(this.watchdog);
     this.retry = null; this.watchdog = null;
+    this.authenticated = false; this.ping = null; this.handlers.onLatency?.(null);
     const socket = this.socket; this.socket = null;
     socket?.close(); this.state("disconnected");
   }

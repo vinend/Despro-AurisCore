@@ -1,7 +1,7 @@
 # Heart and Abdomen app integration — phase 5
 
 The existing Next.js app now uses actual recorded audio in its main recording
-controls and WAV upload flow. Select **Heart** or **Abdomen** before starting.
+controls. The main screen now exposes streaming and device capture for Heart, Lung and Abdomen. File upload controls were removed from all main organ views on 2026-11-14.
 Capture freezes that selection, collects validated mono PCM packets, encodes WAV
 and calls the same service as uploaded files. No fake classification or processing
 delay is used by the main recording flow. Simulator audio remains visibly labeled
@@ -127,3 +127,8 @@ approved package, real Lung analysis returns unavailable. Eligible results show
 sound events, respiratory phase timelines and nullable respiratory measurements.
 Rates/I:E require three complete unambiguous cycles. Heart controls such as BPM
 and auscultation site are hidden in Lung mode. No model is active yet.
+
+The main Heart screen no longer mounts or loads the historical CNN training
+metrics card. MainScreen has no trainingMetricsCard prop, and page.tsx renders
+only the live device workspace. HTTP rendering on 2026-11-14 confirmed both the
+training metrics heading and WAV upload heading absent.

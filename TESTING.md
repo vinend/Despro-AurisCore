@@ -1,5 +1,17 @@
 # TESTING.md
 
+Branch publication checks (2026-11-14, base origin/master 03da32a): production
+WebApp build and separate TypeScript check pass after npm ci in an isolated
+worktree. All 49 WebApp tests, four gateway tests, 59 focused Python backend/DSP
+tests and ten production HTTP acceptance checks pass with no skipped checks.
+HTTP acceptance uses generated audio and the default unconfigured-model state;
+it does not certify the private H022/L006/A005 models on a Linux server. Python
+tests include saved-CNN inference on generated input, without a performance claim.
+Docker image build, server TLS/WSS and physical iPhone acceptance remain pending.
+The companion hardware source is on codex/hardware-esp32; its radio startup failure
+is separate from these passing software checks. Private models, credentials and
+machine evidence are deliberately excluded from both publication commits.
+
 ## Fixed-reference features and trajectory — 2026-11-10
 
 40 focused checks pass for Lung-only fixed-reference/floor features, identical
@@ -623,3 +635,37 @@ covering TRAIN/validation devices plus stridor/rhonchi examples, regenerated 36
 windows and found zero source/cache mismatches. Listening-based acoustic alignment
 remains unverified. Evidence is ignored under artifacts/lung-launch; no model
 fitting or official-test opening was performed.
+
+Rhythm descriptors (2026-11-14): synthetic tests verify population SD, CV,
+constant intervals and insufficient interval handling. UI tests cover CV
+rendering, legacy responses without CV and suppression of legacy irregular
+findings. These checks verify calculations and rendering, not rhythm accuracy.
+
+## Mobile LAN controls — 2026-11-14
+
+`WebApp/tests/device-streaming.test.mjs` includes host-derived gateway defaults
+(LAN, localhost, IPv6, HTTPS) and a real DeviceConnection handshake/PCM decode
+with secure-context crypto APIs absent. It verifies that connection readiness
+still requires audio, and pairing remains mandatory. UI verification covers
+the physical-only form, organ switching, validation errors and narrow viewport
+layout. This does not establish physical-phone audio playback or model accuracy.
+
+Seven streaming checks pass, including exact 25.5 ms echo timing with a controlled
+monotonic clock, wrong-ID rejection, PCM meter reference RMS/rail counts/rolling
+replacement/input preservation, and controller handoff with a deliberately stalled
+publisher close handshake. Three existing gateway checks and 32 organ/live result
+checks pass. TypeScript checking passes. Browser testing uses an HTTP LAN origin
+and phone-sized viewport, not a claim of physical iOS device testing.
+
+## Organ interval display — 2026-11-14
+
+Heart scorer regression verifies unchanged aggregate scores/tensors, exact
+overlapping window times and discarded tails, including real saved CNN inference.
+Frontend checks cover optional Heart temporal fields, invalid interval rejection,
+threshold-reference display, empty states, and Lung/Abdomen range rendering.
+These software checks do not validate murmur onset/offset accuracy.
+
+The authorized local Lung release adapter was exercised with a synthetic
+30-second PCM input through POST /api/analysis/live. HTTP 200/partial contained
+L006 scores and intervals with LUNG_INSUFFICIENT_CYCLES, preserving null
+respiratory metrics. Archive/model hashes matched the published release.

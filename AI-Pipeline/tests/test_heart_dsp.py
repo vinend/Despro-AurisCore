@@ -96,6 +96,15 @@ def test_irregular_flag_requires_enough_intervals():
     assert classify_rhythm(float("nan"), [])["heart_rate_bpm"] is None
 
 
+def test_descriptive_interval_cv_uses_mean_and_population_sd():
+    result = classify_rhythm(75, [760., 840.] * 5)
+    assert result["interval_std_ms"] == 40.
+    assert result["interval_cv"] == .05
+    assert classify_rhythm(75, [800.] * 10)["interval_cv"] == 0.
+    assert classify_rhythm(None, [])["interval_cv"] is None
+    assert classify_rhythm(75, [800.])["interval_cv"] is None
+
+
 def test_interval_records_and_reject_impossible_pairing():
     systole, diastole = interval_records(np.array([800, 1600, 2400]),
                                          np.array([1100, 1900]), 1000)
