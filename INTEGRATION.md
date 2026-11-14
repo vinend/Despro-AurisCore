@@ -1,5 +1,95 @@
 # INTEGRATION.md
 
+Wi-Fi init-only bench control (2026-11-14): WIFI_INIT_ONLY_V1 separates direct
+driver initialization from manual esp_wifi_start. S reports DRIVER_READY,
+RADIO_STARTED, ATTEMPTED and uptime; R attempts one radio start per boot. It
+does not connect or scan. Default brownout protection remains enabled. The
+original S3 completes driver initialization but resets with a brownout message
+on esp_wifi_start. This diagnostic serial interface is separate from gateway
+audio transport. README was not updated at user request.
+
+Wi-Fi diagnostic build fix (2026-11-14): DisableBrownout now adds a C++ compiler
+flag while preserving PSRAM/board defines. Serial RUNTIME_SDK, FLASH_BYTES,
+PSRAM_BYTES and BUILD_PSRAM_ENABLED expose effective configuration. The pre-radio
+BROWNOUT_HW_ENABLE reads the actual detector enable bit. WIFI_MODE_READY is
+printed only if WiFi.mode succeeds; a returned failure sets radio recovery hold
+and prints WIFI_MODE_FAILED. These diagnostic fields do not change PCM/GATT or
+model contracts. Reset during WiFi.mode remains unresolved after the build fix.
+
+BLE manual bench control v2 (2026-11-14) waits for serial R before one radio
+initialization per boot. After reset it returns to waiting. S reports READY,
+CONNECTED, ATTEMPTED and UPTIME_MS with STANDALONE_BLE_RADIO_TEST_V2_MANUAL.
+The PowerShell monitor logs R requests, device markers and host elapsed time.
+Supply and EN voltage remain external measurements. Public GATT bench UUIDs
+and synthetic payloads stay compatible with the first bench version.
+
+BLE bench test (2026-11-14): `Firmware/diagnostics/ble_radio_minimal` implements
+only public synthetic connectivity data on ESP32-S3. Advertised name is
+`AurisCore-BLE-Test`; service UUID is dce83010-8196-4ef1-ae1b-13b634324624,
+read/notify UUID is dce83011-8196-4ef1-ae1b-13b634324624, write UUID is
+dce83012-8196-4ef1-ae1b-13b634324624. ASCII PING requests PONG;
+BEAT counters are synthetic transport-test data. Firmware uses the default CPU
+clock and PHY table, with brownout disabled per user request. A -12 dBm request
+occurs after BLE init succeeds. Current hardware resets at BLE_INIT_BEGIN before
+advertising. This adds a bench interface only; audio transport and a phone
+receiver remain unimplemented. See the sketch README for complete UUIDs.
+
+User-selected bench firmware option (2026-11-14): `build_wifi_firmware.ps1
+-DisableBrownout` builds a separate image calling ESP-IDF's brownout-disable
+function at setup. The serial boot marker is `BROWNOUT_DETECTOR_DISABLED`.
+The selection persists through reboot by reapplication at setup. Flash a plain
+build to restore the detector. Wi-Fi/PCM contracts and continuity checks remain
+in force. Physical voltage and audio acceptance must be measured for this build.
+
+LED status preparation (2026-11-14): capable Wi-Fi publishers advertise optional
+`indicatorProtocol: 1` in device_hello. The authenticated controlling browser sends
+`{type:"indicator",mode:"heart"|"lung"|"abdomen",phase:"idle"|"recording"|"processing"|"done"|"error"}`.
+Gateway validates and forwards these advisory messages only to capable devices.
+They never start/stop acquisition. Legacy publishers receive no such messages.
+Firmware computes red/green/blue boot test (300 ms each), slow white disconnected
+blink (300 ms on / 2 s), dim white before mode selection, mode color with two
+confirmation blinks, breathing during recording, and three blinks on successful
+completion. Processing/error retain mode color; neither triggers completion.
+An unset LED GPIO disables physical output. Wiring/type is pending hardware team
+integration; `AURISCORE_RGB_DATA_PIN` supports a confirmed addressable RGB LED only.
+The built-in diagnostic LED is not assumed to be the external RGB LED.
+
+USB diagnostics connector selection: the Wi-Fi build script accepts `-NativeUsb`
+to enable hardware CDC on boot in a separate build directory. USB 115200 then
+carries STATUS/RETRY/provisioning and diagnostics over native USB instead of the
+default CH343 UART. Network control/audio contracts are identical. The monitor
+accepts `-NativeUsb` to assert DTR for this connector.
+
+Wi-Fi firmware v0.2 update (2026-11-14): local USB provisioning accepts optional
+`kind=wifi|hotspot` and `primary=true|false`; existing ssid/password/host/token
+fields remain compatible. Profile writes upsert by SSID, retain other entries,
+support four entries and reject a fifth without eviction. Each profile stores
+its own reachable gateway host. Unsuccessful association rotates profiles after
+15 seconds; a working association is retained. Loss stops audio, clears the WS
+session and retries with a new stream identity. Browser/PCM/model schemas remain
+unchanged. A five-second pre-radio configuration window and brownout recovery
+hold permit diagnostics; a held/off radio is never reported as audio readiness.
+
+Wi-Fi capture addition (2026-11-14): `Firmware/wifi-capture` uses the existing
+gateway v2 header/control messages unchanged. Hardware identity becomes
+`ESP32S3-INMP441-WIFI`. It preserves the original GPIO16/18/17 stereo I2S capture
+and moves organ-slot FIR/16-to-8kHz conversion onto the board. Its USB 115200
+interface carries provisioning/diagnostics only, never audio. Network credentials
+are arbitrary user-selected 2.4 GHz Wi-Fi/hotspot settings stored in NVS. The new
+setup CLI sends secrets only after a `STATUS` response identifies this firmware.
+Current endpoint is local WS port 8082; WSS cloud acceptance and native BLE remain
+separate work. ECG synchronization remains available only in the original USB-v4.
+
+scripts/serial_to_gateway.py accepts physical serial v4 at 921600 baud. It verifies
+CRC, sequence and short-write flags, selects the left organ channel and uses a
+stateful 127-tap FIR (3600 Hz cutoff) before 16-to-8 kHz decimation. FIR delay is
+63 input samples (3.9375 ms); sample numbering begins with this filtered stream.
+It emits original gateway v2 frames, 400 samples each, hardware source.
+No noise cancellation or EKG processing is claimed. Only EKG sample counts are
+logged. Raw probe data stays local. Corrupt frames and sequence gaps stop the
+source instead of inserting zero-filled audio. A browser disconnect releases
+the publisher; restart the serial adapter to reconnect.
+
 Research artifact extension (2026-11-10): Lung config may explicitly select
 `lung_feature_policy.schema_version=lung-fixed-logmel-v1`, bound by the existing
 full config hash; absence preserves legacy features. v7 research training emits

@@ -1,5 +1,203 @@
 # TESTING.md
 
+Branch publication checks (2026-11-14): 14 serial bridge/provisioning tests pass
+from this branch's source; all six added PowerShell scripts parse successfully.
+No board was reflashed or radio retry issued for these publication checks.
+Radio startup remains a failed physical acceptance, as detailed below. Diagnostic
+README files are preserved at the user's request; current manual BLE control and
+staged Wi-Fi behavior are authoritative in this document and the sketches.
+
+Staged Wi-Fi init-only diagnostic (2026-11-14): default brownout enabled and
+no SSID/connect/scan. The direct ESP-IDF sequence returns ESP_OK for NVS init,
+netif init, default event loop, esp_wifi_init and esp_wifi_set_mode on the S3.
+It remains ready during seven seconds before R. One R invokes esp_wifi_start;
+brownout messages occur and the chip restarts. Driver initialization succeeds
+again after reset and returns to waiting. Thus earlier WiFi.mode failures cannot
+be described as proof that esp_wifi_init itself fails: the Arduino wrapper also
+calls esp_wifi_start. Source is Firmware/diagnostics/wifi_init_only and evidence
+is `.runtime/hardware/wifi-init-only-test/result.json`. No audio/model data used.
+
+User-supplied simple Wi-Fi control (2026-11-14): a separate WiFi.h sketch calls
+WiFi.mode(WIFI_STA), then WiFi.begin for the locally provisioned router, with a
+20-second connection timeout. Brownout protection is enabled for this specific
+test at user request; runtime reads BROWNOUT_HW_ENABLE=1. Compiled flags preserve
+the normal S3/OPI board setup; there is no PHY table override, microphone or
+gateway code. Flash hash passes. In 24 seconds repeated brownout messages and
+POWERON resets occur after WIFI_MODE_BEGIN, without WIFI_MODE_OK or WIFI_BEGIN.
+Connection/password code has not been reached. Evidence, source and read-only
+PowerShell live monitor are in `.runtime/hardware/wifi-simple-test`. Local
+credentials remain ignored by Git and are not printed. README is untouched.
+
+SDK/build re-audit (2026-11-14): official archive SHA256 values match and 35
+selected installed compiler/core/SDK runtime files match the official archives.
+Actual build commands select ESP32-S3 qio_opi. The copied root sdkconfig's quad
+PSRAM defaults are not the effective qio_opi headers. A real build-script bug
+was found: brownout override used build.defines and replaced BOARD_HAS_PSRAM.
+The override now uses compiler.cpp.extra_flags, preserving the board flag.
+The fixed image retains the 10 dBm startup table, passes image/flash verification,
+and reports IDF v5.5.5, 16 MiB flash, 8 MiB PSRAM and BUILD_PSRAM_ENABLED=1.
+Three POWERON resets occur in 21 seconds with BROWNOUT_HW_ENABLE=0 immediately
+before each WIFI_INIT_BEGIN. Thus this confirmed build bug is fixed, but its
+causality for reset is not established and startup still fails. Sources and
+observations are in `.runtime/hardware/wifi-flags-fixed-test`, with package audit
+at `.runtime/hardware/sdk-integrity-audit.json`. No further flash erase occurred.
+
+User-requested flash factory reset (2026-11-14): initial full read failed at
+91.5% with invalid serial packet head; no erase had occurred. Sixteen 1 MiB
+chunks and the assembled 16 MiB backup subsequently pass esptool verification.
+Flash is erased once, then the preserved AurisCore Wi-Fi 10 dBm/brownout-off
+app is installed and its hash verified. Two Windows-saved profiles are securely
+reprovisioned locally and PROFILE_COUNT=2 is observed. Post-reset observation
+shows four POWERON resets at WIFI_INIT_BEGIN plus the expected configuration
+software reboot. No WIFI_MODE_READY or gateway authentication occurs.
+Evidence is `.runtime/hardware/factory-reset-wifi/result.json`; raw flash backup
+is private local material containing stored configuration. README is untouched.
+
+Manual BLE v2 control verifies eight seconds idle without radio startup, one R
+causing exactly one BLE_INIT_BEGIN, one POWERON reset, and return to idle with
+ATTEMPTED=0 and uptime/status available. No automatic radio retry occurs during
+the subsequent seven seconds. Compile/upload hashes and PowerShell parsing pass.
+Evidence is in `.runtime/hardware/ble-manual-v2/result.json`. Host R-relative
+timestamps are serial timing only; no voltage measurement is claimed.
+
+Further USB-only controls (2026-11-14): a locally retained 20 KiB NVS backup and
+active-entry inventory find the provisioning namespace but no active `phy`
+namespace/calibration keys. No calibration erase is performed. For the same BLE
+app on S3, an esptool-verified bootloader header at 40 MHz flash clock still
+produces three POWERON reset markers during 20 seconds before BLE_INIT_READY.
+Original bootloader is restored with flash hash verification. Evidence is in
+`.runtime/hardware/phy-calibration-audit` and `ble-flash40-control`. These checks
+have not isolated the shared USB power/EN path from all firmware/SDK causes.
+
+Independent SDK control (2026-11-14): Arduino core 2.0.14 / ESP-IDF 4.4.6 is
+installed under ignored `.runtime/hardware/arduino-core-2.0.14`, with isolated
+CLI data/download/user paths. The existing 3.3.12 installation is preserved.
+An API-compatible BLE bench sketch (CPU 240 MHz, brownout disabled, default PHY)
+builds and flashes with hash verification. The running S3 prints CORE_VERSION=
+2.0.14 and produces four POWERON resets at BLE_INIT_BEGIN during 24 seconds.
+A ten-second service-filtered scan again finds no target. Changing these SDK
+versions has not resolved the reset. Root cause remains unproven. Core 3 BLE
+source/ELF/app/boot artifacts were saved before the control and are restored
+after testing. Evidence is in `.runtime/hardware/ble-core2-test`.
+
+BLE isolation on original S3 (2026-11-14): core 3.3.12 compilation and esptool
+flash hash verification pass. Runtime confirms brownout disabled and CPU 240 MHz.
+During 24 seconds, four POWERON reset markers occur at BLE_INIT_BEGIN, with no
+BLE_INIT_READY or advertising. A separate local Windows BLE scan using the
+specific service UUID finds no target in ten seconds. Therefore GATT PING/PONG,
+notifications and reconnect cannot be verified. The BLE bench firmware remains
+installed. Logs, isolated client dependency lock and results are retained in
+`.runtime/hardware/ble-radio-test`; a dedicated COM3 PowerShell monitor is open.
+This observation leaves SDK and electrical reset causes unresolved.
+
+Second-board minimal test (2026-11-14): COM6 is classic ESP32-D0WD-V3 revision
+3.1, MAC 80:f3:da:61:66:28. Separate classic firmware builds and uploads with
+hash verification. The packaged PHY table has six capped values of 40 quarter-dBm
+units; CPU is 80 MHz and brownout is disabled. Twenty-five seconds produces one
+TG1WDT_SYS_RESET and three SW_CPU_RESET markers, with LoadStoreError/debug panics
+at startup and no WIFI_MODE_READY or completed scan. An additional eight-second
+capture records another watchdog reset. These observations do not identify an
+electrical or SDK cause. Minimal classic firmware remains installed; original
+4 MB backup SHA256 is verified and retained in `.runtime/hardware/new-esp32-com6`.
+Evidence and COM6 live monitor are in `.runtime/hardware/radio-minimal-esp32-off-test`.
+
+Standalone radio isolation (2026-11-14): `Firmware/diagnostics/wifi_radio_minimal`
+compiles under core 3.3.12, CPU 80 MHz, brownout disabled. Its packaged PHY init
+table contains fourteen 10 dBm values; map verification confirms the standalone
+table object. Esptool verifies the existing AurisCore app against its saved copy
+before uploading and verifies the minimal image after writing. On the original
+S3 MAC 28:84:85:50:b6:2c, 24 seconds yields four POWERON reset markers during
+WiFi.mode, before WIFI_MODE_READY or any scan. Radio startup remains unsuccessful
+without AurisCore/sensor/gateway code. This does not isolate Arduino/PHY SDK from
+electrical reset causes. Minimal firmware remains installed. Source, ELF, image,
+hashes and restore script for the prior combined AurisCore app are preserved at
+`.runtime/hardware/saved-auriscore-before-radio-minimal/`; current observation is
+`.runtime/hardware/radio-minimal-off-test/physical-result.json`.
+
+Combined startup-power bench test: the 10 dBm PHY init table with brownout
+disabled passes binary-difference checks and esptool upload hash verification
+on MAC 28:84:85:50:b6:2c. During 38 seconds of observation there are six
+`POWERON` reset markers, each after `WIFI_INIT_BEGIN`, with no `WIFI_MODE_READY`
+or gateway authentication. This tested cap has not resolved startup resets.
+The combined image remains flashed at the user's request. Artifacts are in
+`.runtime/hardware/phy-startup-10dbm-brownout-off/`. Supply/EN causes remain
+unresolved without measurements; emitted RF power and current were not measured.
+
+Brownout-off bench build (2026-11-14, explicitly requested by user): separate UART
+build compiles on core 3.3.12. Disassembly confirms setup calls
+`esp_brownout_disable`. Upload to MAC 28:84:85:50:b6:2c passes esptool flash
+verification. Runtime prints `BROWNOUT_DETECTOR_DISABLED`, then reboots during
+`WIFI_INIT_BEGIN` with `rst:0x1 (POWERON)` before `WIFI_MODE_READY`.
+This confirms a reboot remains with the detector disabled. Its physical cause
+requires rail measurement. Evidence and pre-flash app backup are retained in
+ignored `.runtime/hardware/brownout-off-uart`. The requested bypass stays flashed.
+
+Serial monitor logging now uses one auto-flushed writer with shared read/write
+access. A concurrent-reader check and a simulated writer failure pass: failed
+file logging is disabled while console/serial monitoring remains active.
+
+LED preparation (2026-11-14): native USB firmware with the LED state engine
+compiles successfully. Four gateway tests and seven streaming tests pass,
+including validated indicator forwarding and legacy publisher capability gating.
+TypeScript checking passes. Physical RGB output is disabled pending wiring.
+The embedded SELFTEST includes boot, disconnected, mode, breathing and completion
+patterns; running it on the intended S3 board remains pending after board removal.
+
+Portable monitor `scripts/monitor_auriscore.ps1` parses successfully and lists
+ports under Windows PowerShell 5.1. Hardware acceptance on the second laptop is
+pending. R is gated by the Wi-Fi firmware identity and sends a single manual
+RETRY. The monitor preserves diagnostic timestamps and closes the serial port
+on exit. It does not provision credentials or alter firmware.
+
+## Wi-Fi/router plus phone-hotspot profiles — 2026-11-14
+
+Eleven provisioning tests pass for Wi-Fi/hotspot roles, priority flags, UTF-8
+SSID limits, gateway host validation and boot/brownout errors. Actual ESP32 SELFTEST
+passes profile upsert/priority/four-entry capacity, fallback timing/index wrap,
+and exact packet/FIR parity against independent synthetic Python references.
+SELFTEST restores real RAM configuration and never writes credentials to NVS.
+Firmware build and flash hashes pass. One stored real profile is observed.
+A bounded delayed/recovery radio retry still brownouts before Wi-Fi initialization
+finishes, so physical association/failover/streaming acceptance remains incomplete.
+See Firmware/wifi-capture/README.md. No deep sleep during streaming, detector bypass,
+model retraining, external validation, sealed-test use or clinical relabeling occurs.
+
+## Local Wi-Fi capture firmware — 2026-11-14
+
+Physical follow-up finds repeated brownout boot resets after configuration is
+saved; radio/audio acceptance is blocked on stable power. Three generated-line
+tests cover explicit brownout classification, normal single boot/authentication,
+repeated boot detection and capture-init errors. No brownout protection is disabled.
+After a cable change, a real startup-isolation probe with I2S deferred still
+records 16 brownout messages in eight seconds during Wi-Fi initialization, before
+the I2S task starts. Compile/flash hashes pass; radio/audio acceptance remains
+blocked by the observed supply reset. Evidence is retained under `.runtime/hardware/`.
+
+Arduino core 3.3.12 / WebSockets 2.7.2 compile passes on ESP32-S3 N16R8 settings.
+Upload on COM3 confirms chip identity and all flash hashes; a separate USB STATUS
+probe identifies the running Wi-Fi sketch. Original serial-v4 source SHA-256
+remains 75c2602082ba37340fe186377e3355c86c2dcaba8ea15dd27323b6c74eea3574.
+Evidence: ignored `.runtime/hardware/wifi-preflight.json`. This does not verify
+radio audio delivery: password provisioning, complete recording, reconnection,
+FIR runtime parity, sustained continuity and latency remain acceptance checks.
+No dataset split, model weight or medical label changed.
+
+
+Hardware laptop bring-up commands and measured software checks are recorded in
+[HARDWARE_BRINGUP_2026-11-14.md](HARDWARE_BRINGUP_2026-11-14.md).
+
+Arduino serial-capture bring-up: exact provided firmware compiled successfully with
+esp32:esp32 3.3.12 for the documented UART configuration (898667 bytes sketch,
+56752 bytes globals). See HARDWARE_BRINGUP_2026-11-14.md. Physical USB/capture
+acceptance and Native USB settings remain pending board access.
+
+Physical serial-v4 integration adds three tests covering fragmented packets,
+CRC/sequence/short-write rejection, continuous FIR parity and binary v2 layout.
+Two engineering model tests enforce explicit authorization and input hash/scope
+rejection. Actual COM3 capture reached the gateway as 80,000 continuous samples;
+both live inference endpoints returned completed using real captured PCM.
+Engineering tests do not validate disease or event-boundary performance.
+
 ## Fixed-reference features and trajectory — 2026-11-10
 
 40 focused checks pass for Lung-only fixed-reference/floor features, identical
