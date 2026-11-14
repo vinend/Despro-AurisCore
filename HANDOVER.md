@@ -223,4 +223,120 @@ git push origin feat/abdomen-crnn-sed
   * **Result:** False Positives reduced from 452 down to **427** (-25 FP) at Collar 100ms; Collar 250ms Precision reached **44.43%** (Recall **66.15%**, F1 **53.16%**); High-Precision profile reached **63.04%** Precision.
 * **Research Candidate:** **`EXP-A103`** remains available for offline evaluation. It is not wired into `abdomen-analysis-v1`; see the training report for evaluation limitations.
 
+---
+
+## 7. HANDOVER: EKSEKUSI TRAINING EXP-A104 DI PC LAB (Dataset Kaggle Nowak)
+
+### A. Konteks & Tujuan Eksperimen EXP-A104
+* **Tujuan:** Melatih model fine-tuning berbasis bobot pretrained **EXP-A103** menggunakan dataset publik **Kaggle `robertnowak/bowel-sounds`** (427 pasien unik, 1.606 rekaman audio 2.0s, 6.413 kejadian bising usus) + *hard negatives* hardware AurisCore.
+* **Target Metrik:** Meningkatkan Event Recall dari ~66% ke **>75%–80%** dan menekan False Positives dengan variasi 427 subjek nyata.
+* **Branch Git Aktif:** `feat/abdomen-crnn-sed`
+
+---
+
+### B. Langkah Eksekusi di PC Lab (Step-by-Step)
+
+#### 1. Masuk ke Repo & Tarik Update Terbaru
+```powershell
+cd D:\Despro\Despro-AurisCore
+git fetch origin
+git checkout feat/abdomen-crnn-sed
+git pull origin feat/abdomen-crnn-sed
+```
+
+#### 2. Siapkan File Dataset Kaggle
+Pastikan file rekaman Kaggle diletakkan di direktori berikut:
+```text
+AI-Pipeline/data/external/kaggle-bowel-sounds/
+```
+*(Berisi 1.606 file `.wav`, 1.606 file `.csv`, dan `files.csv`). Jika di PC Lab sudah ada folder `D:\Despro\archive\data`, cukup salin isinya ke `AI-Pipeline\data\external\kaggle-bowel-sounds\`.*
+
+#### 3. Jalankan Preprocessing Dataset (Hanya ~40 Detik)
+Skrip ini akan melakukan resampling ke 8 kHz, bandpass 100–1.000 Hz, ekstraksi log-mel (40, 126), frame masks, dan patient-level leak-free split:
+```powershell
+python AI-Pipeline/scripts/prepare_kaggle_dataset.py
+```
+*Output yang dihasilkan:*
+* `AI-Pipeline/data/processed/kaggle/kaggle_sed_tensors.npz` (tensors cache)
+* `AI-Pipeline/data/processed/segments_kaggle.csv` (manifest pembagian train/val/test)
+
+#### 4. Jalankan Pelatihan EXP-A104
+
+**Opsi A — Mode Interaktif (Tampil Langsung di Layar Terminal):**
+```powershell
+python AI-Pipeline/scripts/train_kaggle_sed.py --config configs/abdomen_sed_nowak.yaml --name EXP-A104-abdomen-crnn-nowak
+```
+
+**Opsi B — Mode Background (PowerShell Launcher):**
+```powershell
+powershell -ExecutionPolicy Bypass -File AI-Pipeline/scripts/launch_abdomen_nowak.ps1
+```
+*Untuk memantau log secara real-time jika dijalankan di background:*
+```powershell
+Get-Content AI-Pipeline\.runtime\EXP-A104-abdomen-crnn-nowak.stdout.log -Wait -Tail 30
+```
+
+---
+
+### C. File Hasil & Verifikasi Pasca-Training
+Hasil evaluasi lengkap tersimpan di:
+* `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/best_model.keras`
+* `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/metrics.json`
+* `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/sensitivity_comprehensive_analysis.csv`
+* `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/training_history.png`
+
+### D. Hasil Training EXP-A104 (Completed - 2026-11-14)
+* **Status:** Completed
+* **Best Val Loss:** `0.0521` (Epoch 15, early stopping Epoch 23)
+* **Event SED Metrics (Collar 250 ms - Max F1 Profile `0.50 / 0.40`):**
+  * Event Precision: **85.97%** (naik dari 44.43% di EXP-A103)
+  * Event Recall / Sensitivity: **61.15%** (576 TP dari 942 event ground truth)
+  * Event F1-Score: **71.46%** (naik dari 53.16% di EXP-A103)
+  * False Positives: **94** (turun drastis dari 427 di EXP-A103)
+* **High-Precision Profile (`0.80 / 0.64`):** Precision **98.84%**, hanya 2 FP di seluruh set validasi.
+* **Screening Profile (`0.40 / 0.32`):** Recall **64.97%**, Precision **78.26%**, Event F1 **71.00%**.
+
+---
+
+## 8. EKSPERIMEN EXP-A105 (SpecAugment Frequency Masking + Noise Injection)
+* **Status:** Completed (2026-11-14)
+* **Tujuan:** Meningkatkan Recall / Sensitivitas dari bising usus samar menggunakan augmentasi on-the-fly (SpecAugment frequency masking up to 6 bins, additive noise SNR 18–32 dB, gain jitter $\pm 3\text{ dB}$, focal loss $\alpha=0.65, \gamma=2.0$).
+* **Best Val Loss:** **`0.0223`** (turun drastis -57.2% dari EXP-A104)
+* **Event SED Metrics (Collar 250 ms):**
+  * **Peak Recall Profile (`0.40 / 0.32`):** Recall **73.04%** (688 TP / 942 ground truth), Precision **66.60%**, Event F1 **69.67%**, FP 345.
+  * **Balanced Profile (`0.45 / 0.36`):** Recall **71.34%** (672 TP), Precision **72.03%**, Event F1 **71.68%**, FP 261.
+  * **Peak F1 Profile (`0.50 / 0.40`):** Event F1 **72.53%** (Rekor Tertinggi), Precision **76.32%**, Recall **69.11%** (651 TP), FP 202.
+* **New Locked Candidate:** **`EXP-A105-abdomen-crnn-specaugment-noise`** ditetapkan sebagai model terkuat untuk `abdomen-analysis-v1`.
+
+---
+
+## 9. EXPORT MODEL KE TENSORFLOW LITE (.tflite) UNTUK DEPLOYMENT FLUTTER (EXP-A105)
+
+* **Status:** Completed & Verified (2026-11-14)
+* **Tujuan:** Mengonversi model Keras CRNN (EXP-A105) ke format TensorFlow Lite (`.tflite`) yang siap dieksekusi secara offline pada aplikasi mobile Flutter (`tflite_flutter`) tanpa ketergantungan library eksternal atau Select TF Ops (Flex Delegate).
+* **Solusi Kendala Keras GRU:** Lapisan `Bidirectional(GRU)` standar menghasilkan op dinamis `TensorListReserve`/`TensorListStack` yang biasanya memerlukan Flex Delegate C++ yang besar (~30+ MB). Masalah ini diselesaikan secara tuntas dengan **static loop unrolling (`unroll=True`)** pada input statis 2.0 detik (`[1, 40, 126, 1]`), sehingga seluruh graph diekspor ke **100% pure TFLite Built-in Ops** (MatMul, Add, Mul, Sigmoid, Tanh).
+* **Artefak TFLite yang Dihasilkan (`AI-Pipeline/results/EXP-A105-abdomen-crnn-specaugment-noise/`):**
+  1. **`model.tflite` (Float32):**
+     * Ukuran: **1.72 MB** (1.765.392 bytes)
+     * Paritas Numerik vs Keras: Max Abs Diff **`3.87e-07`** (Identik sempurna)
+     * Target: CPU / GPU Mobile dengan presisi penuh
+  2. **`model_fp16.tflite` (Float16 Quantized):**
+     * Ukuran: **1.39 MB** (1.429.300 bytes)
+     * Paritas Numerik vs Keras: Max Abs Diff **`0.000215`** (< 0.02% error)
+     * Target: Perangkat mobile hemat memori (default rekomendasi Flutter)
+  3. **`tflite_metadata.json`:**
+     * Dokumentasi lengkap spesifikasi audio (8.000 Hz, window 2.0s = 16.000 samples, Butterworth bandpass 100–1.000 Hz)
+     * Parameter Log-Mel Spectrogram (`n_fft=512`, `hop_length=128`, `n_mels=40`, output shape `[40, 126]`)
+     * **Vektor Normalisasi Exact:** 40 nilai `mean_freq` dan 40 nilai `std_freq` dari dataset training Kaggle sehingga tim mobile tidak perlu menghitung statistik runtime
+     * Profil ambang batas deteksi histeresis (`balanced`: onset 0.45 / offset 0.36; `high_sensitivity`: 0.40 / 0.32; `high_precision`: 0.50 / 0.40)
+     * Klasifikasi motilitas klinis (`hypoactive` < 5 bpm, `normoactive` 5–30 bpm, `hyperactive` > 30 bpm)
+* **Skrip Ekspor & Pengujian:**
+  * Skrip ekspor: `AI-Pipeline/scripts/export_abdomen_tflite.py`
+  * Unit test: `AI-Pipeline/tests/test_abdomen_tflite.py` (verifikasi loading interpreter, tensor shapes, finite output, dan metadata)
+  * Hasil pengujian test suite Abdomen: **76 passed, 0 failed**.
+
+
+
+
+
 

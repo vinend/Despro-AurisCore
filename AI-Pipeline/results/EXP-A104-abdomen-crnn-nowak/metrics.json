@@ -1,0 +1,44 @@
+{
+  "status": "completed",
+  "experiment_id": "EXP-A104-abdomen-crnn-nowak",
+  "model_architecture": "CRNN_SED (RESIDUAL_SE + BiGRU + TimeDistributed)",
+  "pretrained_source": "results/EXP-A103-abdomen-crnn-hard-negatives/best_model.keras",
+  "dataset": "Kaggle Nowak (427 patients) + AurisCore Hardware Hard Negatives",
+  "training_time_s": 0.0,
+  "total_epochs": 23,
+  "best_val_loss": 0.0521,
+  "event_metrics_collar_100ms": {
+    "true_positives": 457.0,
+    "false_positives": 61.0,
+    "false_negatives": 485.0,
+    "precision": 0.8822,
+    "recall_sensitivity": 0.4851,
+    "event_f1": 0.626
+  },
+  "event_metrics_collar_150ms": {
+    "true_positives": 457.0,
+    "false_positives": 61.0,
+    "false_negatives": 485.0,
+    "precision": 0.8822,
+    "recall_sensitivity": 0.4851,
+    "event_f1": 0.626
+  },
+  "event_metrics_collar_200ms": {
+    "true_positives": 463.0,
+    "false_positives": 55.0,
+    "false_negatives": 479.0,
+    "precision": 0.8938,
+    "recall_sensitivity": 0.4915,
+    "event_f1": 0.6342
+  },
+  "event_metrics_collar_250ms": {
+    "true_positives": 465.0,
+    "false_positives": 53.0,
+    "false_negatives": 477.0,
+    "precision": 0.8977,
+    "recall_sensitivity": 0.4936,
+    "event_f1": 0.637
+  },
+  "detected_events_count": 518,
+  "ground_truth_events_count": 942
+}

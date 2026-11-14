@@ -1,0 +1,200 @@
+{
+  "model_name": "auriscore_abdomen_crnn_sed",
+  "model_version": "1.0.0",
+  "source_experiment": "EXP-A105-abdomen-crnn-specaugment-noise",
+  "format": "TensorFlow Lite",
+  "tflite_builtins_only": true,
+  "flex_delegate_required": false,
+  "sizes": {
+    "float32_bytes": 1765392,
+    "float32_kb": 1724.02,
+    "float16_bytes": 1429300,
+    "float16_kb": 1395.8
+  },
+  "numerical_parity": {
+    "float32_max_abs_diff": 3.8743019104003906e-07,
+    "float16_max_abs_diff": 0.00021535158157348633
+  },
+  "input_tensor": {
+    "name": "serving_default_spectrogram:0",
+    "shape": [
+      1,
+      40,
+      126,
+      1
+    ],
+    "dtype": "float32",
+    "description": "Log-mel spectrogram (batch=1, n_mels=40, time_frames=126, channels=1)"
+  },
+  "output_tensor": {
+    "name": "StatefulPartitionedCall_1:0",
+    "shape": [
+      1,
+      126,
+      1
+    ],
+    "dtype": "float32",
+    "description": "Time-distributed acoustic burst probability curve P(t) for each frame",
+    "frame_hop_ms": 16.0,
+    "temporal_resolution_seconds": 0.016
+  },
+  "audio_preprocessing": {
+    "target_sample_rate": 8000,
+    "window_duration_seconds": 2.0,
+    "window_samples": 16000,
+    "filter": {
+      "type": "butterworth_bandpass",
+      "order": 4,
+      "low_hz": 100.0,
+      "high_hz": 1000.0
+    },
+    "spectrogram": {
+      "n_fft": 512,
+      "hop_length": 128,
+      "n_mels": 40,
+      "fmin": 100.0,
+      "fmax": 1000.0,
+      "power": 2.0,
+      "top_db": 80.0,
+      "output_shape": [
+        40,
+        126
+      ]
+    },
+    "normalization": {
+      "type": "per_frequency",
+      "clip_min": -5.0,
+      "clip_max": 5.0,
+      "mean_freq": [
+        -21.777755737304688,
+        -23.008569717407227,
+        -24.958026885986328,
+        -25.599002838134766,
+        -28.06489372253418,
+        -27.84958839416504,
+        -28.751548767089844,
+        -29.695980072021484,
+        -29.16330909729004,
+        -30.39847183227539,
+        -29.666013717651367,
+        -29.85359764099121,
+        -30.105932235717773,
+        -29.6444034576416,
+        -30.96876335144043,
+        -30.544208526611328,
+        -31.363248825073242,
+        -31.89839744567871,
+        -31.86827850341797,
+        -33.257415771484375,
+        -33.021018981933594,
+        -34.142276763916016,
+        -34.67537307739258,
+        -34.83432388305664,
+        -36.26553726196289,
+        -36.0393180847168,
+        -37.32859420776367,
+        -37.819210052490234,
+        -38.184852600097656,
+        -39.50871276855469,
+        -39.174835205078125,
+        -40.516658782958984,
+        -40.72917175292969,
+        -41.08079147338867,
+        -42.315677642822266,
+        -41.86259078979492,
+        -43.2403450012207,
+        -43.29164505004883,
+        -43.762962341308594,
+        -44.93187713623047
+      ],
+      "std_freq": [
+        11.174731254577637,
+        10.969322204589844,
+        10.897497177124023,
+        11.033967018127441,
+        11.316322326660156,
+        11.206900596618652,
+        11.361722946166992,
+        11.596965789794922,
+        11.634687423706055,
+        12.015159606933594,
+        12.221077919006348,
+        12.428858757019043,
+        12.568685531616211,
+        12.624917030334473,
+        12.845738410949707,
+        12.832803726196289,
+        13.002482414245605,
+        13.154373168945312,
+        13.187997817993164,
+        13.39467716217041,
+        13.278611183166504,
+        13.188438415527344,
+        13.047236442565918,
+        12.991721153259277,
+        13.029520034790039,
+        12.818438529968262,
+        12.78062629699707,
+        12.764068603515625,
+        12.800024032592773,
+        12.98326301574707,
+        13.003445625305176,
+        13.078076362609863,
+        13.017349243164062,
+        12.959409713745117,
+        12.938560485839844,
+        12.691469192504883,
+        12.673149108886719,
+        12.55105209350586,
+        12.438650131225586,
+        12.440067291259766
+      ]
+    }
+  },
+  "event_detection_postprocessing": {
+    "method": "hysteresis_thresholding",
+    "operating_profiles": {
+      "balanced": {
+        "onset": 0.45,
+        "offset": 0.36,
+        "target": "Balanced precision/recall"
+      },
+      "high_sensitivity": {
+        "onset": 0.4,
+        "offset": 0.32,
+        "target": "Screening-first (high recall)"
+      },
+      "high_precision": {
+        "onset": 0.5,
+        "offset": 0.4,
+        "target": "Low false alarm rate"
+      }
+    },
+    "default_profile": "balanced",
+    "min_duration_seconds": 0.025,
+    "merge_gap_seconds": 0.02
+  },
+  "clinical_analytics": {
+    "schema_version": "abdomen-analysis-v1",
+    "metric_unit": "bursts/min",
+    "motility_patterns": {
+      "hypoactive": {
+        "rule": "bowel_rate < 5.0 bursts/min (or silent)",
+        "clinical_finding": "Hypoactive bowel sounds"
+      },
+      "normoactive": {
+        "rule": "5.0 <= bowel_rate <= 30.0 bursts/min",
+        "clinical_finding": "Normal acoustic motility pattern"
+      },
+      "hyperactive": {
+        "rule": "bowel_rate > 30.0 bursts/min",
+        "clinical_finding": "Hyperactive acoustic pattern (increased motility)"
+      }
+    },
+    "acoustic_pattern_classification": {
+      "single_burst": "Isolated transient acoustic event (< 0.2s duration)",
+      "multiple_burst": "Cluster of transient bursts occurring in rapid succession",
+      "prolonged_sound": "Continuous rumbling sound or migrating motor complex (duration >= 0.5s)"
+    }
+  }
+}
