@@ -292,8 +292,13 @@ Phase 4 adds `abdomen-analysis-v1` inside the shared `organ-analysis-v1` envelop
 Its `activity` branch reports timestamped binary bowel-activity window scores,
 labels, threshold and model/preprocessing/threshold versions. The active-window
 fraction counts overlapping windows; it is not event rate or duration fraction.
-Event/rate/variability/pattern fields remain explicitly null until separately
-implemented and validated. Missing or failed models never create activity labels.
+With the introduction of the validated CRNN SED models (EXP-A104/EXP-A105), the
+previously null event branches are now populated via `abdomen_sed_analytics`:
+- `bowel_events`: list of timestamped discrete acoustic events (`start_s`, `end_s`, `duration_ms`, `confidence`, `pattern`);
+- `bowel_rate_per_minute`: numeric rate, clinical motility category (`hypoactive|normoactive|hyperactive`), and assistive screening interpretation;
+- `bowel_rate_variability`: inter-event interval (IEI) statistics (`mean_interval_s`, `std_interval_s`, `cv_interval`, `rhythm_regularity`);
+- `pattern_categories`: breakdown of Single Burst (SB), Multiple Burst (MB), and Prolonged / CRS sounds.
+Legacy window-activity packages retain null event fields to preserve backward compatibility.
 See `AI-Pipeline/docs/abdomen_inference.md` for the full contract. The shared Python
 worker supports both packages; WebApp Abdomen transport and display are now wired
 in phase 5 through the existing backend.

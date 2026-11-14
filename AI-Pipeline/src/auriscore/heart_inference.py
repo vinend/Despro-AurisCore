@@ -106,6 +106,14 @@ def validate_preprocessing(metadata: dict[str, Any]) -> None:
         raise ValueError("Explicit filter configuration is required")
     if config["filter_enabled"] and not 0 < config["filter_low_hz"] < config["filter_high_hz"] < config["sample_rate"] / 2:
         raise ValueError("Invalid frozen filter band")
+    if config.get("spectrogram_normalization") == "per_frequency":
+        for key in ("spectrogram_frequency_mean", "spectrogram_frequency_std"):
+            if not isinstance(config.get(key), list) or not config[key]:
+                raise ValueError(f"per_frequency normalization requires {key}")
+            if any(not finite(v) for v in config[key]):
+                raise ValueError(f"Non-finite value in {key}")
+        if any(v <= 0 for v in config["spectrogram_frequency_std"]):
+            raise ValueError("spectrogram_frequency_std values must be positive")
     validate_spectrogram_config(config)
     expected = [*spectrogram_shape(config), 1]
     if metadata.get("input_shape") != expected:
