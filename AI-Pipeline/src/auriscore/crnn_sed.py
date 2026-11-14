@@ -6,12 +6,17 @@ from typing import Any
 from .cnn import require_tensorflow
 
 
-def build_crnn_sed_model(input_shape: tuple[int, int, int], config: dict[str, Any]) -> Any:
+def build_crnn_sed_model(
+    input_shape: tuple[int, int, int],
+    config: dict[str, Any],
+    batch_size: int | None = None,
+    unroll: bool = False,
+) -> Any:
     """Build a CRNN with frequency-only pooling, bidirectional recurrent context, and time-distributed output."""
     tf = require_tensorflow()
 
     # Input: (frequency_bins, time_frames, 1), e.g. (40, 313, 1)
-    inputs = tf.keras.Input(shape=input_shape, name="spectrogram")
+    inputs = tf.keras.Input(shape=input_shape, batch_size=batch_size, name="spectrogram")
     x = inputs
 
     architecture = str(config.get("crnn_architecture", "compact"))
@@ -68,7 +73,7 @@ def build_crnn_sed_model(input_shape: tuple[int, int, int], config: dict[str, An
     # 2. Bidirectional recurrent temporal modeling
     gru_units = int(config.get("crnn_gru_units", 64))
     x = tf.keras.layers.Bidirectional(
-        tf.keras.layers.GRU(gru_units, return_sequences=True)
+        tf.keras.layers.GRU(gru_units, return_sequences=True, unroll=unroll)
     )(x)
 
     # 3. Regularization & Time-distributed frame classification

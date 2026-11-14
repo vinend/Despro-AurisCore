@@ -308,6 +308,34 @@ Hasil evaluasi lengkap tersimpan di:
   * **Peak F1 Profile (`0.50 / 0.40`):** Event F1 **72.53%** (Rekor Tertinggi), Precision **76.32%**, Recall **69.11%** (651 TP), FP 202.
 * **New Locked Candidate:** **`EXP-A105-abdomen-crnn-specaugment-noise`** ditetapkan sebagai model terkuat untuk `abdomen-analysis-v1`.
 
+---
+
+## 9. EXPORT MODEL KE TENSORFLOW LITE (.tflite) UNTUK DEPLOYMENT FLUTTER (EXP-A105)
+
+* **Status:** Completed & Verified (2026-11-14)
+* **Tujuan:** Mengonversi model Keras CRNN (EXP-A105) ke format TensorFlow Lite (`.tflite`) yang siap dieksekusi secara offline pada aplikasi mobile Flutter (`tflite_flutter`) tanpa ketergantungan library eksternal atau Select TF Ops (Flex Delegate).
+* **Solusi Kendala Keras GRU:** Lapisan `Bidirectional(GRU)` standar menghasilkan op dinamis `TensorListReserve`/`TensorListStack` yang biasanya memerlukan Flex Delegate C++ yang besar (~30+ MB). Masalah ini diselesaikan secara tuntas dengan **static loop unrolling (`unroll=True`)** pada input statis 2.0 detik (`[1, 40, 126, 1]`), sehingga seluruh graph diekspor ke **100% pure TFLite Built-in Ops** (MatMul, Add, Mul, Sigmoid, Tanh).
+* **Artefak TFLite yang Dihasilkan (`AI-Pipeline/results/EXP-A105-abdomen-crnn-specaugment-noise/`):**
+  1. **`model.tflite` (Float32):**
+     * Ukuran: **1.72 MB** (1.765.392 bytes)
+     * Paritas Numerik vs Keras: Max Abs Diff **`3.87e-07`** (Identik sempurna)
+     * Target: CPU / GPU Mobile dengan presisi penuh
+  2. **`model_fp16.tflite` (Float16 Quantized):**
+     * Ukuran: **1.39 MB** (1.429.300 bytes)
+     * Paritas Numerik vs Keras: Max Abs Diff **`0.000215`** (< 0.02% error)
+     * Target: Perangkat mobile hemat memori (default rekomendasi Flutter)
+  3. **`tflite_metadata.json`:**
+     * Dokumentasi lengkap spesifikasi audio (8.000 Hz, window 2.0s = 16.000 samples, Butterworth bandpass 100–1.000 Hz)
+     * Parameter Log-Mel Spectrogram (`n_fft=512`, `hop_length=128`, `n_mels=40`, output shape `[40, 126]`)
+     * **Vektor Normalisasi Exact:** 40 nilai `mean_freq` dan 40 nilai `std_freq` dari dataset training Kaggle sehingga tim mobile tidak perlu menghitung statistik runtime
+     * Profil ambang batas deteksi histeresis (`balanced`: onset 0.45 / offset 0.36; `high_sensitivity`: 0.40 / 0.32; `high_precision`: 0.50 / 0.40)
+     * Klasifikasi motilitas klinis (`hypoactive` < 5 bpm, `normoactive` 5–30 bpm, `hyperactive` > 30 bpm)
+* **Skrip Ekspor & Pengujian:**
+  * Skrip ekspor: `AI-Pipeline/scripts/export_abdomen_tflite.py`
+  * Unit test: `AI-Pipeline/tests/test_abdomen_tflite.py` (verifikasi loading interpreter, tensor shapes, finite output, dan metadata)
+  * Hasil pengujian test suite Abdomen: **76 passed, 0 failed**.
+
+
 
 
 
