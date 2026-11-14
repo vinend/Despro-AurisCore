@@ -56,6 +56,7 @@ def train_nowak_model(
     root: Path,
     config: dict[str, Any],
     exp_name: str = "EXP-A104-abdomen-crnn-nowak",
+    eval_only: bool = False,
 ) -> dict[str, Any]:
     tf = require_tensorflow()
     root = root.resolve()
@@ -100,85 +101,104 @@ def train_nowak_model(
     exp_dir.mkdir(parents=True, exist_ok=True)
     (exp_dir / "config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
 
-    # 3. Build CRNN SED Model
-    input_shape = (40, 126, 1)
-    tf.keras.utils.set_random_seed(int(config.get("seed", 42)))
-    model = build_crnn_sed_model(input_shape, config)
-
-    # 4. Transfer Pretrained Weights if specified
-    pretrained_rel = config.get("pretrained_weights")
-    if pretrained_rel:
-        pretrained_path = root / pretrained_rel
-        if pretrained_path.exists():
-            print(f"Loading pretrained weights from {pretrained_path}...")
-            orig_m = tf.keras.models.load_model(pretrained_path)
-            transferred = 0
-            for l_orig in orig_m.layers:
-                w = l_orig.get_weights()
-                if len(w) > 0:
-                    try:
-                        l_target = model.get_layer(l_orig.name)
-                        l_target.set_weights(w)
-                        transferred += 1
-                    except Exception as ex:
-                        LOG.debug("Could not transfer %s: %s", l_orig.name, ex)
-            print(f"  Successfully transferred {transferred} layers from EXP-A103!")
-        else:
-            print(f"Warning: Pretrained weights not found at {pretrained_path}, training from scratch.")
-
-    # 5. Compile with Focal Loss and low learning rate for fine-tuning
-    lr = float(config.get("cnn_learning_rate", 0.0003))
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
-        loss=tf.keras.losses.BinaryFocalCrossentropy(gamma=2.0, apply_class_balancing=False),
-        metrics=[
-            tf.keras.metrics.BinaryAccuracy(name="accuracy"),
-            tf.keras.metrics.AUC(curve="PR", name="pr_auc"),
-            tf.keras.metrics.AUC(curve="ROC", name="roc_auc"),
-            tf.keras.metrics.Precision(name="precision"),
-            tf.keras.metrics.Recall(name="recall"),
-        ],
-    )
-
-    # 6. Callbacks
-    patience = int(config.get("cnn_patience", 8))
-    callbacks = [
-        tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            patience=patience,
-            mode="min",
-            restore_best_weights=True,
-            verbose=1,
-        ),
-        tf.keras.callbacks.ModelCheckpoint(
-            filepath=str(exp_dir / "best_model.keras"),
-            monitor="val_loss",
-            save_best_only=True,
-            mode="min",
-            verbose=1,
-        ),
-        tf.keras.callbacks.CSVLogger(str(exp_dir / "history.csv")),
-    ]
-
-    # 7. Train
     batch_size = int(config.get("cnn_batch_size", 32))
-    epochs = int(config.get("cnn_epochs", 40))
+    pretrained_rel = config.get("pretrained_weights")
 
-    start_t = time.time()
-    history = model.fit(
-        X_train,
-        y_train,
-        validation_data=(X_val, y_val),
-        epochs=epochs,
-        batch_size=batch_size,
-        callbacks=callbacks,
-        verbose=1,
-    )
-    duration = time.time() - start_t
-    stopped_epoch = len(history.history["loss"])
-    best_loss = min(history.history["val_loss"])
+    if eval_only:
+        print(f"Running in evaluation-only mode for {exp_name}...")
+        model_path = exp_dir / "best_model.keras"
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model not found at {model_path}")
+        model = tf.keras.models.load_model(model_path)
+        hist_csv = exp_dir / "history.csv"
+        if hist_csv.exists():
+            df_hist = pd.read_csv(hist_csv)
+            hist_dict = {col: df_hist[col].tolist() for col in df_hist.columns}
+            stopped_epoch = len(df_hist)
+            best_loss = float(df_hist["val_loss"].min())
+            plot_history(hist_dict, exp_dir / "training_history.png", exp_name)
+        else:
+            stopped_epoch = 0
+            best_loss = 0.0
+        duration = 0.0
+    else:
+        # 3. Build CRNN SED Model
+        input_shape = (40, 126, 1)
+        tf.keras.utils.set_random_seed(int(config.get("seed", 42)))
+        model = build_crnn_sed_model(input_shape, config)
 
-    plot_history(history.history, exp_dir / "training_history.png")
+        # 4. Transfer Pretrained Weights if specified
+        if pretrained_rel:
+            pretrained_path = root / pretrained_rel
+            if pretrained_path.exists():
+                print(f"Loading pretrained weights from {pretrained_path}...")
+                orig_m = tf.keras.models.load_model(pretrained_path)
+                transferred = 0
+                for l_orig in orig_m.layers:
+                    w = l_orig.get_weights()
+                    if len(w) > 0:
+                        try:
+                            l_target = model.get_layer(l_orig.name)
+                            l_target.set_weights(w)
+                            transferred += 1
+                        except Exception as ex:
+                            LOG.debug("Could not transfer %s: %s", l_orig.name, ex)
+                print(f"  Successfully transferred {transferred} layers from EXP-A103!")
+            else:
+                print(f"Warning: Pretrained weights not found at {pretrained_path}, training from scratch.")
+
+        # 5. Compile with Focal Loss and low learning rate for fine-tuning
+        lr = float(config.get("cnn_learning_rate", 0.0003))
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
+            loss=tf.keras.losses.BinaryFocalCrossentropy(gamma=2.0, apply_class_balancing=False),
+            metrics=[
+                tf.keras.metrics.BinaryAccuracy(name="accuracy"),
+                tf.keras.metrics.AUC(curve="PR", name="pr_auc"),
+                tf.keras.metrics.AUC(curve="ROC", name="roc_auc"),
+                tf.keras.metrics.Precision(name="precision"),
+                tf.keras.metrics.Recall(name="recall"),
+            ],
+        )
+
+        # 6. Callbacks
+        patience = int(config.get("cnn_patience", 8))
+        callbacks = [
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss",
+                patience=patience,
+                mode="min",
+                restore_best_weights=True,
+                verbose=1,
+            ),
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=str(exp_dir / "best_model.keras"),
+                monitor="val_loss",
+                save_best_only=True,
+                mode="min",
+                verbose=1,
+            ),
+            tf.keras.callbacks.CSVLogger(str(exp_dir / "history.csv")),
+        ]
+
+        # 7. Train
+        epochs = int(config.get("cnn_epochs", 40))
+
+        start_t = time.time()
+        history = model.fit(
+            X_train,
+            y_train,
+            validation_data=(X_val, y_val),
+            epochs=epochs,
+            batch_size=batch_size,
+            callbacks=callbacks,
+            verbose=1,
+        )
+        duration = time.time() - start_t
+        stopped_epoch = len(history.history["loss"])
+        best_loss = min(history.history["val_loss"])
+
+        plot_history(history.history, exp_dir / "training_history.png", exp_name)
 
     # 8. Event-Based SED Evaluation on Validation Set
     print("\nEvaluating Sound Event Detection on Validation Set...")
@@ -207,8 +227,8 @@ def train_nowak_model(
         w_offset = i * 2.0
         for e in pred_evs:
             e_copy = dict(e)
-            e_copy["start_sec"] += w_offset
-            e_copy["end_sec"] += w_offset
+            e_copy["start_s"] += w_offset
+            e_copy["end_s"] += w_offset
             all_val_events_pred.append(e_copy)
 
         for e in gt_evs:
@@ -245,8 +265,8 @@ def train_nowak_model(
                     )
                     for e in pevs:
                         e_c = dict(e)
-                        e_c["start_sec"] += w_offset
-                        e_c["end_sec"] += w_offset
+                        e_c["start_s"] += w_offset
+                        e_c["end_s"] += w_offset
                         all_p.append(e_c)
 
                 for c_ms in collars:
@@ -311,6 +331,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="configs/abdomen_sed_nowak.yaml", type=str)
     parser.add_argument("--name", default="EXP-A104-abdomen-crnn-nowak", type=str)
+    parser.add_argument("--eval-only", action="store_true", help="Skip training and evaluate existing best_model.keras")
     args = parser.parse_args()
 
     pipeline_root = Path(__file__).resolve().parent.parent
@@ -318,4 +339,4 @@ if __name__ == "__main__":
     with open(cfg_path, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
 
-    train_nowak_model(pipeline_root, cfg, exp_name=args.name)
+    train_nowak_model(pipeline_root, cfg, exp_name=args.name, eval_only=args.eval_only)

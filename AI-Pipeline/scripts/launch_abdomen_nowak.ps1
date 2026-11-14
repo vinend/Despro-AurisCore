@@ -6,10 +6,13 @@ param(
 $ErrorActionPreference = "Stop"
 $pipelineRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $venvPython = Join-Path $pipelineRoot ".venv/Scripts/python.exe"
+$repoRootVenv = Join-Path (Resolve-Path (Join-Path $pipelineRoot "..")).Path ".venv/Scripts/python.exe"
 $systemPython = "python"
 
 if (Test-Path -LiteralPath $venvPython) {
     $pythonPath = $venvPython
+} elseif (Test-Path -LiteralPath $repoRootVenv) {
+    $pythonPath = $repoRootVenv
 } else {
     $pythonPath = $systemPython
 }

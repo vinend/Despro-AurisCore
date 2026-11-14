@@ -279,18 +279,23 @@ Get-Content AI-Pipeline\.runtime\EXP-A104-abdomen-crnn-nowak.stdout.log -Wait -T
 ---
 
 ### C. File Hasil & Verifikasi Pasca-Training
-Setelah selesai, hasil evaluasi lengkap akan tersimpan di:
+Hasil evaluasi lengkap tersimpan di:
 * `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/best_model.keras`
 * `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/metrics.json`
 * `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/sensitivity_comprehensive_analysis.csv`
 * `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/training_history.png`
 
-#### Perintah Commit & Push Hasil dari PC Lab:
-```powershell
-git add AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/
-git commit -m "feat(sed): complete EXP-A104 training on Kaggle Nowak dataset"
-git push origin feat/abdomen-crnn-sed
-```
+### D. Hasil Training EXP-A104 (Completed - 2026-11-14)
+* **Status:** Completed
+* **Best Val Loss:** `0.0521` (Epoch 15, early stopping Epoch 23)
+* **Event SED Metrics (Collar 250 ms - Max F1 Profile `0.50 / 0.40`):**
+  * Event Precision: **85.97%** (naik dari 44.43% di EXP-A103)
+  * Event Recall / Sensitivity: **61.15%** (576 TP dari 942 event ground truth)
+  * Event F1-Score: **71.46%** (naik dari 53.16% di EXP-A103)
+  * False Positives: **94** (turun drastis dari 427 di EXP-A103)
+* **High-Precision Profile (`0.80 / 0.64`):** Precision **98.84%**, hanya 2 FP di seluruh set validasi.
+* **Screening Profile (`0.40 / 0.32`):** Recall **64.97%**, Precision **78.26%**, Event F1 **71.00%**.
+
 
 
 
