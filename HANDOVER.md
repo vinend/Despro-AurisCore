@@ -223,4 +223,74 @@ git push origin feat/abdomen-crnn-sed
   * **Result:** False Positives reduced from 452 down to **427** (-25 FP) at Collar 100ms; Collar 250ms Precision reached **44.43%** (Recall **66.15%**, F1 **53.16%**); High-Precision profile reached **63.04%** Precision.
 * **Locked Production Candidate:** **`EXP-A103`** selected as the production model for `abdomen-analysis-v1` due to demonstrated robustness against real-world stethoscope acoustic artifacts.
 
+---
+
+## 7. HANDOVER: EKSEKUSI TRAINING EXP-A104 DI PC LAB (Dataset Kaggle Nowak)
+
+### A. Konteks & Tujuan Eksperimen EXP-A104
+* **Tujuan:** Melatih model fine-tuning berbasis bobot pretrained **EXP-A103** menggunakan dataset publik **Kaggle `robertnowak/bowel-sounds`** (427 pasien unik, 1.606 rekaman audio 2.0s, 6.413 kejadian bising usus) + *hard negatives* hardware AurisCore.
+* **Target Metrik:** Meningkatkan Event Recall dari ~66% ke **>75%–80%** dan menekan False Positives dengan variasi 427 subjek nyata.
+* **Branch Git Aktif:** `feat/abdomen-crnn-sed`
+
+---
+
+### B. Langkah Eksekusi di PC Lab (Step-by-Step)
+
+#### 1. Masuk ke Repo & Tarik Update Terbaru
+```powershell
+cd D:\Despro\Despro-AurisCore
+git fetch origin
+git checkout feat/abdomen-crnn-sed
+git pull origin feat/abdomen-crnn-sed
+```
+
+#### 2. Siapkan File Dataset Kaggle
+Pastikan file rekaman Kaggle diletakkan di direktori berikut:
+```text
+AI-Pipeline/data/external/kaggle-bowel-sounds/
+```
+*(Berisi 1.606 file `.wav`, 1.606 file `.csv`, dan `files.csv`). Jika di PC Lab sudah ada folder `D:\Despro\archive\data`, cukup salin isinya ke `AI-Pipeline\data\external\kaggle-bowel-sounds\`.*
+
+#### 3. Jalankan Preprocessing Dataset (Hanya ~40 Detik)
+Skrip ini akan melakukan resampling ke 8 kHz, bandpass 100–1.000 Hz, ekstraksi log-mel (40, 126), frame masks, dan patient-level leak-free split:
+```powershell
+python AI-Pipeline/scripts/prepare_kaggle_dataset.py
+```
+*Output yang dihasilkan:*
+* `AI-Pipeline/data/processed/kaggle/kaggle_sed_tensors.npz` (tensors cache)
+* `AI-Pipeline/data/processed/segments_kaggle.csv` (manifest pembagian train/val/test)
+
+#### 4. Jalankan Pelatihan EXP-A104
+
+**Opsi A — Mode Interaktif (Tampil Langsung di Layar Terminal):**
+```powershell
+python AI-Pipeline/scripts/train_kaggle_sed.py --config configs/abdomen_sed_nowak.yaml --name EXP-A104-abdomen-crnn-nowak
+```
+
+**Opsi B — Mode Background (PowerShell Launcher):**
+```powershell
+powershell -ExecutionPolicy Bypass -File AI-Pipeline/scripts/launch_abdomen_nowak.ps1
+```
+*Untuk memantau log secara real-time jika dijalankan di background:*
+```powershell
+Get-Content AI-Pipeline\.runtime\EXP-A104-abdomen-crnn-nowak.stdout.log -Wait -Tail 30
+```
+
+---
+
+### C. File Hasil & Verifikasi Pasca-Training
+Setelah selesai, hasil evaluasi lengkap akan tersimpan di:
+* `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/best_model.keras`
+* `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/metrics.json`
+* `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/sensitivity_comprehensive_analysis.csv`
+* `AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/training_history.png`
+
+#### Perintah Commit & Push Hasil dari PC Lab:
+```powershell
+git add AI-Pipeline/results/EXP-A104-abdomen-crnn-nowak/
+git commit -m "feat(sed): complete EXP-A104 training on Kaggle Nowak dataset"
+git push origin feat/abdomen-crnn-sed
+```
+
+
 
