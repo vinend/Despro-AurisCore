@@ -25,6 +25,83 @@ from auriscore.visualization import plot_history
 LOG = logging.getLogger(__name__)
 
 
+def apply_sed_augmentation(
+    mel: np.ndarray,
+    config: dict[str, Any],
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Apply safe SED augmentation to a single (40, 126, 1) mel spectrogram:
+    - Frequency masking (SpecAugment)
+    - Additive Gaussian noise (bounded SNR)
+    - Gain/amplitude jitter
+    Leaves time alignment and event boundaries 100% intact.
+    """
+    m = mel.copy()
+
+    # 1. Gain jitter (+/- gain_db)
+    gain_db = float(config.get("augmentation_gain_db", 0.0))
+    if gain_db > 0:
+        factor = float(10.0 ** (rng.uniform(-gain_db, gain_db) / 20.0))
+        m *= factor
+
+    # 2. Additive Noise
+    if config.get("augmentation_snr_db_min") is not None:
+        low = float(config.get("augmentation_snr_db_min", 18.0))
+        high = float(config.get("augmentation_snr_db_max", 32.0))
+        snr_db = rng.uniform(min(low, high), max(low, high))
+        sig_std = float(np.std(m))
+        if sig_std > 1e-4:
+            noise_std = sig_std / float(10.0 ** (snr_db / 20.0))
+            m += rng.normal(0.0, noise_std, size=m.shape).astype(np.float32)
+
+    # 3. Frequency masking (SpecAugment)
+    freq_bins = int(config.get("augmentation_freq_mask_bins", 0))
+    freq_count = int(config.get("augmentation_freq_mask_count", 1))
+    if freq_bins > 0 and freq_count > 0:
+        n_freq = m.shape[0]  # 40
+        for _ in range(freq_count):
+            w = int(rng.integers(1, min(freq_bins, n_freq) + 1))
+            f0 = int(rng.integers(0, n_freq - w + 1))
+            m[f0 : f0 + w, :, :] = 0.0
+
+    # Clip to normalization limits
+    clip_val = float(config.get("spectrogram_normalization_clip", 5.0))
+    return np.clip(m, -clip_val, clip_val)
+
+
+tf_pkg = require_tensorflow()
+_BaseDataset = getattr(tf_pkg.keras.utils, "PyDataset", getattr(tf_pkg.keras.utils, "Sequence", object))
+
+
+class SEDAugmentedSequence(_BaseDataset):
+    def __init__(self, X: np.ndarray, y: np.ndarray, batch_size: int, config: dict[str, Any], seed: int = 42, **kwargs):
+        super().__init__(**kwargs)
+        self.X = X
+        self.y = y
+        self.batch_size = batch_size
+        self.config = config
+        self.aug_enabled = bool(config.get("augmentation_enabled", False))
+        self.rng = np.random.default_rng(seed)
+        self.indices = np.arange(len(X))
+
+    def __len__(self) -> int:
+        return int(np.ceil(len(self.X) / float(self.batch_size)))
+
+    def on_epoch_end(self) -> None:
+        self.rng.shuffle(self.indices)
+
+    def __getitem__(self, idx: int) -> tuple[np.ndarray, np.ndarray]:
+        batch_idx = self.indices[idx * self.batch_size : (idx + 1) * self.batch_size]
+        batch_x = self.X[batch_idx].copy()
+        batch_y = self.y[batch_idx]
+
+        if self.aug_enabled:
+            for i in range(len(batch_x)):
+                batch_x[i] = apply_sed_augmentation(batch_x[i], self.config, self.rng)
+
+        return batch_x, batch_y
+
+
 def extract_gt_events_from_mask(mask: np.ndarray, hop_s: float = 0.016) -> list[dict[str, Any]]:
     """Extract discrete ground truth event intervals from a binary 1D mask."""
     events: list[dict[str, Any]] = []
@@ -147,11 +224,22 @@ def train_nowak_model(
             else:
                 print(f"Warning: Pretrained weights not found at {pretrained_path}, training from scratch.")
 
-        # 5. Compile with Focal Loss and low learning rate for fine-tuning
+        # 5. Compile with Focal Loss and learning rate for fine-tuning
         lr = float(config.get("cnn_learning_rate", 0.0003))
+        gamma = float(config.get("focal_gamma", 2.0))
+        alpha = config.get("focal_alpha")
+        if alpha is not None:
+            loss_fn = tf.keras.losses.BinaryFocalCrossentropy(
+                gamma=gamma,
+                alpha=float(alpha),
+                apply_class_balancing=True,
+            )
+        else:
+            loss_fn = tf.keras.losses.BinaryFocalCrossentropy(gamma=gamma, apply_class_balancing=False)
+
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
-            loss=tf.keras.losses.BinaryFocalCrossentropy(gamma=2.0, apply_class_balancing=False),
+            loss=loss_fn,
             metrics=[
                 tf.keras.metrics.BinaryAccuracy(name="accuracy"),
                 tf.keras.metrics.AUC(curve="PR", name="pr_auc"),
@@ -185,15 +273,26 @@ def train_nowak_model(
         epochs = int(config.get("cnn_epochs", 40))
 
         start_t = time.time()
-        history = model.fit(
-            X_train,
-            y_train,
-            validation_data=(X_val, y_val),
-            epochs=epochs,
-            batch_size=batch_size,
-            callbacks=callbacks,
-            verbose=1,
-        )
+        if config.get("augmentation_enabled", False):
+            print("  [Augmentation] Dynamic SED SpecAugment (Freq Mask) + Noise Jitter + Gain enabled on training split.")
+            train_seq = SEDAugmentedSequence(X_train, y_train, batch_size, config, seed=int(config.get("seed", 42)))
+            history = model.fit(
+                train_seq,
+                validation_data=(X_val, y_val),
+                epochs=epochs,
+                callbacks=callbacks,
+                verbose=1,
+            )
+        else:
+            history = model.fit(
+                X_train,
+                y_train,
+                validation_data=(X_val, y_val),
+                epochs=epochs,
+                batch_size=batch_size,
+                callbacks=callbacks,
+                verbose=1,
+            )
         duration = time.time() - start_t
         stopped_epoch = len(history.history["loss"])
         best_loss = min(history.history["val_loss"])

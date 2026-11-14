@@ -296,6 +296,19 @@ Hasil evaluasi lengkap tersimpan di:
 * **High-Precision Profile (`0.80 / 0.64`):** Precision **98.84%**, hanya 2 FP di seluruh set validasi.
 * **Screening Profile (`0.40 / 0.32`):** Recall **64.97%**, Precision **78.26%**, Event F1 **71.00%**.
 
+---
+
+## 8. EKSPERIMEN EXP-A105 (SpecAugment Frequency Masking + Noise Injection)
+* **Status:** Completed (2026-11-14)
+* **Tujuan:** Meningkatkan Recall / Sensitivitas dari bising usus samar menggunakan augmentasi on-the-fly (SpecAugment frequency masking up to 6 bins, additive noise SNR 18–32 dB, gain jitter $\pm 3\text{ dB}$, focal loss $\alpha=0.65, \gamma=2.0$).
+* **Best Val Loss:** **`0.0223`** (turun drastis -57.2% dari EXP-A104)
+* **Event SED Metrics (Collar 250 ms):**
+  * **Peak Recall Profile (`0.40 / 0.32`):** Recall **73.04%** (688 TP / 942 ground truth), Precision **66.60%**, Event F1 **69.67%**, FP 345.
+  * **Balanced Profile (`0.45 / 0.36`):** Recall **71.34%** (672 TP), Precision **72.03%**, Event F1 **71.68%**, FP 261.
+  * **Peak F1 Profile (`0.50 / 0.40`):** Event F1 **72.53%** (Rekor Tertinggi), Precision **76.32%**, Recall **69.11%** (651 TP), FP 202.
+* **New Locked Candidate:** **`EXP-A105-abdomen-crnn-specaugment-noise`** ditetapkan sebagai model terkuat untuk `abdomen-analysis-v1`.
+
+
 
 
 
