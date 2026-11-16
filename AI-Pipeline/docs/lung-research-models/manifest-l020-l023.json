@@ -1,0 +1,38 @@
+{
+  "research_only": true,
+  "release": "https://github.com/vinend/Despro-AurisCore/releases/tag/lung-research-models-l020-l023",
+  "assets": [
+    {
+      "experiment": "L020",
+      "asset": "EXP-L020-lung-research.zip",
+      "models": 3,
+      "bytes": 18068502,
+      "sha256": "679e5749ed6202f9a0f67d0be9b76ee012b16313fa73653f9465353f5891f435",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models-l020-l023/EXP-L020-lung-research.zip"
+    },
+    {
+      "experiment": "L021",
+      "asset": "EXP-L021-lung-research.zip",
+      "models": 1,
+      "bytes": 6064837,
+      "sha256": "1590e7fce34e986340591d5defee823237f63857f18a52a1909ca41b46ae3592",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models-l020-l023/EXP-L021-lung-research.zip"
+    },
+    {
+      "experiment": "L022",
+      "asset": "EXP-L022-lung-research.zip",
+      "models": 0,
+      "bytes": 1577,
+      "sha256": "613c7dc9ffd0b3abbb7bd419cee2ce7294fda899a670c280347e1b3f49870da1",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models-l020-l023/EXP-L022-lung-research.zip"
+    },
+    {
+      "experiment": "L023",
+      "asset": "EXP-L023-lung-research.zip",
+      "models": 1,
+      "bytes": 6084917,
+      "sha256": "e6278ae2ace04a120897e6d0af12479cfe0bc3ec5c328938c2b29e61255e8f77",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models-l020-l023/EXP-L023-lung-research.zip"
+    }
+  ]
+}
