@@ -22,6 +22,29 @@ async function peer(base, role) {
   const ws = new WebSocket(base + "/" + role, { origin }), next = inbox(ws); await once(ws, "open");
   ws.send(JSON.stringify({ type: "authenticate", token })); await next(v => v.type === "authenticated"); return { ws, next };
 }
+
+test("indicator state reaches capable firmware and rejects invalid modes", async () => {
+  const gateway = createDeviceGateway({ token, origins: [origin], port: 0 });
+  const address = await gateway.listen();
+  const base = `ws://127.0.0.1:${address.port}`;
+  const device = await peer(base, "device");
+  const browser = await peer(base, "browser");
+  try {
+    device.ws.send(JSON.stringify({ ...hello, indicatorProtocol: 1 }));
+    await browser.next(v => v.type === "device_hello");
+    for (const mode of ["heart", "lung", "abdomen"]) {
+      for (const phase of ["idle", "recording", "processing", "done", "error"]) {
+        const state = { type: "indicator", mode, phase };
+        browser.ws.send(JSON.stringify(state));
+        assert.deepEqual(await device.next(v => v.type === "indicator"), state);
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+    }
+    const closed = once(browser.ws, "close");
+    browser.ws.send(JSON.stringify({ type: "indicator", mode: "invalid", phase: "done" }));
+    await closed;
+  } finally { device.ws.terminate(); browser.ws.terminate(); await gateway.close(); }
+});
 const frame = (seq = 0, firstSample = seq * 400) => encodeAudioFrame({ streamId: 42, seq, firstSample, flags: 0,
   samples: Int16Array.from({ length: 400 }, (_, i) => i - 200) });
 test("binary golden layout, signed values, safe sample clock, gaps and duplicate rules", () => {

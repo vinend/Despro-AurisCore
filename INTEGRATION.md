@@ -441,3 +441,110 @@ contains `startSample`, exclusive `endSample` and the existing
 `organ-analysis-v1` as `result`. Bounds are relative to the current
 contiguous buffer; event times inside the result are relative to that window.
 HTTP 429 means skip this window because the shared worker is busy.
+
+LED status preparation (2026-11-14): capable Wi-Fi publishers advertise optional
+`indicatorProtocol: 1` in device_hello. The authenticated controlling browser sends
+`{type:"indicator",mode:"heart"|"lung"|"abdomen",phase:"idle"|"recording"|"processing"|"done"|"error"}`.
+Gateway validates and forwards these advisory messages only to capable devices.
+They never start/stop acquisition. Legacy publishers receive no such messages.
+Firmware computes red/green/blue boot test (300 ms each), slow white disconnected
+blink (300 ms on / 2 s), dim white before mode selection, mode color with two
+confirmation blinks, breathing during recording, and three blinks on successful
+completion. Processing/error retain mode color; neither triggers completion.
+An unset LED GPIO disables physical output. Wiring/type is pending hardware team
+integration; `AURISCORE_RGB_DATA_PIN` supports a confirmed addressable RGB LED only.
+The built-in diagnostic LED is not assumed to be the external RGB LED.
+
+Rhythm display update (2026-11-14): DSP 0.1.1 adds nullable `interval_cv` to
+heart-analysis-v1 rhythm output, calculated as population SD / mean of the same
+retained S1-S1 intervals, with at least two intervals and a positive mean.
+SD remains in milliseconds; CV is dimensionless. The parser accepts older
+responses without CV. The UI displays BPM, SD and CV and marks rhythm regularity
+as awaiting evaluation. The legacy `irregular` field and 5 ms rule remain for
+compatibility but do not drive the UI finding. No CV decision threshold or
+regularity percentage is introduced. Validation of timing and rhythm remains
+an implementation gap.
+
+Mobile LAN controls (2026-11-14): the main workspace defaults to an unconnected
+physical ESP32 source; there is no simulator selector or automatic mock socket.
+The gateway form derives `ws(s)://<page-host>:8082/browser`, accepts an explicit
+override, and retains pairing authentication. Command IDs are non-secret
+correlation counters and do not require secure-context `crypto.randomUUID`.
+Disconnect releases the single browser controller; applying identical settings
+can reconnect. The LAN launcher supplies its selected IP through
+`AURISCORE_ALLOWED_DEV_ORIGINS` for Next development-resource access; no wildcard
+origin is added. AudioWorklet listening still requires HTTPS or localhost.
+No audio/result schema or analysis/model/threshold behavior changes.
+
+Live diagnostic addition: `heartbeat` with an optional correlation ID has a
+gateway-local `heartbeat_ack` response (protocol v2, backward-compatible).
+The UI shows the latest browser–gateway RTT and latest live analysis request
+duration separately. A client-side rolling one-second PCM meter shows RMS dBFS
+and exact signed-PCM16 rail saturation; it does not estimate SNR, raw microphone
+clipping, physiological validity, or sensor-to-screen latency. Audio/analysis
+readings clear on audio loss; RTT clears on socket close or its own probe timeout
+(gateway responsiveness can still be measured without device audio).
+Backend quality gates and all model thresholds remain unchanged.
+
+
+## Timed evidence for organ results — 2026-11-14
+
+heart-analysis-v1 adds optional murmur.temporal_evidence for a configured verified
+Heart CNN backend. Version heart-window-evidence-v1 contains kind
+exploratory_window_scores, threshold_scope recording_reference_only, duration_s,
+discarded_tail_s and windows of start_s/end_s/score. Timestamps follow frozen
+preprocessing and complete segmentation windows. Recording aggregation and its
+threshold are preserved. The recording threshold is a descriptive comparison on
+individual windows and has no independently validated segment operating point.
+Older responses without the optional field remain accepted.
+
+The common UI renders positive-reference Heart windows, existing Abdomen activity
+windows and Lung model-frame intervals as absolute seconds from recording start.
+Overlapping windows remain separate. Unanalyzed tails receive no score. An absent
+or unconfigured model produces no inferred intervals. This addition does not
+register historical H022 fold encoders, Temporal MIL, or A103 as deployment models.
+
+## Uji lokal model dan jembatan USB — 2026-11-14
+
+User explicitly authorizes engineering testing on this laptop. The optional
+AURISCORE_ENGINEERING_MODELS points to an ignored, local hash manifest.
+AnalysisService accepts an engineering_test_only registration only when
+allow_engineering=True is explicitly selected. Default candidate and final
+deployment checks remain in effect. Results carry usage_scope=engineering_test_only
+and the UI displays that scope. No training, final promotion or held-out
+evaluation is performed.
+
+Current local test configuration uses H022 fold 1 (frozen encoder, normalization
+and logistic head), with historical pooled-OOF threshold as descriptive reference,
+and Abdomen A005 window classification. Fold 1 was chosen as the explicit first
+diagnostic instance, without selection on these device recordings. This is not an
+ensemble or a final refit. H022 whole-record scoring preserves mean embedding then
+logistic head. Per-window head scores are exploratory. Lung remains unavailable
+until the weights/normalization/config/thresholds are supplied.
+
+Live result timelines offset their local model windows using the received stream
+startSample / 8000. WAV upload starts at zero. Stream samples omit no synthetic
+padding, and model discarded tails remain explicitly unanalyzed.
+
+## Lung release and live-only main screen — 2026-11-14
+
+The explicitly authorized local test manifest now also selects
+EXP-L006-temporal-cnn-context/fold-0 from GitHub release lung-research-models.
+Archive SHA-256 faf89db277d6814ed7e4cc47581b981387f506086f0ffaad80eba0f587ee66fc
+and model SHA-256 fcb29b63ae77004132ad5e4350636a80e8bb3616523773c6e21b169353c228c2
+match the release index on origin/master b45db72. Source configuration,
+normalization and development thresholds come from that same archive.
+L006 was selected for six-class integration coverage, without a new performance
+selection or a claim that it is the best Lung model. Research scope and false
+deployment eligibility are preserved. No training or new held-out scoring occurs.
+
+LungTestBackend caches its model and uses the existing research feature/frame
+decoder and respiratory measurement rules. It returns lung-analysis-v1, with
+partial status when respiratory cycles are insufficient. Three local modes
+are now configured: H022 fold 1, Lung L006 fold 0, Abdomen A005.
+
+The main screen removes the WAV upload section across all organ selections and
+its upload-busy state. Recording from the device, playback/download of device
+captures, and live analysis remain available. WAV endpoints and file-simulation
+tooling remain supported for engineering tests. There is no result-schema change
+from removing the UI section.

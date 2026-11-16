@@ -1,0 +1,17 @@
+{$AURISCORE_DOMAIN} {
+    request_body {
+        max_size 18MB
+    }
+    # WebSockets authenticate through the existing pairing protocol.
+    @stream path /browser /device
+    handle @stream {
+        reverse_proxy gateway:8082
+    }
+    handle {
+        # Protect the UI AND all Python inference endpoints.
+        basic_auth {
+            {$AURISCORE_WEB_USER} {$AURISCORE_WEB_PASSWORD_HASH}
+        }
+        reverse_proxy web:3000
+    }
+}

@@ -32,7 +32,9 @@ export interface PcgStream {
   isConnected: boolean;
   isHardware: boolean;
   error: string | null;
+  gatewayRttMs: number | null;
   setOrganMode: (mode: OrganMode) => void;
+  setIndicator?: (mode: "heart" | "lung" | "abdomen", phase: "idle" | "recording" | "processing" | "done" | "error") => void;
   commitBpm: (bpm: number) => void;
   subscribePacket: (listener: (packet: PcgPacketMsg) => void) => () => void;
   subscribeConnection: (listener: (state: PcgConnectionState) => void) => () => void;
@@ -46,9 +48,10 @@ export interface PcgStream {
  * seluruh pohon UI. Render React hanya terjadi saat status (1 dtk), mode,
  * atau state koneksi berubah.
  */
-export function usePcgStream(settings: { source: "mock" | "hardware"; url: string; token: string } = { source: "mock", url: "", token: "" }): PcgStream {
+export function usePcgStream(settings: { source: "mock" | "hardware"; url: string; token: string } = { source: "mock", url: "", token: "" }, connectionAttempt = 0): PcgStream {
   const { source, url, token } = settings;
   const [error, setError] = useState<string | null>(null);
+  const [gatewayRttMs, setGatewayRttMs] = useState<number | null>(null);
   // Buffer gelombang dibuat sekali per komponen lewat lazy state initializer
   // (bukan ref) agar tidak ada akses ref saat render.
   const [ring] = useState(
@@ -61,13 +64,19 @@ export function usePcgStream(settings: { source: "mock" | "hardware"; url: strin
   const packetListeners = useRef(new Set<(packet: PcgPacketMsg) => void>());
   const connectionListeners = useRef(new Set<(state: PcgConnectionState) => void>());
 
-  const [state, setState] = useState<PcgConnectionState>("connecting");
+  const [state, setState] = useState<PcgConnectionState>("disconnected");
   const [hello, setHello] = useState<HelloMsg | null>(null);
   const [status, setStatus] = useState<DeviceStatusMsg | null>(null);
   const [organMode, setOrganModeState] = useState<OrganMode>("mitral");
   const [bpmDraft, setBpmDraft] = useState<number | null>(null);
 
   useEffect(() => {
+    if (source === "hardware" && (!url || token.length < 16)) {
+      ring.clear(); ring.resetSequence();
+      setState("disconnected"); setHello(null); setStatus(null); setError(null); setGatewayRttMs(null);
+      for (const listener of connectionListeners.current) listener("disconnected");
+      return;
+    }
     const handlers = {
       onHello: (msg: HelloMsg) => {
         setError(null);
@@ -111,6 +120,7 @@ export function usePcgStream(settings: { source: "mock" | "hardware"; url: strin
         }
       },
       onError: (message: string) => setError(message),
+      onLatency: (milliseconds: number | null) => setGatewayRttMs(milliseconds),
     };
     ring.clear(); ring.resetSequence();
     const connection = source === "hardware" ? new DeviceConnection({ url, token }, handlers)
@@ -123,10 +133,14 @@ export function usePcgStream(settings: { source: "mock" | "hardware"; url: strin
       connection.close();
       connRef.current = null;
     };
-  }, [ring, source, url, token]);
+  }, [ring, source, url, token, connectionAttempt]);
 
   const setOrganMode = useCallback((mode: OrganMode) => {
     connRef.current?.setMode(mode);
+  }, []);
+
+  const setIndicator = useCallback((mode: "heart" | "lung" | "abdomen", phase: "idle" | "recording" | "processing" | "done" | "error") => {
+    if (connRef.current instanceof DeviceConnection) connRef.current.setIndicator(mode, phase);
   }, []);
 
   const commitBpm = useCallback((bpm: number) => {
@@ -158,7 +172,9 @@ export function usePcgStream(settings: { source: "mock" | "hardware"; url: strin
     isConnected: state === "connected",
     isHardware: source === "hardware",
     error,
+    gatewayRttMs,
     setOrganMode,
+    setIndicator,
     commitBpm,
     subscribePacket,
     subscribeConnection,

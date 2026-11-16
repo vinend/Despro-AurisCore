@@ -414,3 +414,11 @@ development training completed on Linux; no model is approved or active.
 Software readiness does not complete clinical,
 model or physical-device validation. Respiratory metrics remain null without
 sufficient complete detected cycles.
+
+### Device workspace UI — 2026-11-14
+
+At the user's request, the main WebApp now exposes physical ESP32 audio only;
+the simulator source tab is removed. File/synthetic adapters remain engineering
+tools and test fixtures, preserving the prerequisite simulator capability.
+Phone browsers on the same LAN use the laptop gateway. Browser-local offline
+inference and clinical/device validity are not established by this UI change.

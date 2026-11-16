@@ -10,6 +10,7 @@ import { parseHeartAnalysisResult } from "../src/lib/auriscore/heart-result.ts";
 import { heartDisplay, HEART_SCREENING_NOTICE } from "../src/lib/auriscore/heart-display.ts";
 import { HttpHeartAnalysisService, validateHeartFile } from "../src/lib/auriscore/heart-analysis-service.ts";
 
+import { EvidenceTimeline } from "../src/components/auriscore/evidence-timeline.tsx";
 const nodeRequire = createRequire(import.meta.url);
 const componentSource = readFileSync(new URL("../src/components/auriscore/heart-result-view.tsx", import.meta.url), "utf8");
 const componentJs = ts.transpileModule(componentSource, { compilerOptions: {
@@ -20,7 +21,7 @@ runInNewContext(componentJs, {
   module: componentModule,
   exports: componentModule.exports,
   require: (name) => name === "@/lib/auriscore/heart-display"
-    ? { heartDisplay, HEART_SCREENING_NOTICE } : nodeRequire(name),
+    ? { heartDisplay, HEART_SCREENING_NOTICE } : name === "./evidence-timeline" ? { EvidenceTimeline } : nodeRequire(name),
 });
 const { HeartResultView } = componentModule.exports;
 
@@ -93,7 +94,23 @@ test("missing BPM and insufficient events never invent a rate", () => {
   assert.equal(display.bpm, "Belum cukup data");
   assert.equal(display.s1, "Belum cukup bukti");
   assert.equal(display.s3, "Belum cukup bukti");
-  assert.equal(display.irregular, "Belum cukup interval");
+  assert.equal(display.irregular, "Belum dievaluasi");
+});
+
+test("interval descriptors render without promoting legacy irregular flags", () => {
+  const input = validResult();
+  input.rhythm.irregular = true;
+  input.rhythm.interval_std_ms = 40;
+  input.rhythm.interval_cv = 0.05;
+  const result = parseHeartAnalysisResult(input);
+  const display = heartDisplay(result);
+  assert.equal(display.intervalSd, "40.0 ms");
+  assert.equal(display.intervalCv, "0.050");
+  const html = renderToStaticMarkup(createElement(HeartResultView, { result }));
+  assert.match(html, /Belum dievaluasi/);
+  assert.doesNotMatch(html, /Indikasi interval tidak teratur/);
+  delete input.rhythm.interval_cv;
+  assert.equal(heartDisplay(parseHeartAnalysisResult(input)).intervalCv, "Belum tersedia");
 });
 
 test("available Murmur shows generic model version and refuses conflicting label", () => {
@@ -134,4 +151,42 @@ test("file-simulator errors are explicit", async () => {
   await assert.rejects(() => new HttpHeartAnalysisService(async () => Response.json({ error: "WAV rusak" }, { status: 422 })).analyze(file), /WAV rusak/);
   await assert.rejects(() => new HttpHeartAnalysisService(async () => Response.json({ bogus: true })).analyze(file), /heart-analysis-v1/);
   await assert.rejects(() => new HttpHeartAnalysisService(async () => { throw new Error("offline"); }).analyze(file), /tidak dapat dihubungi/);
+});
+
+test("Heart evidence retains overlapping windows, marks reference scores and rejects bad times", () => {
+  const input = validResult();
+  input.murmur = {status: "available", model_version: "fixture", preprocessing_version: "fixture",
+    threshold_version: "fixture", probability: .6, threshold: .5, label: "present", window_count: 2,
+    temporal_evidence: {version: "heart-window-evidence-v1", kind: "exploratory_window_scores",
+      threshold_scope: "recording_reference_only", duration_s: 8, discarded_tail_s: .5,
+      windows: [{start_s: 0, end_s: 5, score: .8}, {start_s: 2.5, end_s: 7.5, score: .4}]}};
+  const output = parseHeartAnalysisResult(input);
+  const html = renderToStaticMarkup(createElement(HeartResultView, {result: output}));
+  assert.match(html, /0.00–5.00 detik/);
+  assert.match(html, /skor 0.800/);
+  assert.doesNotMatch(html, /2.50–7.50 detik/);
+  assert.match(html, /belum tervalidasi/);
+  assert.match(html, /0.50 detik tidak dianalisis/);
+  input.murmur.temporal_evidence.windows[0].end_s = 9;
+  assert.throws(() => parseHeartAnalysisResult(input));
+});
+
+test("empty Heart temporal evidence flags cannot imply a confirmed negative result", () => {
+  const html = renderToStaticMarkup(createElement(EvidenceTimeline, {
+    title:"Uji rentang", duration:10, intervals:[], explanation:"Skor eksploratif",
+    emptyMessage:"Tidak ada jendela yang mencapai ambang."
+  }));
+  assert.match(html,/Tidak ada jendela/);
+  assert.doesNotMatch(html,/bg-amber-600/);
+});
+
+test("live evidence uses stream seconds after a nonzero window offset", () => {
+  const html = renderToStaticMarkup(createElement(EvidenceTimeline, {
+    title: "Live candidates", duration: 10, timeOffset: 30,
+    intervals: [{start_s: 2, end_s: 7, label: "Kandidat", score: .8}],
+    explanation: "Uji", emptyMessage: "Kosong",
+  }));
+  assert.match(html, /32\.00–37\.00 detik/);
+  assert.match(html, /30\.00 detik/);
+  assert.match(html, /40\.00 detik/);
 });

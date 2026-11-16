@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { HeartPulse, Wind, Activity, Stethoscope, Radio, AlertCircle } from "lucide-react";
 import { ConnectionBadge } from "./connection-badge";
 import { DeviceStatusCard } from "./device-status-card";
@@ -11,12 +11,12 @@ import { RecordingControls } from "./recording-controls";
 import { ResultCard } from "./result-card";
 import { DeviceConnect, type StreamSettings } from "./device-connect";
 import { LiveListening } from "./live-listening";
-import { OrganFileAnalysis } from "./organ-file-analysis";
 import { OrganResultView } from "./organ-result-view";
 import type { AnalysisMode } from "@/lib/auriscore/analysis-result";
 import { usePcgStream } from "@/hooks/use-pcg-stream";
 import { useRecording } from "@/hooks/use-recording";
 import { useLiveAnalysis } from "@/hooks/use-live-analysis";
+import { useSignalMeter } from "@/hooks/use-signal-meter";
 import { LIVE_RATE, LIVE_WINDOW_SAMPLES } from "@/lib/auriscore/live-analysis";
 import { ORGAN_MODE_LABELS } from "@/lib/auriscore/format";
 import { EXPECTED_SAMPLING_RATE } from "@/lib/auriscore/protocol";
@@ -27,25 +27,25 @@ import { EXPECTED_SAMPLING_RATE } from "@/lib/auriscore/protocol";
  * area gelombang → kontrol (rekam, timer, slider BPM) → kartu hasil →
  * riwayat → footer.
  */
-export function MainScreen({
-  trainingMetricsCard,
-}: {
-  trainingMetricsCard: ReactNode;
-}) {
+export function MainScreen() {
   const [settings, setSettings] = useState<StreamSettings>({
-    source: "mock",
+    source: "hardware",
     url: "",
     token: "",
   });
-  const stream = usePcgStream(settings);
+  const [connectionAttempt, setConnectionAttempt] = useState(0);
+  const stream = usePcgStream(settings, connectionAttempt);
+  const signalMetrics = useSignalMeter(stream);
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("heart");
-  const [uploadBusy, setUploadBusy] = useState(false);
   const recording = useRecording(stream, analysisMode);
+  useEffect(() => {
+    if (stream.isConnected) stream.setIndicator?.(analysisMode, recording.phase);
+  }, [stream.isConnected, stream.setIndicator, analysisMode, recording.phase]);
   const recordingBusy =
     recording.phase === "recording" || recording.phase === "processing";
-  const busy = recordingBusy || uploadBusy;
+  const busy = recordingBusy;
   const [liveEnabled, setLiveEnabled] = useState(false);
-  const livePaused = recording.phase === "processing" || uploadBusy;
+  const livePaused = recording.phase === "processing";
   const live = useLiveAnalysis(stream, analysisMode, liveEnabled && !livePaused);
 
   const organModes: { id: AnalysisMode; label: string; icon: typeof HeartPulse; desc: string }[] = [
@@ -89,7 +89,7 @@ export function MainScreen({
               Ruang Auskultasi
             </p>
             <h1>Pantau suara tubuh.</h1>
-            <p>Pilih organ, amati sinyal real-time, lalu rekam atau unggah audio.</p>
+            <p>Pilih organ, hubungkan alat, lalu amati dan analisis suara secara langsung.</p>
           </div>
           <span className="auris-session-label">
             AUDIO / {stream.isMock ? "SIMULATOR" : stream.isConnected ? "PERANGKAT" : "TERPUTUS"}
@@ -99,10 +99,17 @@ export function MainScreen({
         {/* Device Connection Settings Card */}
         <DeviceConnect
           disabled={busy}
+          connected={stream.isConnected}
           onConnect={(next) => {
             recording.reset();
             setLiveEnabled(false);
             setSettings(next);
+            setConnectionAttempt(value => value + 1);
+          }}
+          onDisconnect={() => {
+            recording.reset();
+            setLiveEnabled(false);
+            setSettings({ source: "hardware", url: "", token: "" });
           }}
         />
 
@@ -172,6 +179,9 @@ export function MainScreen({
           connected={stream.isConnected}
           analysisMode={analysisMode}
           hardware={stream.isHardware}
+          signalMetrics={signalMetrics}
+          gatewayRttMs={stream.gatewayRttMs}
+          analysisLatencyMs={live.latest?.elapsedMs ?? null}
         />
 
         {/* Live Audio Oscilloscope Console & Side Panel */}
@@ -257,7 +267,7 @@ export function MainScreen({
               bpm={stream.bpm}
               isMock={!stream.isHardware && stream.isMock && analysisMode === "heart"}
               durationMs={recording.durationMs}
-              disabled={!stream.isConnected || uploadBusy}
+              disabled={!stream.isConnected}
               onStart={recording.start}
               onStop={recording.stop}
               onCommitBpm={stream.commitBpm}
@@ -282,25 +292,14 @@ export function MainScreen({
           </div>
           {liveEnabled && (
             <p className="text-xs text-muted-foreground" role="status">
-              {livePaused ? "Dijeda selama analisis rekaman atau unggahan." : !stream.isConnected ? "Menunggu koneksi audio."
+              {livePaused ? "Dijeda selama analisis rekaman." : !stream.isConnected ? "Menunggu koneksi audio."
                 : live.error ?? (live.latest
                   ? `Jendela ${(live.latest.startSample / LIVE_RATE).toFixed(1)}–${(live.latest.endSample / LIVE_RATE).toFixed(1)} s · ${live.latest.elapsedMs} ms dari kirim hingga hasil`
                   : `Mengumpulkan ${LIVE_WINDOW_SAMPLES[analysisMode] / LIVE_RATE} detik audio berurutan atau menunggu hasil.`)}
             </p>
           )}
-          {liveEnabled && !livePaused && live.latest && <OrganResultView result={live.latest.result} />}
+          {liveEnabled && !livePaused && live.latest && <OrganResultView result={live.latest.result} timeOffset={live.latest.startSample / LIVE_RATE} />}
         </section>
-
-        {/* WAV File Upload & Offline Analysis */}
-        <OrganFileAnalysis
-          key={analysisMode}
-          mode={analysisMode}
-          onBusy={setUploadBusy}
-          disabled={recordingBusy}
-        />
-
-        {/* Model Training Metrics Card (Shown for Heart mode) */}
-        {analysisMode === "heart" && trainingMetricsCard}
 
         {/* Session History List */}
         <HistoryList entries={recording.history} />

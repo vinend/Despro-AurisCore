@@ -1,0 +1,14 @@
+# CPU inference versions currently used by the device prototype; no training tools.
+numpy==2.2.6
+scipy==1.15.3
+pandas==2.2.3
+librosa==0.11.0
+soundfile==0.13.1
+scikit-learn==1.6.1
+joblib==1.5.1
+PyYAML==6.0.2
+matplotlib==3.10.3
+tensorflow==2.21.0
+keras==3.15.1
+h5py==3.14.0
+psutil==7.0.0

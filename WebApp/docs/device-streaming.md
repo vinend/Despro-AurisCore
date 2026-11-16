@@ -1,5 +1,29 @@
 # ESP32 Wi-Fi streaming setup and implementation state
 
+## Current physical workspace / mobile LAN — 2026-11-14
+
+The main screen exposes only ESP32, with no simulator tab or auto-mock connection.
+Gateway URL defaults to the page host, so a phone does not connect to its own
+localhost. Enter the pairing code and click **Hubungkan ESP32**. Use **Putuskan
+koneksi** to release the single browser controller before moving to another device.
+The USB serial-v4 bridge currently supplies physical audio; see
+`HARDWARE_BRINGUP_2026-11-14.md` for verified hardware state (older milestones below
+remain historical). Models remain explicitly local engineering adapters.
+
+Launch the Web and Gateway services with `scripts/start_hardware_lan.ps1`, passing
+the actual laptop LAN IP. The Web launcher sets `AURISCORE_ALLOWED_DEV_ORIGINS` to
+that address so Next's dev resources and interactive controls can load over LAN.
+No wildcard origin or pairing bypass is enabled.
+
+Signal diagnostics show received PCM RMS dBFS and rail saturation over at most the
+latest second. These values do not certify body-sound quality or estimate SNR.
+**Respons gateway** is a measured browser–gateway round trip every two seconds;
+**Waktu analisis** measures sending a live window through receiving/parsing its
+result. Collection context (Heart 10 s, Lung 30 s, Abdomen 5 s), hardware buffering,
+USB transfer, drawing and speaker output are not included in that inference timer.
+Audio/analysis readings clear on audio loss; RTT clears on socket close or its
+own probe timeout. No fixed latency target is claimed met.
+
 This adds the v2 device gateway, browser decoder, live listening, sample-clock
 recording and WAV download alongside the existing analysis API. The mock remains
 available and never substitutes automatically for physical audio. Actual sensor

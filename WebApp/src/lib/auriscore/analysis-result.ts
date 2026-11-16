@@ -34,6 +34,7 @@ export const abdomenAnalysisSchema = z.object({
   bowel_rate_variability: z.null(), pattern_categories: z.null(), limitations: z.array(z.string()).optional(),
 });
 const fields = {
+  usage_scope: z.literal("engineering_test_only").optional(),
   schema_version: z.literal("organ-analysis-v1"), request_id: z.string().nullable(),
   source: z.enum(["wav", "pcm", "unknown"]), status: z.enum(["completed", "partial", "unavailable", "error"]), quality,
   backend_version: z.string().nullable(), model_version: z.string().nullable(),
@@ -67,6 +68,7 @@ export function parseOrganAnalysisResult(input: unknown, mode?: AnalysisMode): O
   return parsed.data;
 }
 export function analysisNotice(result: OrganAnalysisResult): string | null {
+  if (result.usage_scope === "engineering_test_only") return "Mode uji rekayasa lokal. Hasil model belum divalidasi pada alat ini. Periksa versi model pada hasil.";
   const code = result.errors[0]?.code;
   if (!code) return null;
   if (["MODEL_UNAVAILABLE", "MODEL_NOT_AUTHORIZED"].includes(code)) return result.mode === "heart"

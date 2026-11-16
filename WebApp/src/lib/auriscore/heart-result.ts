@@ -15,6 +15,7 @@ const rhythm = z.object({
   label: z.enum(["normal", "tachycardia", "bradycardia", "unknown"]),
   irregular: z.boolean().nullable(),
   interval_std_ms: nullableFinite,
+  interval_cv: finite.nonnegative().nullable().optional(),
   beat_intervals_ms: z.array(finite),
   usable_intervals: z.number().int().nonnegative(),
 });
@@ -56,9 +57,24 @@ const availableMurmur = z.object({
   window_count: z.number().int().positive().optional(),
   score_kind: z.literal("uncalibrated_sigmoid").optional(),
   probability_is_calibrated: z.literal(false).optional(),
+  temporal_evidence: z.object({
+    version: z.literal("heart-window-evidence-v1"),
+    kind: z.literal("exploratory_window_scores"),
+    threshold_scope: z.literal("recording_reference_only"),
+    duration_s: finite.positive(), discarded_tail_s: finite.nonnegative(),
+    windows: z.array(z.object({start_s: finite.nonnegative(), end_s: finite.positive(),
+      score: finite.min(0).max(1)})).min(1).max(512),
+  }).superRefine((value, ctx) => {
+    if (value.discarded_tail_s > value.duration_s || value.windows.some((w, i) =>
+      w.end_s <= w.start_s || w.end_s > value.duration_s + 1e-6 ||
+      (i > 0 && w.start_s <= value.windows[i - 1].start_s)) ||
+      Math.abs(value.windows.at(-1)!.end_s + value.discarded_tail_s - value.duration_s) > 1e-6)
+      ctx.addIssue({code: "custom", message: "Invalid Heart evidence times"});
+  }).optional(),
 });
 
 export const heartAnalysisSchema = z.object({
+  usage_scope: z.literal("engineering_test_only").optional(),
   schema_version: z.literal("heart-analysis-v1"),
   mode: z.literal("heart"),
   quality: z.object({
@@ -86,6 +102,8 @@ export const heartAnalysisSchema = z.object({
     if (value.murmur.label !== expected) {
       context.addIssue({ code: "custom", message: "Murmur label conflicts with score" });
     }
+    if (value.murmur.temporal_evidence && value.murmur.window_count !== value.murmur.temporal_evidence.windows.length)
+      context.addIssue({code: "custom", message: "Heart evidence count mismatch"});
   }
 });
 

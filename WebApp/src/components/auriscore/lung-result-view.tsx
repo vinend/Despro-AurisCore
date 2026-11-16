@@ -1,6 +1,7 @@
 import type { LungAnalysisResult } from "@/lib/auriscore/lung-result";
+import { EvidenceTimeline } from "./evidence-timeline";
 const names: Record<string, string> = { inhalation: "Inspirasi", exhalation: "Ekspirasi", wheeze: "Wheeze", rhonchi: "Rhonchi", stridor: "Stridor", crackle: "Crackle", cas: "Suara kontinu tambahan" };
-export function LungResultView({ result }: { result: LungAnalysisResult }) {
+export function LungResultView({ result, timeOffset = 0 }: { result: LungAnalysisResult; timeOffset?: number }) {
   const r = result.respiratory;
   return <section className="auris-heart-result" aria-label="Hasil analisis Lung">
     <h3>Hasil Lung</h3>
@@ -12,14 +13,11 @@ export function LungResultView({ result }: { result: LungAnalysisResult }) {
       {(["wheeze", "crackle", "rhonchi"] as const).map(label => <div key={label}><dt>{names[label]}</dt><dd>{!result.supported_classes.includes(label) ? "Model belum mendukung" : `${result.sound_events.filter(e => e.label === label).length} kandidat akustik`}</dd></div>)}
     </dl>
     {r.reason && <p role="status">Siklus lengkap belum cukup atau fase ambigu; metrik napas belum tersedia.</p>}
-    <figure aria-label="Linimasa suara dan fase napas"><figcaption>Linimasa kandidat · detik</figcaption>
-      <svg viewBox="0 0 600 160" role="img" aria-label="Interval fase dan suara Lung" style={{ width: "100%" }}>
-        {result.supported_classes.map((label, lane) => <g key={label}><text x="0" y={lane * 20 + 14} fontSize="10">{names[label]}</text>
-          {[...result.sound_events, ...result.phase_intervals].filter(e => e.label === label).map((e, i) => <rect key={i} x={130 + e.start_s / result.analyzed_duration_s * 450} y={lane * 20 + 3}
-            width={Math.max(1, (e.end_s - e.start_s) / result.analyzed_duration_s * 450)} height="12" fill="currentColor"><title>{`${names[label]} ${e.start_s.toFixed(2)}–${e.end_s.toFixed(2)} dtk`}</title></rect>)}</g>)}
-      </svg>
-    </figure>
-    <details><summary>Interval kandidat</summary><ul>{[...result.phase_intervals, ...result.sound_events].map((e, i) => <li key={i}>{names[e.label]}: {e.start_s.toFixed(2)}–{e.end_s.toFixed(2)} dtk</li>)}</ul></details>
+    <EvidenceTimeline timeOffset={timeOffset} title="Linimasa kandidat suara dan fase Lung" duration={result.analyzed_duration_s}
+      intervals={[...result.sound_events, ...result.phase_intervals].sort((a,b) => a.start_s - b.start_s)
+        .map(e => ({...e, label: names[e.label] ?? e.label}))}
+      explanation="Rentang mengikuti skor frame dan ambang dari paket model. Penanda merupakan kandidat akustik. Ketelitian waktu perlu dievaluasi pada rekaman berlabel."
+      emptyMessage="Model tidak menandai interval suara atau fase pada rentang yang dianalisis." />
     <p>Versi model: {result.model_version}</p><p>Kandidat akustik untuk skrining prototipe — bukan diagnosis.</p>
   </section>;
 }

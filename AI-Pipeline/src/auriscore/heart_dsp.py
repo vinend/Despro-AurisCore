@@ -16,7 +16,7 @@ from scipy.signal import butter, find_peaks, hilbert, sosfiltfilt
 class HeartDSPConfig:
     """Versioned prototype thresholds; report-derived values remain configurable."""
 
-    algorithm_version: str = "heart-dsp-prototype-0.1.0"
+    algorithm_version: str = "heart-dsp-prototype-0.1.1"
     band_low_hz: float = 20.0
     band_high_hz: float = 150.0
     filter_order: int = 4
@@ -198,12 +198,15 @@ def classify_rhythm(bpm: float | None, beat_intervals_ms: list[float],
     if intervals.size and not np.isfinite(intervals).all():
         raise ValueError("invalid_beat_intervals")
     std_ms = float(np.std(intervals, ddof=0)) if len(intervals) >= 2 else None
+    mean_ms = float(np.mean(intervals)) if len(intervals) >= 2 else None
+    cv = std_ms / mean_ms if mean_ms is not None and mean_ms > 0 else None
     irregular = (std_ms > config.irregularity_std_ms
                  if std_ms is not None and len(intervals) >= config.irregularity_min_intervals else None)
     return {"algorithm_version": config.algorithm_version,
             "heart_rate_bpm": round(bpm, 3) if bpm is not None else None,
             "label": label, "irregular": irregular,
             "interval_std_ms": round(std_ms, 3) if std_ms is not None else None,
+            "interval_cv": round(cv, 6) if cv is not None else None,
             "beat_intervals_ms": [round(float(v), 3) for v in intervals],
             "usable_intervals": len(intervals)}
 

@@ -156,8 +156,25 @@
 .auris-header-inner,
 .auris-main,
 .auris-footer {
+  min-width: 0;
   width: min(1160px, calc(100% - 32px));
   margin-inline: auto;
+}
+
+/* Keep controls inside a narrow phone viewport, including long gateway URLs. */
+.auris-main > *,
+.auris-console > *,
+.auris-side-panel > * {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .auris-header-inner { flex-wrap: wrap; }
+  .auris-product-label, .auris-wordmark-divider { display: none; }
+  .auris-organ-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; }
+  .auris-organ-tab { gap: 5px; padding-inline: 5px; font-size: 12px; }
+  .auris-status-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .auris-footer { overflow-wrap: anywhere; }
 }
 
 @media (min-width: 768px) {
