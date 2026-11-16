@@ -1,5 +1,23 @@
 # AI_PIPELINE.md
 
+L022 evaluates recall-constrained thresholds on the frozen L020 checkpoint.
+L023 compares L020 frame supervision against the same HF fitting split with
+auxiliary ICBHI TRAIN cycle supervision. Both keep the official test sealed.
+See [protocol and artifacts](AI-Pipeline/docs/lung_l022_l023.md).
+
+L021 tests audited SPRSound TRAIN addition with the L020 frame loss, against
+the completed L020 HF control. The runner verifies the cache and split
+identities, uses the same inner checkpoint/threshold rules and reports
+per-label targets on the same HF development population. Official test
+remains sealed. See [L021 protocol](AI-Pipeline/docs/lung_l021_frame_spr.md).
+
+L020 Lung research (2026-11-14): serial comparison of the frame-loss HF
+control, interval-loss HF, and interval-loss HF with audited SPRSound 2022
+TRAIN. The same grouped inner HF partition selects checkpoints by macro clip
+average precision and thresholds by per-class F1. The original HF development
+set is used only after all three arms are frozen. Official test stays sealed.
+See [L020 protocol](AI-Pipeline/docs/lung_l020_interval_data.md).
+
 User-authorized L019 launch (2026-11-10): `EXP-L019-fixed-reference` compares the
 verified Lung fixed-reference/floor cache against L017 with the same model,
 objective/LR/fitting rows and newly saved per-epoch trajectory. A frozen standalone

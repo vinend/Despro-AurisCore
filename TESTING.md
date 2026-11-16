@@ -1,5 +1,9 @@
 # TESTING.md
 
+L020 focused checks (seven passed) cover clip coverage, physical-tail and
+annotation-independent score pooling, interval-loss values and gradients for
+separate positive runs, known negatives and fully masked input, and ICBHI
+TRAIN assignment, patient exclusion and weak cycle labels.
 Branch publication checks (2026-11-14, base origin/master 03da32a): production
 WebApp build and separate TypeScript check pass after npm ci in an isolated
 worktree. All 49 WebApp tests, four gateway tests, 59 focused Python backend/DSP
