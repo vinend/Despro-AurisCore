@@ -1,5 +1,14 @@
 # AurisCore Product Requirements Document (PRD)
 
+Network requirement clarification (2026-11-14, user-authorized): the Wi-Fi WebApp
+prototype must support BOTH an ordinary 2.4 GHz router and a phone's 2.4 GHz
+hotspot backed by cellular data. These are saved network profiles on the ESP32;
+cellular service is supplied by the phone, not a SIM/modem inside the ESP32.
+The device must preserve a fallback profile when another network is configured.
+Local testing requires the laptop gateway to be reachable on the chosen network;
+public-server routing remains a separate deployment milestone. Native offline
+mobile inference remains a product requirement, not replaced by this network path.
+
 **Status:** Active product source of truth  
 **Version:** 1.0  
 **Last updated:** 2026-10-09  

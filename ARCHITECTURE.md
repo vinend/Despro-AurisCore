@@ -1,5 +1,21 @@
 # ARCHITECTURE.md
 
+Dual-path networking (2026-11-14): router Wi-Fi and phone-hotspot/cellular are both
+supported by one configurable Wi-Fi client, not mutually exclusive firmware builds.
+Saved profiles have a priority and per-network gateway address. Association failure
+rotates profiles; no model, DSP or transport contract changes between networks.
+This does not provide a direct cellular modem or native BLE phone relay. Radio
+startup remains blocked by observed brownout/POWERON resets on this board.
+Electrical and SDK causes remain unresolved. A separate BLE initialization test
+also resets, including a control built with Arduino 2.0.14 / ESP-IDF 4.4.6.
+
+Local Wi-Fi acquisition prototype (2026-11-14): a separate Arduino sketch under
+`Firmware/wifi-capture` connects real dual-slot I2S capture to the existing gateway
+v2 interface. Only organ-slot audio is published; ANC and ECG forwarding are not
+implemented by this prototype. SSID/password/gateway host are provisioned locally
+and retained on-device, never bound to a particular campus network. USB-v4 remains
+the rollback path. No cloud endpoint or BLE/native-phone implementation is activated.
+
 ## 1. Architecture authority
 
 Product requirements come from `PRD.md`. This document defines **how the current architecture satisfies those requirements**.

@@ -1,5 +1,37 @@
 # Hardware team handoff for actual stethoscope streaming
 
+## Current handoff — 2026-11-14
+
+`codex/hardware-esp32` contains capture firmware, provisioning, serial bridge and
+radio diagnostics. `codex/device-integration` contains the companion WebApp,
+gateway, engineering inference and hosting starter. Both branches start from
+`origin/master` commit `03da32a`; review both when assembling the full prototype.
+Neither branch is a deployment acceptance or a model promotion.
+
+The S3 is ESP32-S3-WROOM-1 N16R8, with two INMP441 slots on BCLK16/WS18/DATA17.
+The supplied serial-v4 capture firmware is preserved. The Wi-Fi prototype forwards
+the organ slot only; it does not implement ANC or ECG forwarding. External RGB
+wiring remains unconfirmed, so physical RGB output defaults to disabled.
+
+Latest isolated observation: driver initialization and station-mode setup return
+ESP_OK; manual `R` reaches `esp_wifi_start` and resets with a brownout message.
+Wi-Fi/BLE radio operation remains blocked; the reset cause is not fully isolated.
+Brownout-off bench variants also reset and do not establish electrical stability.
+Do not treat successful compilation, a gateway heartbeat or supplied current
+capacity as proof of working device audio.
+
+For Python hardware tools, install into the chosen local environment with
+`python -m pip install -e "./AI-Pipeline[hardware]"` from the repository root.
+This adds pyserial and websocket-client; a Python runtime is not included in Git.
+Install WebApp/gateway dependencies with their existing npm lockfiles separately.
+`monitor_auriscore.ps1` targets AurisCore capture firmware; the init-only diagnostic
+uses serial 115200 and single-character `R`/`S`, rather than capture commands.
+Build scripts compile only and never upload automatically. Keep credentials,
+logs, flash backups, caches and private model assets outside tracked files.
+
+The questionnaire below is retained for other boards and unresolved peripherals;
+its original statement that no capture firmware exists is historical.
+
 Pins are required for acquisition firmware, not for the Wi-Fi/WebSocket module.
 
 | Item | Required details |
@@ -19,3 +51,6 @@ Pins are required for acquisition firmware, not for the Wi-Fi/WebSocket module.
 First priority: exact board, sensor/ADC datasheets and wiring diagram. There is
 currently no capture firmware; these enable the acquisition driver. Do not send
 Wi-Fi passwords or pairing secrets through tracked repository files.
+
+For the current Windows laptop bring-up and hardware questionnaire, see
+[HARDWARE_BRINGUP_2026-11-14.md](HARDWARE_BRINGUP_2026-11-14.md).
