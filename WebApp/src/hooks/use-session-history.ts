@@ -5,6 +5,7 @@ import { accountClient } from "@/lib/auriscore/account-client";
 import { listSessions, pendingSessions, queueSession, removePending, sha256, syncSession,
   type SavedSession, type PendingSession } from "@/lib/auriscore/session-repository";
 import type { HistoryEntry } from "@/lib/auriscore/recording-session";
+import { createSessionSyncQueue } from "@/lib/auriscore/session-sync-queue";
 
 export function useSessionHistory() {
   const { user } = useAccount();
@@ -14,7 +15,7 @@ export function useSessionHistory() {
   const [more, setMore] = useState(false);
   const [saving, setSaving] = useState(false);
   const owner = useRef(user?.id);
-  const processing = useRef(false);
+  const syncQueue = useRef(createSessionSyncQueue());
   const savedFiles = useRef(new WeakSet<File>());
   useEffect(() => { owner.current = user?.id; }, [user?.id]);
   const refresh = useCallback(async () => {
@@ -22,9 +23,8 @@ export function useSessionHistory() {
     const rows = await listSessions(accountClient(), user.id);
     if (owner.current === user.id) { setEntries(rows); setLoadedFor(user.id); setMore(rows.length === 30); }
   }, [user]);
-  const retry = useCallback(async () => {
-    if (!user || processing.current) return;
-    processing.current = true;
+  const retry = useCallback(() => syncQueue.current(async () => {
+    if (!user || owner.current !== user.id) return;
     try {
       const queued = await pendingSessions(user.id);
       if (owner.current !== user.id) return;
@@ -38,8 +38,8 @@ export function useSessionHistory() {
       if (owner.current === user.id) setMessage("Riwayat tersinkron.");
     } catch (error) {
       if (owner.current === user.id) setMessage(error instanceof Error ? error.message : "Sinkronisasi belum berhasil.");
-    } finally { processing.current = false; setSaving(false); }
-  }, [refresh, user]);
+    } finally { if (owner.current === user.id) setSaving(false); }
+  }), [refresh, user]);
   useEffect(() => {
     if (!user) return;
     const synchronize = () => { void retry(); };

@@ -35,6 +35,8 @@ update requires the object to exist. Retrying an interrupted upload uses the
 same UUID and verifies a pre-existing WAV's size and SHA-256 before finalizing.
 Pending local files are removed only after cloud completion. Local data may
 remain pending after sign-out and resumes when the original user returns.
+Concurrent save/online requests are serialized and trigger a fresh outbox scan
+after the current upload; the latest account's request is retained.
 The UI clears the prior account's transient results when accounts change.
 
 History pages contain 30 sessions at a time. Selecting a session displays

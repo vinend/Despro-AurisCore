@@ -10,7 +10,8 @@ The ESP32 opens a TLS WebSocket to the WebApp. The browser pairs over a second
 WebSocket. The gateway relays unmodified v2 PCM16 frames and capture controls
 through Redis Pub/Sub. The browser sends live PCM windows or recorded WAV to
 the same-origin analysis API, which forwards them to a dedicated Vercel Python
-Function. Session history stays in the browser. Redis stores only short-lived
+Function. Guest history stays in the browser; signed-in sessions synchronize
+results and private WAVs to Supabase. Redis stores only short-lived
 connection leases. Audio is published without replay or server-side recording.
 
 Use synthetic audio for this engineering deployment. Public-cloud handling of

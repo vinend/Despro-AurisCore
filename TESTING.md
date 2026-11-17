@@ -16,6 +16,10 @@ history. Synthetic accounts and objects were removed after acceptance.
 Confirmation/reset email delivery and Auth URL configuration remain pending
 provider setup.
 
+Outbox concurrency regressions verify a recording queued during an upload is
+included in a follow-up scan, account changes retain the latest owner's scan,
+and failed scans do not lock subsequent retries.
+
 The A105 cloud engineering check posts generated 8 kHz Abdomen audio to the
 staged Python service and verifies the model version, candidate schema, and
 unavailable motility fields. The WebApp contract tests reject out-of-bounds
