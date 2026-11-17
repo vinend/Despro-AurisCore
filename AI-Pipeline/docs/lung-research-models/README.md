@@ -9,3 +9,7 @@ These are research checkpoints for acoustic findings. Evaluation is development-
 Training used [HF Lung V1](https://gitlab.com/techsupportHF/HF_Lung_V1), documented in [the training guide](../lung_training.md), under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). L012 additionally used the TRAIN partition of [SPRSound 2022](https://github.com/SJTU-YONGFU-RESEARCH-GRP/SPRSound) under CC BY 4.0, as described in [the source audit](../lung_sprsound_training.md). The archives contain model outputs derived from these sources and aggregate metrics. Evaluation group identifiers were replaced with counts.
 
 L020–L023 checkpoints and aggregate evaluations are indexed in [the follow-up manifest](manifest-l020-l023.json). L022 reuses the L020 HF checkpoint.
+
+L024–L030 checkpoints and aggregate development evaluations are indexed in
+[the L024–L030 manifest](manifest-l024-l030.json). These are research
+checkpoints. The official test remains sealed.

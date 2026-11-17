@@ -57,6 +57,27 @@ def clip_metrics(truth, scores, mask, thresholds):
 def run(args):
     import tensorflow as tf
 
+    slow_training = args.slow_lr or args.multiscale_temporal or args.temporal_delta
+    if args.spr_rhonchi_only and not args.temporal_delta:
+        raise ValueError("L031 requires the L030 temporal-delta control")
+    if args.temporal_delta and (args.slow_lr or args.multiscale_temporal):
+        raise ValueError("Select one HF architecture experiment")
+    if args.spectral_tilt and not args.multiscale_temporal:
+        raise ValueError("L029 spectral tilt requires the L028 architecture")
+    epochs = 25 if slow_training else EPOCHS
+    initial_lr = .0003 if slow_training else .001
+    if not 1 <= args.min_epochs <= epochs:
+        raise ValueError("Minimum epochs must be within the experiment's epoch budget")
+
+    class MinimumEpochEarlyStopping(tf.keras.callbacks.EarlyStopping):
+        """Track the best checkpoint from epoch one, while delaying termination."""
+
+        def on_epoch_end(self, epoch, logs=None):
+            super().on_epoch_end(epoch, logs)
+            if epoch + 1 < args.min_epochs and self.model.stop_training:
+                self.model.stop_training = False
+                self.stopped_epoch = 0
+
     def write(path, value):
         path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
@@ -85,7 +106,25 @@ def run(args):
     clip_frames = nominal_clip_frames(hf_config["sample_rate"], hf_config["hop_length"])
     if args.icbhi_train and not args.l020_control:
         raise ValueError("L023 requires the completed L020 frame HF control")
-    arms = (["frame_hf_icbhi"] if args.icbhi_train else ["frame_hf_spr"]) if args.l020_control else ARMS
+    if args.lr_plateau and (not args.l020_control or args.icbhi_train):
+        raise ValueError("L024 requires L020 control and HF-only training")
+    uses_clip_objective = args.clip_aux or args.rhonchi_focus
+    if slow_training and (not args.l020_control or uses_clip_objective or args.icbhi_train
+                          or args.lr_plateau or (args.slow_lr and args.multiscale_temporal)):
+        raise ValueError("Select a single HF-only slow-learning experiment against L020")
+    if uses_clip_objective and (not args.l020_control or args.icbhi_train or args.lr_plateau
+                                or (args.clip_aux and args.rhonchi_focus)):
+        raise ValueError("Clip supervision requires a single HF-only experiment against L020")
+    arms = (["frame_delta_spr_rhonchi"] if args.spr_rhonchi_only else
+            ["frame_hf_temporal_delta"] if args.temporal_delta else
+            ["frame_hf_multiscale_tilt"] if args.spectral_tilt else
+            ["frame_hf_multiscale"] if args.multiscale_temporal else
+            ["frame_hf_slow_lr"] if args.slow_lr else
+            ["frame_hf_rhonchi_focus"] if args.rhonchi_focus else
+            ["frame_hf_clip_aux"] if args.clip_aux else
+            ["frame_hf_plateau"] if args.lr_plateau else
+            ["frame_hf_icbhi"] if args.icbhi_train else
+            ["frame_hf_spr"] if args.l020_control else ARMS)
     control = None
     if args.l020_control:
         reference = args.l020_control
@@ -107,16 +146,33 @@ def run(args):
     args.output.mkdir(parents=True, exist_ok=False)
     args._owns_output = True
     write(args.output / "protocol.json", {
-        "experiment": ("EXP-L023-frame-icbhi" if args.icbhi_train else
+        "experiment": ("EXP-L031-delta-spr-rhonchi" if args.spr_rhonchi_only else
+                       "EXP-L030-frame-temporal-delta" if args.temporal_delta else
+                       "EXP-L029-frame-multiscale-tilt" if args.spectral_tilt else
+                       "EXP-L028-frame-multiscale" if args.multiscale_temporal else
+                       "EXP-L027-frame-slow-lr" if args.slow_lr else
+                       "EXP-L026-trunc-rhonchi-focus" if args.rhonchi_focus else
+                       "EXP-L025-frame-clip-aux" if args.clip_aux else
+                       "EXP-L024-frame-lr-plateau" if args.lr_plateau else
+                       "EXP-L023-frame-icbhi" if args.icbhi_train else
                        "EXP-L021-frame-spr" if control else "EXP-L020-interval-data"),
         "arms": arms, "classes": CLASSES,
+        "temporal_dilations": [1, 16] if args.multiscale_temporal else [16],
+        "spectral_tilt_db": 8. if args.spectral_tilt else 0.,
+        "temporal_delta": args.temporal_delta,
+        "spr_rhonchi_only": args.spr_rhonchi_only,
+        "clip_auxiliary_weight": .5 if uses_clip_objective else None,
+        "rhonchi_focus": {"source": "trunc", "focal_gamma": 2} if args.rhonchi_focus else None,
+        "lr_plateau": ({"monitor": "inner_clip_ap", "factor": .5, "patience": 2,
+                        "min_delta": 0., "min_lr": 0.} if args.lr_plateau else None),
         "cycle_supervision": ({"source": "ICBHI official TRAIN, excluding test subjects",
                                "cycle_examples_per_step": 2, "weak_loss_multiplier": .8,
                                "pool": "max of complete physical frames", "rhonchi": "unknown",
                                "normalization": "HF fitting only"}
                               if args.icbhi_train else None),
         "control_sha256": digest(args.l020_control / "comparison.json") if control else None,
-        "seed": SEED, "batch_size": BATCH, "epochs_max": EPOCHS, "patience": PATIENCE,
+        "seed": SEED, "batch_size": BATCH, "epochs_min": args.min_epochs,
+        "epochs_max": epochs, "patience": PATIENCE,
         "checkpoint": "max inner macro clip average precision",
         "thresholds": "per-class max F1 on inner only, grid .05..95 step .025, ties lowest",
         "clip_frames": clip_frames, "clip_decision": "maximum over physical frames, complete clips only",
@@ -131,7 +187,7 @@ def run(args):
         "config": hf_config, "fit_groups": sorted(fit.group.unique()),
         "inner_groups": sorted(inner.group.unique()), "outer_groups": sorted(outer.group.unique()),
         "spr_fit_windows": len(additions), "spr_fit_groups": additions.group.nunique(),
-        "optimizer": {"type": "Adam", "lr": .001}, "dropout": .2, "dilation": 16,
+        "optimizer": {"type": "Adam", "lr": initial_lr}, "dropout": .2, "dilation": 16,
         "official_test": "sealed", "deployment_eligible": False,
     })
     print(f"GPU={tf.config.list_physical_devices('GPU')} HF fit={len(fit)} inner={len(inner)} "
@@ -183,16 +239,50 @@ def run(args):
         rows, weights, report = plan_supervision(cache, rows, indices, {
             "positive_weighting": "window_mass", "empty_training_windows": "keep",
         })
+        rhonchi_only = frozenset()
+        if args.spr_rhonchi_only:
+            # Add verified positive windows without changing HF-only normalization
+            # or class weights. Known rhonchi negatives within each window remain.
+            rhonchi = indices[CLASSES.index("rhonchi")]
+            selected = []
+            for row in additions.itertuples():
+                _, target, valid = load_block(spr_cache / row.file)
+                if np.any((target[:, rhonchi] > 0) & (valid[:, rhonchi] > 0)):
+                    selected.append(row.file)
+            rhonchi_only = frozenset(selected)
+            if not rhonchi_only:
+                raise ValueError("No eligible SPRSound rhonchi windows")
+            additional_rows = additions[additions.file.isin(rhonchi_only)]
+            rows = pd.concat([rows, additional_rows])
+            cache = spr_cache
+            report["spr_rhonchi_windows"] = len(additional_rows)
+            report["spr_rhonchi_groups"] = additional_rows.group.nunique()
+            print(f"Added {len(additional_rows)} SPRSound rhonchi windows", flush=True)
         write(folder / "objective.json", report)
         np.savez(folder / "normalization.npz", mean=mean, std=std)
         shape = load_block(cache / rows.iloc[0].file)[0].shape
         def dataset(root, items, training=False):
+            masks = None
+            if uses_clip_objective:
+                masks = dict(zip(items.file, physical_frames(items, args.hf_audit, hf_config, shape[0])))
+            focus = (frozenset(items.file[items.file.str.startswith("trunc_")])
+                     if args.rhonchi_focus else None)
             return build_dataset(root, items, mean, std, batch_size=BATCH, training=training,
-                                 seed=SEED, class_indices=indices)
+                                 seed=SEED, class_indices=indices, physical_masks=masks,
+                                 clip_focus_files=focus,
+                                 spectral_tilt_db=8. if args.spectral_tilt and training else 0.,
+                                 rhonchi_only_files=rhonchi_only if training else frozenset())
 
         model = build_model(shape, CLASSES, positive_weights=weights, temporal_dilation=16,
-                            loss_numerics="stable_bce")
+                            loss_numerics="stable_bce", learning_rate=initial_lr,
+                            multiscale_temporal=args.multiscale_temporal, temporal_delta=args.temporal_delta)
         training_data = dataset(cache, rows, training=True)
+        if uses_clip_objective:
+            from auriscore.lung_clip_loss import frame_and_clip_loss
+            focus_class = CLASSES.index("rhonchi") if args.rhonchi_focus else None
+            model.compile(optimizer=model.optimizer, loss=frame_and_clip_loss(
+                weights, clip_frames, shape[0], focus_class=focus_class
+            ))
         if arm == "frame_hf_icbhi":
             model.compile(optimizer=model.optimizer, loss=joint_loss(weights))
             weak_data = tf.data.Dataset.from_tensor_slices(
@@ -208,14 +298,19 @@ def run(args):
         if arm.startswith("interval_"):
             model.compile(optimizer=model.optimizer, loss=interval_loss(weights))
         inner_data = dataset(hf_cache, inner)
+        schedule = [tf.keras.callbacks.ReduceLROnPlateau(
+            monitor="inner_clip_ap", mode="max", factor=.5, patience=2,
+            min_delta=0., min_lr=0., verbose=1,
+        )] if args.lr_plateau else []
         history = model.fit(training_data, validation_data=inner_data,
-                            epochs=EPOCHS, verbose=2, callbacks=[
+                            epochs=epochs, verbose=2, callbacks=[
             InnerClipAP(inner_data),
+            *schedule,
             tf.keras.callbacks.CSVLogger(str(folder / "history.csv")),
             tf.keras.callbacks.ModelCheckpoint(str(folder / "best.weights.h5"),
                                                monitor="inner_clip_ap", mode="max",
                                                save_best_only=True, save_weights_only=True),
-            tf.keras.callbacks.EarlyStopping(monitor="inner_clip_ap", mode="max",
+            MinimumEpochEarlyStopping(monitor="inner_clip_ap", mode="max",
                                              patience=PATIENCE, restore_best_weights=True),
         ])
         model.load_weights(folder / "best.weights.h5")
@@ -255,6 +350,10 @@ def run(args):
             "macro_f1": candidate["macro_f1"] >= control["macro_f1"],
             "macro_accuracy": candidate["macro_accuracy"] >= .70,
             "macro_balanced_accuracy": candidate["macro_balanced_accuracy"] >= .70,
+            "per_label_accuracy_and_f1": {
+                name: metrics["accuracy"] >= .70 and metrics["f1"] >= .70
+                for name, metrics in candidate["metrics"].items()
+            },
             "wheeze": wheeze["f1"] >= .81 and wheeze["sensitivity"] >= .81 and wheeze["specificity"] >= .60,
             "rhonchi": rhonchi["f1"] >= .65 and rhonchi["precision"] >= .55 and rhonchi["sensitivity"] >= .75,
             "crackle": crackle["f1"] >= baseline_crackle["f1"]
@@ -272,6 +371,20 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--l020-control", type=Path, help="Run L021 against this completed L020 result directory")
     parser.add_argument("--icbhi-train", type=Path, help="Run L023 with a verified ICBHI TRAIN staging directory")
+    parser.add_argument("--lr-plateau", action="store_true", help="Run L024 with HF-only frame loss and LR decay")
+    parser.add_argument("--clip-aux", action="store_true", help="Run L025 with an auxiliary clip objective")
+    parser.add_argument("--rhonchi-focus", action="store_true", help="Run L026 with focal clip loss on trunc rhonchi")
+    parser.add_argument("--min-epochs", type=int, default=1,
+                        help="Minimum training epochs while selecting the best checkpoint from epoch one")
+    parser.add_argument("--slow-lr", action="store_true", help="Run L027 with Adam at 0.0003 from epoch one")
+    parser.add_argument("--multiscale-temporal", action="store_true",
+                        help="Run L028 with parallel short and long temporal convolutions")
+    parser.add_argument("--spectral-tilt", action="store_true",
+                        help="Run L029 with training-only +/-8 dB spectral-tilt augmentation")
+    parser.add_argument("--temporal-delta", action="store_true",
+                        help="Run L030 with aligned frame differences alongside log-mel")
+    parser.add_argument("--spr-rhonchi-only", action="store_true",
+                        help="Run L031 with audited positive SPRSound windows supervised only for rhonchi")
     parser.add_argument("--authorized-training", action="store_true")
     args = parser.parse_args()
     try:

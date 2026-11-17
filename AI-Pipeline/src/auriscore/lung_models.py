@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def build_model(shape, classes, *, temporal=True, learning_rate=.001, positive_weights=None, dropout=.2, temporal_dilation=1, weight_decay=0., bottleneck_channels=None, loss_numerics='legacy_clip'):
+def build_model(shape, classes, *, temporal=True, learning_rate=.001, positive_weights=None, dropout=.2, temporal_dilation=1, weight_decay=0., bottleneck_channels=None, loss_numerics='legacy_clip', multiscale_temporal=False, temporal_delta=False):
     """Time-preserving compact CNN; optional pooled window research baseline."""
     from .lung_training_policy import validate_dropout, model_dilation, model_bottleneck
     dropout = validate_dropout(dropout)
@@ -18,6 +18,12 @@ def build_model(shape, classes, *, temporal=True, learning_rate=.001, positive_w
         raise ValueError("Expected time/frequency dimensions and explicit classes")
     inputs = tf.keras.Input(shape=shape, name="lung_logmel")
     x = tf.keras.layers.Reshape((*shape, 1))(inputs)
+    if temporal_delta:
+        previous = tf.keras.layers.Cropping2D(cropping=((0, 1), (0, 0)))(x)
+        current = tf.keras.layers.Cropping2D(cropping=((1, 0), (0, 0)))(x)
+        delta = tf.keras.layers.Subtract()([current, previous])
+        delta = tf.keras.layers.ZeroPadding2D(padding=((1, 0), (0, 0)))(delta)
+        x = tf.keras.layers.Concatenate(name="logmel_with_delta")([x, delta])
     for width in (16, 32, 64):
         x = tf.keras.layers.Conv2D(width, (3, 3), padding="same", activation="relu")(x)
         x = tf.keras.layers.MaxPooling2D((1, 2))(x)
@@ -25,7 +31,14 @@ def build_model(shape, classes, *, temporal=True, learning_rate=.001, positive_w
     x = tf.keras.layers.Reshape((shape[0], int(x.shape[2]) * int(x.shape[3])))(x)
     if bottleneck_channels is not None:
         x = tf.keras.layers.Conv1D(bottleneck_channels, 1, padding='same', activation='relu', name='frequency_bottleneck')(x)
-    x = tf.keras.layers.Conv1D(64, 5, padding="same", dilation_rate=temporal_dilation, activation="relu")(x)
+    if multiscale_temporal:
+        short = tf.keras.layers.Conv1D(32, 5, padding="same", activation="relu",
+                                       name="temporal_local")(x)
+        long = tf.keras.layers.Conv1D(32, 5, padding="same", dilation_rate=temporal_dilation,
+                                      activation="relu", name="temporal_context")(x)
+        x = tf.keras.layers.Concatenate(name="temporal_multiscale")([short, long])
+    else:
+        x = tf.keras.layers.Conv1D(64, 5, padding="same", dilation_rate=temporal_dilation, activation="relu")(x)
     x = tf.keras.layers.Dropout(dropout)(x)
     if not temporal:
         x = tf.keras.layers.GlobalAveragePooling1D()(x)

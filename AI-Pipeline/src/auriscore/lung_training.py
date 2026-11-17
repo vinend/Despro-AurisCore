@@ -58,7 +58,11 @@ INPUT_PIPELINE_VERSION = "lung-cache-dataset-v2"
 
 def build_dataset(cache: str | Path, rows: pd.DataFrame, mean: np.ndarray,
                   std: np.ndarray, *, batch_size: int, training: bool,
-                  seed: int, class_indices: list[int] | None = None, frequency_mask: int = 0) -> Any:
+                  seed: int, class_indices: list[int] | None = None, frequency_mask: int = 0,
+                  physical_masks: dict[str, np.ndarray] | None = None,
+                  clip_focus_files: frozenset[str] | None = None,
+                  spectral_tilt_db: float = 0.,
+                  rhonchi_only_files: frozenset[str] = frozenset()) -> Any:
     """Stream aligned cache blocks with known batch count and TRAIN-only shuffling.
 
     Shuffle filenames before loading tensors so a full permutation costs only
@@ -84,6 +88,8 @@ def build_dataset(cache: str | Path, rows: pd.DataFrame, mean: np.ndarray,
     if (type(frequency_mask) is not int or not 0 <= frequency_mask <= features.shape[1]
             or (not training and frequency_mask)):
         raise ValueError("Frequency masking is TRAIN-only and must fit the feature band")
+    if not np.isfinite(spectral_tilt_db) or not 0 <= spectral_tilt_db <= 12 or (spectral_tilt_db and not training):
+        raise ValueError("Spectral tilt must be TRAIN-only and bounded to 12 dB")
     indices = list(range(truth.shape[1])) if class_indices is None else class_indices
     if (not indices or any(type(i) is not int or not 0 <= i < truth.shape[1] for i in indices)
             or indices != sorted(set(indices))):
@@ -94,15 +100,34 @@ def build_dataset(cache: str | Path, rows: pd.DataFrame, mean: np.ndarray,
         dataset = dataset.shuffle(len(names), seed=seed, reshuffle_each_iteration=True)
 
     def load(name):
-        x, y, mask = load_block(cache / name.decode("utf-8"))
+        name = name.decode("utf-8")
+        x, y, mask = load_block(cache / name)
         if x.shape != feature_shape or y.shape != target_shape:
             raise ValueError("Inconsistent Lung cache geometry")
-        return np.clip((x - mean) / std, -5, 5), np.concatenate([y[:, indices], mask[:, indices]], axis=-1)
+        if name in rhonchi_only_files:
+            if not training or class_indices is None or len(indices) != 3:
+                raise ValueError("Rhonchi-only source rows require three-class fitting")
+            mask[:, [indices[0], indices[2]]] = 0
+        pieces = [y[:, indices], mask[:, indices]]
+        if physical_masks is not None:
+            pieces.append(physical_masks[name][:, None].astype(np.float32))
+        if clip_focus_files is not None:
+            pieces.append(np.full((feature_shape[0], 1), name in clip_focus_files, np.float32))
+        if not spectral_tilt_db:
+            x = np.clip((x - mean) / std, -5, 5)
+        return x, np.concatenate(pieces, axis=-1)
 
     def map_block(position, name):
         x, packed = tf.numpy_function(load, [name], [tf.float32, tf.float32])
         x.set_shape(feature_shape)
-        packed.set_shape((*target_shape[:-1], len(indices) * 2))
+        packed.set_shape((*target_shape[:-1], len(indices) * 2 + int(physical_masks is not None)
+                          + int(clip_focus_files is not None)))
+        if spectral_tilt_db:
+            # One smooth response curve per window, chosen by the shuffled position.
+            seeds = tf.stack([tf.cast(seed, tf.int32) + 1, tf.cast(position, tf.int32)])
+            slope = tf.random.stateless_uniform((), seeds, minval=-spectral_tilt_db, maxval=spectral_tilt_db)
+            x += slope * tf.linspace(-.5, .5, feature_shape[1])[None, :]
+            x = tf.clip_by_value((x - mean) / std, -5., 5.)
         if frequency_mask:
             # Shuffle changes which recording receives each stateless mask across epochs.
             seeds = tf.stack([tf.cast(seed, tf.int32), tf.cast(position, tf.int32)])

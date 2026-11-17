@@ -61,6 +61,39 @@ arbitrarily adding files will resolve L006's errors.
 
 ## Current action
 
+### Rhonchi source follow-up (2026-11-17)
+
+The L020–L028 common HF split has concentrated `trunc` rhonchi supervision
+under the same complete-clip scoring rules. One fitting date group contributes
+2,474 of 2,480 positive fitting clips. The other positive fitting group
+contributes six. All 42 inner-validation positives come from one date group,
+as do all 247 positives in the separate development set. These are overlapping
+clips and the date groups do not establish patient identity. Treat source
+metrics as observations about these cohorts. Prioritize additional independent
+positive groups and preserve split membership when acquiring them. Upweighting
+the existing dominant group cannot increase cohort coverage.
+
+- [AI-Hub chest auscultation, dataset 71474](https://aihub.or.kr/aihubdata/data/view.do?dataSetSn=71474)
+  lists only ten rhonchi recordings in its distribution and requires download
+  approval. An [associated study](https://pmc.ncbi.nlm.nih.gov/articles/PMC12346898/)
+  gives a conflicting class distribution. Do not estimate usable rhonchi support
+  or map numeric labels without reconciling the actual annotation export.
+- [HF Lung incremental package](https://gitlab.com/techsupportHF/HF_Lung_V1_IP)
+  is the closest acquisition match. The [authors' data availability statement](https://www.mdpi.com/2076-3417/12/15/7623)
+  makes the audio available but requires a direct request for proprietary
+  annotations. No fitting input added. If access is obtained, first verify actual
+  rhonchi support, original split roles and overlap with HF V1 by subject and audio.
+- [SPRSound release roles](https://github.com/SJTU-YONGFU-RESEARCH-GRP/SPRSound#dataset-versions)
+  identify the later additions as challenge test sets. Preserve their test roles.
+- [HLS-CMDS data record](https://data.mendeley.com/datasets/8972jxbpmp/3)
+  documents a CC BY 4.0 manikin dataset with recording-level labels. An audit
+  of the authors' GitHub `Dataset.v2` lung-only archive at
+  `ad9a5b08c05f31a61096fec4ab4fde6b0ff1f45c` matched 36 of 50 metadata IDs
+  to audio, including eight rhonchi files. Fourteen metadata IDs and 14 WAV IDs
+  did not match by filename. The recordings come from a manikin and supply no
+  independent patient groups. Keep outside fitting pending a specifically
+  designed simulator experiment and verified metadata mapping.
+
 L007–L011 remain controlled HF-only probes. Following explicit authorization,
 SPRSound 2022 TRAIN acquisition/mapping is implemented in a separate L012 pilot:
 585 quality-eligible recordings / 85 test-disjoint patient IDs add 2,181 windows.

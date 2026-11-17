@@ -1,5 +1,59 @@
 # AI_PIPELINE.md
 
+L031 tests adding audited SPRSound TRAIN windows that have a confirmed
+rhonchi-positive frame to L030. The added windows supervise rhonchi only,
+with original known negatives retained for that class. HF-only statistics
+and loss weights, the L030 model and optimizer, and the 15–25 epoch budget
+remain the control settings. Checkpoint selection is on inner HF groups and
+evaluation is on the same development clips. Official test remains sealed.
+
+L030 tests signed changes between successive normalized log-mel frames as a
+second input channel, with a zero delta for the first frame. It holds L027's
+HF split, frame loss, dilation, optimizer, 15–25 epoch budget, and selection
+rules fixed. Static log-mel values remain available to the model. L029
+improved crackle versus L028 but reduced rhonchi F1, so L030 starts from the
+unaugmented L027 setup. Official test remains sealed.
+
+L029 compares training-only spectral tilt against L028 with the same
+architecture, HF split, 15–25 epoch budget and selection rules. It adds a
+smooth log-mel band slope sampled uniformly from -8 to +8 dB per window
+before existing fit normalization. The range covers the order of magnitude
+of the observed source difference in annotated rhonchi-negative fitting
+frames. Evaluation inputs and the official test role are unchanged.
+
+L028 is prepared as an opt-in follow-up to L027. The 64-channel dilated
+temporal convolution is replaced by two 32-channel branches, one local and
+one with the existing dilation of 16. Parameter count and frame output
+geometry are unchanged. This tests whether short transients benefit from
+contiguous context while sustained sounds retain longer context. Use L027's
+HF groups, fixed learning rate, 15–25 epoch budget, and inner checkpoint and
+threshold rules. Compare to L027 and L020 on the same development population.
+The official test stays sealed.
+
+L027 tests Adam at 0.0003 from epoch one on the L020 HF frame-loss setup.
+It trains for at least 15 and at most 25 epochs, tracking the best inner
+macro clip average precision from epoch one. This differs from L024,
+which reduced the rate only after its eventual best checkpoint.
+
+L026 retains the L020 HF frame loss and adds a 0.5-weight focal clip loss
+(gamma 2) only on annotated rhonchi clips from trunc recordings. L025's
+broad clip loss reduced trunc rhonchi false positives from 895 to 657
+but also reduced true positives from 65 to 30. The focused loss weights
+both hard positives and hard negatives. Same HF split, thresholds and
+evaluation procedure as L020, with the official test sealed.
+
+L025 tests an auxiliary clip BCE term (weight 0.5) alongside the unchanged
+HF frame loss. The clip target and physical-frame rules match the L020
+evaluation reducer. HF data, split, optimizer, checkpoint and threshold
+selection match L020. Development reporting checks accuracy and F1 at
+0.70 independently for all three labels. Official test remains sealed.
+
+L024 compares HF-only L020 frame training with an Adam learning-rate
+reduction on plateau. It halves the rate after two epochs without an
+increase in inner-group macro clip average precision. Checkpoint,
+threshold, and development evaluation rules are inherited from L020.
+Official test remains sealed.
+
 L022 evaluates recall-constrained thresholds on the frozen L020 checkpoint.
 L023 compares L020 frame supervision against the same HF fitting split with
 auxiliary ICBHI TRAIN cycle supervision. Both keep the official test sealed.
