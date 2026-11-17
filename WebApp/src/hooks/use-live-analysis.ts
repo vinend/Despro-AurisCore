@@ -5,7 +5,7 @@ import { parseOrganAnalysisResult, type AnalysisMode, type OrganAnalysisResult }
 import { LivePcmWindow } from "@/lib/auriscore/live-analysis";
 
 type LiveResult = { result: OrganAnalysisResult; startSample: number; endSample: number; elapsedMs: number };
-export function useLiveAnalysis(stream: PcgStream, mode: AnalysisMode, enabled: boolean) {
+export function useLiveAnalysis(stream: PcgStream, mode: AnalysisMode, enabled: boolean, operatorToken?: string) {
   const [latest, setLatest] = useState<LiveResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inFlight = useRef(false);
@@ -45,7 +45,8 @@ export function useLiveAnalysis(stream: PcgStream, mode: AnalysisMode, enabled: 
         try {
           const response = await fetch(`/api/analysis/live?mode=${mode}`, {
             method: "POST", headers: { "Content-Type": "application/octet-stream",
-              "X-AurisCore-Start-Sample": String(next.startSample) }, body: next.pcm,
+              "X-AurisCore-Start-Sample": String(next.startSample),
+              ...(operatorToken ? { "X-AurisCore-Operator-Token": operatorToken } : {}) }, body: next.pcm,
           });
           if (response.status === 429) return; // Shared worker is busy; don't queue stale audio.
           if (!response.ok) throw new Error("Analisis langsung belum tersedia.");
@@ -78,6 +79,6 @@ export function useLiveAnalysis(stream: PcgStream, mode: AnalysisMode, enabled: 
       offPacket();
       offConnection();
     };
-  }, [mode, enabled, isConnected, subscribePacket, subscribeConnection]);
+  }, [mode, enabled, isConnected, subscribePacket, subscribeConnection, operatorToken]);
   return { latest: enabled && isConnected && latest?.result.mode === mode ? latest : null, error };
 }

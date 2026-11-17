@@ -1,14 +1,15 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { PcgStream } from "./use-pcg-stream";
 import type { AnalysisMode } from "@/lib/auriscore/analysis-result";
 import { HttpOrganAnalysisService } from "@/lib/auriscore/organ-analysis-service";
 import { RecordingSession, recordingDurationMs } from "@/lib/auriscore/recording-session";
 export { RECORD_DURATION_MS } from "@/lib/auriscore/recording-session";
 export type { RecordingPhase, HistoryEntry } from "@/lib/auriscore/recording-session";
-const service = new HttpOrganAnalysisService();
-export function useRecording(stream: PcgStream, mode: AnalysisMode) {
-  const [session] = useState(() => new RecordingSession(service));
+export function useRecording(stream: PcgStream, mode: AnalysisMode, operatorToken = "") {
+  const token = useRef(operatorToken);
+  useEffect(() => { token.current = operatorToken; }, [operatorToken]);
+  const [session] = useState(() => new RecordingSession(new HttpOrganAnalysisService(fetch, () => token.current)));
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { subscribePacket, subscribeConnection } = stream;
   useEffect(() => {

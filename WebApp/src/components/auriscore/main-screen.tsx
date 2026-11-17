@@ -37,7 +37,8 @@ export function MainScreen() {
   const stream = usePcgStream(settings, connectionAttempt);
   const signalMetrics = useSignalMeter(stream);
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("heart");
-  const recording = useRecording(stream, analysisMode);
+  const operatorToken = process.env.NEXT_PUBLIC_AURISCORE_CLOUD === "1" ? settings.token : undefined;
+  const recording = useRecording(stream, analysisMode, operatorToken);
   useEffect(() => {
     if (stream.isConnected) stream.setIndicator?.(analysisMode, recording.phase);
   }, [stream.isConnected, stream.setIndicator, analysisMode, recording.phase]);
@@ -46,7 +47,7 @@ export function MainScreen() {
   const busy = recordingBusy;
   const [liveEnabled, setLiveEnabled] = useState(false);
   const livePaused = recording.phase === "processing";
-  const live = useLiveAnalysis(stream, analysisMode, liveEnabled && !livePaused);
+  const live = useLiveAnalysis(stream, analysisMode, liveEnabled && !livePaused, operatorToken);
 
   const organModes: { id: AnalysisMode; label: string; icon: typeof HeartPulse; desc: string }[] = [
     { id: "heart", label: "Heart", icon: HeartPulse, desc: "Jantung & PCG" },

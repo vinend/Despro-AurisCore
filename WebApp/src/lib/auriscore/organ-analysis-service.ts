@@ -6,14 +6,16 @@ export interface OrganAnalysisService {
   analyze(file: File, mode: AnalysisMode, signal?: AbortSignal): Promise<OrganAnalysisResult>;
 }
 export class HttpOrganAnalysisService implements OrganAnalysisService {
-  constructor(private readonly request: typeof fetch = fetch) {}
+  constructor(private readonly request: typeof fetch = fetch, private readonly getOperatorToken = () => "") {}
   async analyze(file: File, mode: AnalysisMode, signal?: AbortSignal): Promise<OrganAnalysisResult> {
     const error = validateHeartFile(file);
     if (error) throw new Error(error);
     const form = new FormData();
     form.set("audio", file);
     form.set("mode", mode);
-    const response = await this.request.call(globalThis, "/api/analysis", { method: "POST", body: form, signal });
+    const token = this.getOperatorToken();
+    const response = await this.request.call(globalThis, "/api/analysis", { method: "POST", body: form, signal,
+      headers: token ? { "X-AurisCore-Operator-Token": token } : undefined });
     const body: unknown = await response.json();
     if (typeof body === "object" && body !== null && "schema_version" in body)
       return parseOrganAnalysisResult(body, mode);

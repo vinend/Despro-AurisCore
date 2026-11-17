@@ -1,6 +1,7 @@
 import { AnalysisPythonError, getAnalysisWorker } from "./analysis-python.server.ts";
 import type { AnalysisMode, OrganAnalysisResult } from "./analysis-result.ts";
 import { LIVE_WINDOW_SAMPLES } from "./live-analysis.ts";
+import { analyzeInCloud, cloudAnalysisEnabled, cloudOperatorAuthorized } from "./cloud-analysis.server.ts";
 
 type Analyze = (samples: number[], mode: AnalysisMode, signal: AbortSignal) => Promise<OrganAnalysisResult>;
 export function createLiveAnalysisHandler(
@@ -8,6 +9,8 @@ export function createLiveAnalysisHandler(
 ) {
   return async (request: Request) => {
     const fail = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
+    const cloud = cloudAnalysisEnabled();
+    if (cloud && !cloudOperatorAuthorized(request)) return fail("Kode pairing operator diperlukan.", 401);
     const mode = new URL(request.url).searchParams.get("mode");
     if (mode !== "heart" && mode !== "lung" && mode !== "abdomen") return fail("Mode analisis tidak valid.", 400);
     if (request.headers.get("content-type") !== "application/octet-stream") return fail("Gunakan PCM16 little-endian.", 415);
@@ -30,11 +33,11 @@ export function createLiveAnalysisHandler(
       }
     } catch { return fail("Audio tidak dapat dibaca.", 400); }
     if (offset !== expected) return fail("Jendela PCM belum lengkap.", 400);
-    const view = new DataView(bytes.buffer);
-    const samples = Array.from({ length: expected / 2 }, (_, i) => view.getInt16(i * 2, true));
     try {
-      const result = await analyze(samples, mode, request.signal);
-      return Response.json({ startSample, endSample: startSample + samples.length, result }, {
+      const view = new DataView(bytes.buffer);
+      const result = cloud ? await analyzeInCloud(bytes, "pcm", mode, request.signal)
+        : await analyze(Array.from({ length: expected / 2 }, (_, i) => view.getInt16(i * 2, true)), mode, request.signal);
+      return Response.json({ startSample, endSample: startSample + expected / 2, result }, {
         headers: { "Cache-Control": "no-store" },
       });
     } catch (error) {

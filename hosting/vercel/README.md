@@ -1,0 +1,103 @@
+# AurisCore Vercel engineering deployment
+
+The ESP32 opens a TLS WebSocket to the WebApp. The browser pairs over a second
+WebSocket. The gateway relays unmodified v2 PCM16 frames and capture controls
+through Redis Pub/Sub. The browser sends live PCM windows or recorded WAV to
+the same-origin analysis API, which forwards them to a dedicated Vercel Python
+Function. Session history stays in the browser. Redis stores only short-lived
+connection leases. Audio is published without replay or server-side recording.
+
+Use synthetic audio for this engineering deployment. Public-cloud handling of
+patient recordings requires a separately approved design.
+
+## Provision the Vercel projects
+
+1. Create a FastAPI project for analysis. From the repository root, with the
+   pinned `librosa` version from `hosting/requirements.txt` installed, run
+   `python scripts/prepare_vercel_inference.py`. Deploy the resulting
+   `.runtime/vercel-inference` directory as that project's root, for example by
+   running `vercel` inside it. To regenerate, first move the previous staging
+   directory aside. The script stages the tracked L030 assets and runtime
+   sources without datasets or experiment outputs beyond those model assets.
+   It also stages the import stubs that librosa needs at runtime and Vercel
+   strips from installed dependencies. Use `--output` to stage in a fresh directory.
+2. Enable Fluid Compute and Active CPU on the Python project. Set
+   `VERCEL_SUPPORT_LARGE_FUNCTIONS=1` for the TensorFlow dependencies and
+   `AURISCORE_LUNG_ENGINEERING_L030=1` to select the staged Lung model. Set
+   `AURISCORE_INFERENCE_TOKEN` to a fresh secret. Leave
+   `VERCEL_ANALYZE_BUILD_OUTPUT` disabled on the actual TensorFlow deployment.
+   The size diagnostic applies the standard limit and can fail an otherwise
+   eligible Large Functions build. Verify that the deployed model cold-starts
+   within the configured 60-second function duration.
+3. Create a Next.js project with `WebApp` as its root and Fluid Compute
+   enabled. Use a native TLS Redis service reachable from Vercel that supports
+   `SUBSCRIBE`, `PUBLISH`, and Lua `EVAL`. Place Redis and the gateway in the
+   same region. Use a dedicated Redis database or a distinct namespace per
+   deployment; the gateway supports one active device and one browser per
+   namespace. Set the following before building this project.
+
+| WebApp variable | Value |
+| --- | --- |
+| `NEXT_PUBLIC_AURISCORE_CLOUD` | `1`, selects the cloud gateway and supplies the operator credential on analysis calls |
+| `AURISCORE_CLOUD_ANALYSIS` | `1`, selects HTTP inference |
+| `AURISCORE_REDIS_URL` | Native `rediss://` connection string |
+| `AURISCORE_CLOUD_NAMESPACE` | Unique letters, digits, underscores or hyphens |
+| `AURISCORE_BROWSER_ORIGIN` | Exact HTTPS origin of this WebApp, without a trailing slash |
+| `AURISCORE_DEVICE_TOKEN` | Device-only secret entered during ESP32 setup |
+| `AURISCORE_OPERATOR_TOKEN` | Separate secret entered into the browser pairing form |
+| `AURISCORE_INFERENCE_URL` | Base HTTPS URL of the Python project |
+| `AURISCORE_INFERENCE_TOKEN` | The same server-to-server secret configured on the Python project |
+
+Generate different random secrets for each role, for example 32 random bytes
+encoded as hex. Set them as server-side project variables. The ESP32 needs an
+HTTPS hostname whose deployment protection allows the WSS upgrade before
+application pairing. The WebApp needs to be able to reach Python before
+application bearer authentication. Configure Vercel deployment protection
+accordingly for these engineering endpoints.
+
+The staged service provides Heart DSP and the opt-in L030 Lung engineering
+model. L030 reports wheeze, rhonchi, and crackle clip candidates. Abdomen and
+Heart Murmur require their separately provisioned approved model packages or
+an explicit engineering manifest. Those assets are outside the default stage.
+The analysis responses retain the existing organ schemas.
+
+## Prepare the ESP32
+
+Use the ESP32 3.3.12 core and Arduino WebSockets 2.7.2. Obtain the public root CA
+certificate for the actual gateway hostname from its CA and save it as a PEM
+file. From the repository root, run:
+
+```powershell
+.\scripts\build_wifi_firmware.ps1 -CloudRootCa C:\path\to\gateway-roots.pem
+```
+
+Flash the resulting cloud build using the ESP32 board settings in the firmware
+guide. In the ESP32 setup portal, enter `wss://your-webapp.example` as the
+gateway and enter the device token. The firmware obtains time via SNTP and
+validates the server certificate before sending the pairing token. It connects
+to port 443 at `/api/gateway/device`. The same build accepts a plain LAN host
+for the existing port 8082 and `/device` path, using the separate LAN token.
+
+Open the HTTPS WebApp and enter the operator token. The page uses
+`/api/gateway/browser` and starts capture when the device announces itself.
+The Redis relay is live-only. Dropped audio invalidates the current capture.
+WebSocket lifetimes are bounded by the Vercel function duration. A reconnect
+starts a new capture, including after a deploy. Cloud multipart WAV uploads
+have a 4 MiB audio limit.
+
+## Acceptance
+
+- Run `npm run typecheck` and `npm run test:analysis` in `WebApp` with the
+  existing `AURISCORE_PYTHON` configured. Set `AURISCORE_TEST_REDIS_URL` to an
+  isolated Redis instance to include the two-listener gateway integration test.
+- Verify with the physical ESP32 and browser on different networks. Pair each
+  with its own credential, record at least 30 seconds of synthetic Lung audio,
+  and confirm a versioned L030 result for both live PCM and recorded WAV.
+- Repeat with invalid credentials, a second browser, a wrong trust root, a
+  device power cycle and a gateway reconnect. Confirm that a gap discards the
+  interrupted window and that a new capture works.
+- Measure cold and warm inference latency and Redis command usage during capture.
+
+Platform references: [WebSockets on Vercel](https://vercel.com/kb/guide/real-time-chat-websockets),
+[Python runtime](https://vercel.com/docs/functions/runtimes/python),
+and [Large Functions](https://vercel.com/docs/functions/limitations#large-functions).

@@ -13,7 +13,10 @@ export interface StreamSettings {
 // Location is an external browser value. The empty server snapshot keeps
 // hydration consistent before React reads the actual LAN host on the client.
 const subscribeLocation = () => () => {};
-const readGatewayUrl = () => defaultGatewayUrl(window.location);
+const cloud = process.env.NEXT_PUBLIC_AURISCORE_CLOUD === "1";
+const readGatewayUrl = () => cloud
+  ? `wss://${window.location.host}/api/gateway/browser`
+  : defaultGatewayUrl(window.location);
 const serverGatewayUrl = () => "";
 
 /** Physical-device controls; simulator adapters remain in engineering tooling. */
@@ -38,11 +41,11 @@ export function DeviceConnect({ disabled, connected, onConnect, onDisconnect }: 
         const gateway = url.trim();
         try {
           const parsed = new URL(gateway);
-          if (!["ws:", "wss:"].includes(parsed.protocol) || parsed.pathname !== "/browser"
+          if (!["ws:", "wss:"].includes(parsed.protocol) || !["/browser", "/api/gateway/browser"].includes(parsed.pathname)
             || parsed.username || parsed.password || parsed.search || parsed.hash
-            || (window.location.protocol === "https:" && parsed.protocol !== "wss:")) throw Error();
+            || ((window.location.protocol === "https:" || parsed.pathname === "/api/gateway/browser") && parsed.protocol !== "wss:")) throw Error();
         } catch {
-          setError("Gunakan URL gateway /browser dengan ws:// atau wss:// yang sesuai.");
+          setError("Gunakan URL endpoint browser untuk gateway lokal atau cloud.");
           return;
         }
         if (token.trim().length < 16) {
@@ -55,7 +58,7 @@ export function DeviceConnect({ disabled, connected, onConnect, onDisconnect }: 
           <Wifi className="w-5 h-5 text-emerald-700 shrink-0" />
           <div>
             <h2 className="text-xs font-semibold text-emerald-950 uppercase tracking-wider">Perangkat ESP32</h2>
-            <p className="text-xs text-muted-foreground">Audio alat melalui gateway laptop · HP dan laptop pada Wi-Fi yang sama.</p>
+            <p className="text-xs text-muted-foreground">{cloud ? "Audio alat melalui gateway cloud · HP dan alat memerlukan akses internet." : "Audio alat melalui gateway laptop · HP dan laptop pada Wi-Fi yang sama."}</p>
           </div>
         </div>
         <details className="rounded-lg border border-border bg-background p-3 text-sm">

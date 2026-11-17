@@ -197,3 +197,13 @@ labels sealed through selection. Reuse the existing worker/envelope, require
 hash-bound approved final packages, capture Lung for 30 seconds and return null
 respiratory measurements without three complete unambiguous cycles. No disease
 classifier is introduced. See AI-Pipeline/docs/lung_training.md.
+
+## ADR-012 — Optional Vercel engineering capture
+
+The user requested an Internet-reachable WebApp with ESP32 capture and cloud
+analysis. Use Vercel WSS endpoints and Redis Pub/Sub to carry existing v2 frames
+across Function instances. A separate Python Function shares the local analysis
+backend factory. Cloud sessions require TLS, scoped credentials, and a new
+capture after a transport interruption. This path is for synthetic engineering
+audio. No validated model, clinical claim, data split, or offline product
+requirement changes. See [the deployment runbook](hosting/vercel/README.md).

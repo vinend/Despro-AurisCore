@@ -4,6 +4,8 @@
 #include <DNSServer.h>
 #include <functional>
 
+inline bool validGatewayAddress(const String &address);
+
 class WifiSetupPortal {
   WebServer server{80}; DNSServer dns;
   bool active=false, handlers=false;
@@ -41,7 +43,7 @@ class WifiSetupPortal {
       "<label>Jenis jaringan<select name='kind'><option value='wifi'>Wi-Fi router</option><option value='hotspot'>Hotspot HP / data seluler</option></select></label>"
       "<label>Alamat server / gateway<input name='host' maxlength='253' required autocapitalize='none' value='");
     html+=escape(initialHost);
-    html+=F("'></label><small>Untuk uji lokal: IP Wi-Fi laptop, tanpa http:// atau nomor port. Setelah server di-host, gunakan alamat yang disepakati.</small>"
+    html+=F("'></label><small>Lokal: IP laptop. Cloud: wss://nama-domain, tanpa path atau nomor port.</small>"
       "<label>Kode pairing server<input name='token' type='password' maxlength='128' autocomplete='off'></label>"
       "<small>Kosongkan untuk mempertahankan pairing yang sudah tersimpan. Perangkat baru memerlukan kode pairing dari server.</small>"
       "<button>Simpan dan sambungkan</button></form>"
@@ -56,8 +58,8 @@ class WifiSetupPortal {
       server.send(403,"text/plain","Invalid setup session. Open http://192.168.4.1/setup again."); return;
     }
     String ssid=server.arg("ssid"), password=server.arg("password"), host=server.arg("host"), token=server.arg("token"), kind=server.arg("kind");
-    if(!ssid.length() || ssid.length()>32 || password.length()>63 || !host.length() || host.length()>253 ||
-       strpbrk(host.c_str(),"/:?@# \t\r\n") || token.length()>128 || (token.length()>0 && token.length()<16) ||
+    if(!ssid.length() || ssid.length()>32 || password.length()>63 || !validGatewayAddress(host) ||
+       token.length()>128 || (token.length()>0 && token.length()<16) ||
        (kind!="wifi" && kind!="hotspot")) {
       server.send(400,"text/plain","Pengaturan tidak valid. Periksa panjang nama, password, pairing dan alamat server."); return;
     }
@@ -107,3 +109,22 @@ public:
   }
   bool running()const {return active;}
 };
+// The cloud endpoint uses a fixed path and port. Provision only its DNS name.
+inline bool validGatewayAddress(const String &address) {
+  const bool cloud = address.startsWith("wss://");
+  const char *name = address.c_str() + (cloud ? 6 : 0);
+  if (!*name || address.length() > 253) return false;
+  if (!cloud) return !strpbrk(name, "/:?@# \t\r\n");
+  bool dot = false, label = false;
+  for (const char *p = name; *p; ++p) {
+    if (*p == '.') {
+      if (!label || p[-1] == '-') return false;
+      dot = true; label = false;
+    } else {
+      const bool alphanumeric = (*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || (*p >= '0' && *p <= '9');
+      if (!alphanumeric && (*p != '-' || !label)) return false;
+      label = true;
+    }
+  }
+  return dot && label && address[address.length() - 1] != '-';
+}

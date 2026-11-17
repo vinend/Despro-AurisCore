@@ -1,15 +1,20 @@
 import { MAX_HEART_WAV_BYTES } from "./heart-analysis-service.ts";
 import { AnalysisPythonError, getAnalysisWorker } from "./analysis-python.server.ts";
 import type { AnalysisMode, OrganAnalysisResult } from "./analysis-result.ts";
+import { analyzeInCloud, CLOUD_WAV_BYTES, cloudAnalysisEnabled, cloudOperatorAuthorized } from "./cloud-analysis.server.ts";
 
 type Analyzer = (wav: Buffer, mode: AnalysisMode, signal?: AbortSignal) => Promise<OrganAnalysisResult>;
 export function createAnalysisHandler(fixedMode?: AnalysisMode, legacyHeart = false,
   analyze: Analyzer = (wav, mode, signal) => getAnalysisWorker().analyze(wav, mode, signal)) {
   return async (request: Request): Promise<Response> => {
     const failure = (error: string, status: number) => Response.json({ error }, { status });
-    const maxBody = MAX_HEART_WAV_BYTES + 64 * 1024;
+    const cloud = cloudAnalysisEnabled();
+    if (cloud && !cloudOperatorAuthorized(request)) return failure("Kode pairing operator diperlukan.", 401);
+    const maxWav = cloud ? CLOUD_WAV_BYTES : MAX_HEART_WAV_BYTES;
+    const maxBody = maxWav + 64 * 1024;
+    const tooLarge = () => failure(`Berkas WAV terlalu besar (maksimum ${maxWav / 1024 ** 2} MB).`, 413);
     const size = Number(request.headers.get("content-length"));
-    if (size > maxBody) return failure("Berkas WAV terlalu besar (maksimum 16 MB).", 413);
+    if (size > maxBody) return tooLarge();
     let form: FormData;
     try {
       const reader = request.body?.getReader();
@@ -20,7 +25,7 @@ export function createAnalysisHandler(fixedMode?: AnalysisMode, legacyHeart = fa
         const part = await reader.read();
         if (part.done) break;
         bytes += part.value.byteLength;
-        if (bytes > maxBody) { await reader.cancel(); return failure("Berkas WAV terlalu besar (maksimum 16 MB).", 413); }
+        if (bytes > maxBody) { await reader.cancel(); return tooLarge(); }
         parts.push(new Uint8Array(part.value));
       }
       form = await new Response(new Blob(parts), { headers: { "Content-Type": request.headers.get("content-type") ?? "" } }).formData();
@@ -33,12 +38,12 @@ export function createAnalysisHandler(fixedMode?: AnalysisMode, legacyHeart = fa
     if (!(file instanceof File)) return failure("Pilih berkas WAV terlebih dahulu.", 400);
     if (!file.name.toLowerCase().endsWith(".wav")) return failure("Pilih berkas .wav.", 415);
     if (!file.size) return failure("Berkas WAV kosong.", 400);
-    if (file.size > MAX_HEART_WAV_BYTES) return failure("Berkas WAV terlalu besar (maksimum 16 MB).", 413);
+    if (file.size > maxWav) return tooLarge();
     const wav = Buffer.from(await file.arrayBuffer());
     if (wav.length < 12 || wav.toString("ascii", 0, 4) !== "RIFF" || wav.toString("ascii", 8, 12) !== "WAVE")
       return failure("Format WAV RIFF tidak didukung atau berkas rusak.", 415);
     try {
-      const result = await analyze(wav, mode, request.signal);
+      const result = cloud ? await analyzeInCloud(wav, "wav", mode, request.signal) : await analyze(wav, mode, request.signal);
       if (legacyHeart) {
         if (result.mode !== "heart") return failure("Respons mode analisis tidak sesuai.", 502);
         if (result.analysis) return Response.json(result.analysis);

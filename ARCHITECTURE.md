@@ -1,5 +1,12 @@
 # ARCHITECTURE.md
 
+The optional Vercel engineering path uses separate ESP32 and browser WSS
+connections to Next.js Functions. Redis Pub/Sub joins connections across
+Function instances. The browser assembles the existing analysis windows and
+the Next.js API forwards authorized requests to a Python Function running the
+shared analysis service. The LAN gateway and retained Python worker remain
+available for offline engineering use. See [the runbook](hosting/vercel/README.md).
+
 2026-11-16 update: the new S3 passes the isolated Wi-Fi/gateway test with default
 brownout protection. Historical reset failures below describe earlier boards/tests.
 The main workspace remains the user-facing application. Wi-Fi configuration runs

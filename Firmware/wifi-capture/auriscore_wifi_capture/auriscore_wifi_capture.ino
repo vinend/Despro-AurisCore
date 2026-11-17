@@ -1,4 +1,4 @@
-/* Local Wi-Fi engineering capture. Original USB-v4 sketch remains unchanged.
+/* Local or cloud Wi-Fi engineering capture. Original USB-v4 sketch remains unchanged.
  * INMP441 stereo wiring: BCLK16 WS18 SD17; organ slot0, noise slot1.
  * Publishes ONLY organ PCM16 8kHz v2. No ANC, ECG forwarding or diagnosis.
  * Provision credentials over USB once; USB never carries audio in this sketch.
@@ -7,6 +7,7 @@
 #include <WiFi.h>
 #include <Preferences.h>
 #include <WebSocketsClient.h>
+#include <time.h>
 #include <driver/i2s.h>
 #include <esp_timer.h>
 #include <esp_system.h>
@@ -22,6 +23,10 @@
 #include "audio_codec.h"
 #include "status_led.h"
 #include "setup_portal.h"
+#if __has_include("cloud_root_ca.h")
+#include "cloud_root_ca.h"
+static bool clockRequested=false;
+#endif
 static StatusLed statusLed;
 static WifiSetupPortal setupPortal;
 static String setupName, setupKey;
@@ -38,7 +43,8 @@ static bool enabled=false, failed=false;
 static uint8_t captureFault=0;
 static uint32_t generation=0, streamId=1, sequence=0;
 static uint64_t sampleIndex=0;
-static String ssid, password, host, token, input;
+static String ssid, password, host, token, cloudToken, input;
+static String &gatewayToken(const String &address) { return address.startsWith("wss://") ? cloudToken : token; }
 struct NetworkProfile { String ssid, password, host, kind; };
 static NetworkProfile profiles[4];
 static unsigned profileCount=0, activeProfile=0;
@@ -70,7 +76,7 @@ static void networkEvent(WStype_t type, uint8_t *payload, size_t length) {
   if(type==WStype_CONNECTED) {
     haltCapture(); streamId=esp_random(); if(!streamId)streamId=1;
     cJSON *j=cJSON_CreateObject(); cJSON_AddStringToObject(j,"type","authenticate");
-    cJSON_AddStringToObject(j,"token",token.c_str()); sendJson(j); return;
+    cJSON_AddStringToObject(j,"token",gatewayToken(host).c_str()); sendJson(j); return;
   }
   if(type!=WStype_TEXT || length>2048) return;
   cJSON *j=cJSON_ParseWithLength((const char*)payload,length);
@@ -114,7 +120,7 @@ static bool readConfig(cJSON *j) {
     *h=cJSON_GetObjectItemCaseSensitive(j,"host"), *k=cJSON_GetObjectItemCaseSensitive(j,"token");
   if(!cJSON_IsString(s)||!cJSON_IsString(p)||!cJSON_IsString(h)||!cJSON_IsString(k)
     ||strlen(s->valuestring)<1||strlen(s->valuestring)>32||strlen(p->valuestring)>63
-    ||strlen(h->valuestring)<1||strlen(h->valuestring)>253||strlen(k->valuestring)<16||strlen(k->valuestring)>128) return false;
+    ||!validGatewayAddress(h->valuestring)||strlen(k->valuestring)<16||strlen(k->valuestring)>128) return false;
   const cJSON *kind=cJSON_GetObjectItemCaseSensitive(j,"kind");
   String networkKind=cJSON_IsString(kind)?kind->valuestring:"wifi";
   if(networkKind!="wifi" && networkKind!="hotspot")return false;
@@ -128,7 +134,7 @@ static bool readConfig(cJSON *j) {
     for(unsigned n=index;n>0;n--)profiles[n]=profiles[n-1];
     profiles[0]=next;
   }
-  token=k->valuestring;
+  gatewayToken(next.host)=k->valuestring;
   return true;
 }
 static bool saveProfiles() {
@@ -146,7 +152,8 @@ static bool saveProfiles() {
     prefs.putString("networks",packed); saved=prefs.getString("networks","")==packed; free(packed);
   }
   cJSON_Delete(array); prefs.putString("token",token);
-  return saved && prefs.getString("token","")==token;
+  if(cloudToken.length()) prefs.putString("cloud-token",cloudToken);
+  return saved && prefs.getString("token","")==token && prefs.getString("cloud-token","")==cloudToken;
 }
 static void loadProfiles() {
   String packed=prefs.getString("networks","");
@@ -154,7 +161,9 @@ static void loadProfiles() {
   if(cJSON_IsArray(array)) {
     for(int n=0;n<cJSON_GetArraySize(array) && profileCount<4;n++) {
       cJSON *j=cJSON_GetArrayItem(array,n);
-      cJSON_AddStringToObject(j,"token",token.c_str());
+      const cJSON *address=cJSON_GetObjectItemCaseSensitive(j,"host");
+      if(!cJSON_IsString(address)) { profileCount=0; break; }
+      cJSON_AddStringToObject(j,"token",gatewayToken(address->valuestring).c_str());
       if(!readConfig(j)) { profileCount=0; break; }
     }
   }
@@ -325,12 +334,12 @@ void setup() {
   if(setupKey.length()<8) { setupKey=WifiSetupPortal::randomKey();prefs.putString("setup-pass",setupKey); }
   String suffix=String((uint32_t)(ESP.getEfuseMac()>>32)&0xffffu,HEX);suffix.toUpperCase();
   setupName="AurisCore-Setup-"+suffix;
-  token=prefs.getString("token",""); loadProfiles();
-  configured=profileCount>0 && token.length()>=16;
+  token=prefs.getString("token",""); cloudToken=prefs.getString("cloud-token",""); loadProfiles();
+  configured=profileCount>0;
   String initialHost=profileCount?profiles[0].host:"";
   setupPortal.begin(setupName,setupKey,initialHost,[](const String&s,const String&p,const String&h,const String&t,const String&kind){
     cJSON *j=cJSON_CreateObject();cJSON_AddStringToObject(j,"ssid",s.c_str());cJSON_AddStringToObject(j,"password",p.c_str());
-    cJSON_AddStringToObject(j,"host",h.c_str());cJSON_AddStringToObject(j,"token",(t.length()?t:token).c_str());
+    cJSON_AddStringToObject(j,"host",h.c_str());cJSON_AddStringToObject(j,"token",(t.length()?t:gatewayToken(h)).c_str());
     cJSON_AddStringToObject(j,"kind",kind.c_str());cJSON_AddBoolToObject(j,"primary",true);
     bool saved=readConfig(j) && saveProfiles();cJSON_Delete(j);return saved;
   });
@@ -395,9 +404,21 @@ void loop() {
   wasAssociated=true;
   if(!captureReady) startCapture();
   if(!networkStarted) {
+    if(host.startsWith("wss://")) {
+#if __has_include("cloud_root_ca.h")
+      if(!clockRequested) { configTime(0,0,"time.cloudflare.com","pool.ntp.org"); clockRequested=true; }
+      if(time(nullptr)<1700000000) { delay(20); return; }
+      ws.beginSslWithCA(host.c_str()+6,443,"/api/gateway/device",AURISCORE_CLOUD_ROOT_CA,"");
+#else
+      if(!setupFallbackAttempted) { setupFallbackAttempted=true; Serial.println("CLOUD_TLS_CA_REQUIRED"); startSetupPortal(); }
+      delay(20); return;
+#endif
+    } else {
+      ws.begin(host,gatewayPort,"/device","");
+    }
     Serial.print("WIFI_IP="); Serial.println(WiFi.localIP());
     ws.onEvent(networkEvent); ws.setReconnectInterval(3000);
-    ws.begin(host,gatewayPort,"/device",""); networkStarted=true;
+    networkStarted=true;
   }
   ws.loop();
   bool fault, active; uint32_t current; uint8_t cause;

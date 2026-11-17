@@ -1,5 +1,16 @@
 # INTEGRATION.md
 
+The Vercel engineering gateway accepts authenticated WebSockets at
+`/api/gateway/device` and `/api/gateway/browser`, with different pairing
+credentials and an exact allowed browser origin. The v2 binary frame and JSON
+control formats are shared with LAN. A device profile uses
+`wss://<hostname>` to select TLS on port 443 and the cloud device path.
+The browser sends its pairing credential as `X-AurisCore-Operator-Token`
+for cloud requests to the existing analysis API. Its backend forwards raw PCM
+or WAV to `POST /v1/analysis/{mode}/{pcm|wav}` over HTTPS with a server-only
+bearer token. Cloud WAV inputs are capped at 4 MiB. Existing analysis result
+schemas and 8 kHz live window sizes apply in both modes.
+
 2026-11-16 device integration: normal use remains the main AurisCore `/` workspace,
 with Heart/Lung/Abdomen. `/device-link-test` is an isolated engineering diagnostic;
 it never requests audio or inference and is not the normal examination page.

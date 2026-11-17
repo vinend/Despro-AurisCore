@@ -44,3 +44,28 @@ test("sequence gaps require a fresh window; duplicates add no samples", () => {
   assert.equal(window.startSample, 0);
   assert.equal(new DataView(window.pcm).getInt16(0, true), -123);
 });
+
+test("cloud live analysis requires an operator token and forwards original PCM bytes", async t => {
+  const env = { AURISCORE_CLOUD_ANALYSIS: "1", AURISCORE_OPERATOR_TOKEN: "test-operator-token",
+    AURISCORE_INFERENCE_URL: "https://inference.example", AURISCORE_INFERENCE_TOKEN: "test-inference-token" };
+  for (const [name, value] of Object.entries(env)) {
+    const previous = process.env[name];
+    process.env[name] = value;
+    t.after(() => { if (previous === undefined) delete process.env[name]; else process.env[name] = previous; });
+  }
+  const pcm = new Uint8Array(LIVE_WINDOW_SAMPLES.lung * 2);
+  pcm.set([0x12, 0x90]);
+  const handler = createLiveAnalysisHandler(() => assert.fail("Cloud used the subprocess"));
+  const request = token => new Request("http://localhost/api/analysis/live?mode=lung", { method: "POST",
+    headers: { "Content-Type": "application/octet-stream", "X-AurisCore-Start-Sample": "0",
+      ...(token ? { "X-AurisCore-Operator-Token": token } : {}) }, body: pcm });
+  assert.equal((await handler(request())).status, 401);
+  const fetch = t.mock.method(globalThis, "fetch", async (url, options) => {
+    assert.equal(String(url), "https://inference.example/v1/analysis/lung/pcm");
+    assert.equal(options.headers.Authorization, "Bearer test-inference-token");
+    assert.deepEqual(options.body, pcm);
+    return new Response(null, { status: 429 });
+  });
+  assert.equal((await handler(request(env.AURISCORE_OPERATOR_TOKEN))).status, 429);
+  assert.equal(fetch.mock.callCount(), 1);
+});

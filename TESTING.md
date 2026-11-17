@@ -1,5 +1,13 @@
 # TESTING.md
 
+Vercel engineering checks use a test Redis instance and two independent
+WebSocket listeners. Verify credential rejection, exclusive controller
+ownership, command/ack propagation, byte-identical PCM and gap invalidation.
+Exercise the staged FastAPI endpoint with a generated 30-second PCM window
+and check the versioned L030 result. Vercel WebSocket upgrades, the deployed
+Python bundle and physical ESP32 TLS capture need separate acceptance using
+[the deployment runbook](hosting/vercel/README.md).
+
 L030 engineering validation checks complete-clip thresholding, padded-tail
 exclusion, and the retained worker's three-class response with the actual
 tracked model. The check uses synthetic audio and does not access the official
