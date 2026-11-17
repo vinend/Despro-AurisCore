@@ -16,8 +16,9 @@ product requirement. No raw dataset or recorded audio belongs in the deployment.
   ports remain internal. The website and ALL inference routes require HTTP Basic
   authentication. WebSocket routes use the pairing protocol and exact origin list.
 - Read-only private model mount; startup verifies all three engineering model hash
-  inventories. H022 fold1, A005 and L006 fold0 retain their thresholds, source
-  normalization, engineering banners and `deployment_eligible=false`.
+  inventories. H022 fold1 and A005 load from the private model mount. The
+  image includes the tracked L030 Lung assets and verifies them at startup.
+  All retain engineering-only scope and their own normalization and thresholds.
 - No simulator, training service, upload of datasets or automated model promotion.
 
 This is a single-device/team engineering stack. Shared pairing is not a patient
@@ -34,8 +35,8 @@ AI-Pipeline/.runtime/python/python.exe scripts/prepare_hosting_bundle.py --manif
 This command has already been run locally. Its `bundle.json` lists nine hashes,
 byte counts and source manifest identity. Repeating the command to the same output
 is intentionally rejected. Keep that directory private and transfer it separately
-to `/opt/auriscore-private/models` on the eventual server. The code image excludes
-all model binaries, datasets, local env files and credentials by allowlist.
+to `/opt/auriscore-private/models` on the eventual server. The code image
+includes only the tracked L030 runtime model assets from the results tree.
 
 ## Server prerequisites (not provisioned)
 
@@ -50,9 +51,8 @@ LAN measurements do not predict internet latency.
 
 ## Configure, validate, THEN start (on the Linux server)
 
-1. Transfer reviewed application source, including current uncommitted integration
-   changes; cloning current Git HEAD alone omits these changes. Do not copy the
-   whole laptop repository (datasets, credentials and research results excluded).
+1. Transfer the reviewed Git revision or the allowlisted hosting export.
+   The export includes source and the three tracked L030 runtime assets.
 2. Transfer only the private exported model bundle separately. The worker uses UID
    10001: make the mount readable by that UID and inaccessible to unrelated users.
 3. Copy `hosting/hosting.env.example` to ignored `hosting/hosting.env`. Replace ALL

@@ -19,6 +19,11 @@
 !AI-Pipeline/
 !AI-Pipeline/src/
 !AI-Pipeline/src/**
+!AI-Pipeline/results/
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/best_model.keras
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/config.json
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/normalization.npz
 !AI-Pipeline/scripts/
 !AI-Pipeline/scripts/analyze_recording.py
 !AI-Pipeline/scripts/_bootstrap.py

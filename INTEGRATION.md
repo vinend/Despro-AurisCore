@@ -644,6 +644,20 @@ padding, and model discarded tails remain explicitly unanalyzed.
 
 ## Lung release and live-only main screen — 2026-11-14
 
+The local hardware launcher and private hosting image now enable
+`AURISCORE_LUNG_ENGINEERING_L030=1`. The retained worker loads tracked L030
+on its first Lung request. An explicit verified Lung deployment package
+has precedence. Heart and Abdomen keep their existing configuration.
+L030 thresholds apply to complete 62-frame clips for wheeze, rhonchi and
+crackle. The reported intervals may overlap and represent positive clips.
+Respiratory fields are null because L030 has no phase outputs. The result
+uses the existing `lung-analysis-v1` wire shape.
+
+On Windows, the launcher respects `AURISCORE_PYTHON`, then checks the
+existing repository runtime and `%LOCALAPPDATA%/AurisCore/py/Scripts/python.exe`.
+The latter can be created with Python 3.12 and populated from
+`hosting/requirements.txt` to keep TensorFlow installation paths short.
+
 The explicitly authorized local test manifest now also selects
 EXP-L006-temporal-cnn-context/fold-0 from GitHub release lung-research-models.
 Archive SHA-256 faf89db277d6814ed7e4cc47581b981387f506086f0ffaad80eba0f587ee66fc

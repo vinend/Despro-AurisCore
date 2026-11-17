@@ -30,7 +30,13 @@ if ($Service -eq 'Gateway') {
     & node (Join-Path (Get-Location) 'node_modules/tsx/dist/cli.mjs') index.ts
 } else {
     $env:AURISCORE_ALLOWED_DEV_ORIGINS = $LanAddress.ToString()
-    $env:AURISCORE_PYTHON = Join-Path $repo 'AI-Pipeline/.runtime/python/python.exe'
+    if (-not $env:AURISCORE_PYTHON) {
+        $env:AURISCORE_PYTHON = Join-Path $repo 'AI-Pipeline/.runtime/python/python.exe'
+        if (-not (Test-Path $env:AURISCORE_PYTHON)) {
+            $env:AURISCORE_PYTHON = Join-Path $env:LOCALAPPDATA 'AurisCore/py/Scripts/python.exe'
+        }
+    }
+    $env:AURISCORE_LUNG_ENGINEERING_L030 = '1'
     if (-not (Test-Path $env:AURISCORE_PYTHON)) { throw 'Python analisis belum tersedia.' }
     Set-Location $web
     & node node_modules/next/dist/bin/next dev --hostname 0.0.0.0 --port 3000

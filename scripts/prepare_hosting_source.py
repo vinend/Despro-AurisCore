@@ -1,4 +1,4 @@
-"""Export an exclusive source-only ZIP for private VPS preparation, never upload."""
+"""Export application source and the tracked Lung checkpoint for private VPS preparation."""
 import argparse
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -10,6 +10,9 @@ FILES = ['.dockerignore', 'WebApp/package.json', 'WebApp/package-lock.json',
          'WebApp/mini-services/device-gateway/package-lock.json',
          'WebApp/mini-services/device-gateway/index.ts', 'WebApp/mini-services/device-gateway/gateway.ts',
          'AI-Pipeline/scripts/analyze_recording.py', 'AI-Pipeline/scripts/_bootstrap.py',
+         'AI-Pipeline/results/EXP-L030-frame-temporal-delta/best_model.keras',
+         'AI-Pipeline/results/EXP-L030-frame-temporal-delta/config.json',
+         'AI-Pipeline/results/EXP-L030-frame-temporal-delta/normalization.npz',
          'scripts/prepare_hosting_bundle.py', 'scripts/prepare_hosting_source.py',
          'hosting/Dockerfile', 'hosting/compose.yaml', 'hosting/Caddyfile',
          'hosting/requirements.txt', 'hosting/verify_models.py', 'hosting/README.md',
@@ -37,4 +40,4 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
-    print(f'Source-only ZIP created: {export(args.output.resolve())} files. No upload performed.')
+    print(f'Hosting ZIP created: {export(args.output.resolve())} files.')

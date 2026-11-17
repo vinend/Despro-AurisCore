@@ -52,9 +52,12 @@ test("Lung capture uses 30 seconds of samples while Heart remains 10 seconds", a
   assert.equal(calls, 1); assert.equal(session.getSnapshot().history[0].mode, "lung"); session.dispose();
 });
 
-test("real retained Python worker routes Lung without a model and preserves Heart", async () => {
+test("real retained worker loads L030 in engineering mode and preserves Heart", async () => {
   assert.ok(process.env.AURISCORE_PYTHON, "Configure Python; no skipped backend checks");
-  const worker = new AnalysisPythonWorker(process.env.AURISCORE_PYTHON, path.resolve("../AI-Pipeline/scripts/analyze_recording.py"), { ...process.env, AURISCORE_LUNG_PACKAGE: "" });
+  const script = path.resolve("../AI-Pipeline/scripts/analyze_recording.py");
+  const env = { ...process.env, AURISCORE_LUNG_PACKAGE: "", AURISCORE_ENGINEERING_MODELS: "" };
+  const worker = new AnalysisPythonWorker(process.env.AURISCORE_PYTHON, script, { ...env, AURISCORE_LUNG_ENGINEERING_L030: "0" });
+  const engineering = new AnalysisPythonWorker(process.env.AURISCORE_PYTHON, script, { ...env, AURISCORE_LUNG_ENGINEERING_L030: "1" });
   const rate = 8000, samples = rate * 6, wav = Buffer.alloc(44 + samples * 2);
   wav.write("RIFF"); wav.writeUInt32LE(wav.length - 8, 4); wav.write("WAVEfmt ", 8); wav.writeUInt32LE(16, 16);
   wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22); wav.writeUInt32LE(rate, 24); wav.writeUInt32LE(rate * 2, 28);
@@ -63,5 +66,10 @@ test("real retained Python worker routes Lung without a model and preserves Hear
   try {
     const lung = await worker.analyze(wav, "lung"); assert.equal(lung.status, "unavailable"); assert.equal(lung.mode, "lung");
     const heart = await worker.analyze(wav, "heart"); assert.equal(heart.mode, "heart");
-  } finally { await worker.dispose(); }
+    const l030 = await engineering.analyze(wav, "lung");
+    assert.equal(l030.status, "partial");
+    assert.equal(l030.analysis.model_version, "EXP-L030-frame-temporal-delta");
+    assert.deepEqual(l030.analysis.supported_classes, ["wheeze", "rhonchi", "crackle"]);
+    assert.equal(l030.analysis.respiratory.respiratory_rate_per_minute, null);
+  } finally { await Promise.all([worker.dispose(), engineering.dispose()]); }
 });

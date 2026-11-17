@@ -20,11 +20,13 @@ COPY --from=web-build /build/WebApp/.next/standalone ./
 COPY --from=web-build /build/WebApp/.next/static ./.next/static
 COPY --from=web-build /build/WebApp/public ./public
 COPY AI-Pipeline/src /app/AI-Pipeline/src
+COPY AI-Pipeline/results/EXP-L030-frame-temporal-delta/best_model.keras AI-Pipeline/results/EXP-L030-frame-temporal-delta/config.json AI-Pipeline/results/EXP-L030-frame-temporal-delta/normalization.npz /app/AI-Pipeline/results/EXP-L030-frame-temporal-delta/
 COPY AI-Pipeline/scripts/analyze_recording.py AI-Pipeline/scripts/_bootstrap.py /app/AI-Pipeline/scripts/
 COPY hosting/verify_models.py /app/hosting/verify_models.py
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000 \
     AURISCORE_PIPELINE_DIR=/app/AI-Pipeline AURISCORE_PYTHON=/usr/local/bin/python \
     AURISCORE_ENGINEERING_MODELS=/models/manifest.json CUDA_VISIBLE_DEVICES=-1 \
+    AURISCORE_LUNG_ENGINEERING_L030=1 \
     PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/numba MPLCONFIGDIR=/tmp/matplotlib
 USER 10001:10001
 EXPOSE 3000

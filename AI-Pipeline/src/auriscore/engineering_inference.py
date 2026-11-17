@@ -149,12 +149,91 @@ class LungTestBackend:
         return BackendOutput(output, 'partial' if errors else 'completed', errors)
 
 
-def definitions(manifest):
+class L030ClipBackend:
+    """Score the same complete 62-frame blocks used in L030 development."""
+
+    def __init__(self, folder: Path):
+        from .lung_preprocessing import validate_config
+
+        metadata = json.loads((folder / 'config.json').read_text())
+        classes = ['wheeze', 'rhonchi', 'crackle']
+        if (metadata['experiment'] != 'EXP-L030-frame-temporal-delta'
+                or metadata['classes'] != classes or metadata['clip_frames'] != 62
+                or metadata['deployment_eligible'] is not False):
+            raise ValueError('Invalid L030 engineering metadata')
+        for name in ('best_model.keras', 'normalization.npz'):
+            if digest(folder / name) != metadata['sha256'][name]:
+                raise ValueError('L030 asset hash mismatch')
+        self.config = {**metadata['preprocessing'], 'classes': classes}
+        validate_config(self.config)
+        self.thresholds = np.asarray(metadata['thresholds'], dtype=float)
+        if (self.thresholds.shape != (3,) or not np.isfinite(self.thresholds).all()
+                or np.any((self.thresholds < 0) | (self.thresholds > 1))):
+            raise ValueError('Invalid L030 clip thresholds')
+        with np.load(folder / 'normalization.npz', allow_pickle=False) as norm:
+            self.mean, self.std = norm['mean'], norm['std']
+        if (self.mean.shape != (self.config['n_mels'],) or self.std.shape != self.mean.shape
+                or not np.isfinite(self.mean).all() or not np.isfinite(self.std).all()
+                or np.any(self.std <= 0)):
+            raise ValueError('Invalid L030 normalization')
+        self.model = load_keras_model(folder / 'best_model.keras')
+
+    def analyze(self, audio, rate):
+        from .analysis_service import AnalysisError
+        from .lung_dsp import respiratory_measurements
+        from .lung_preprocessing import windows
+
+        config = self.config
+        sample_rate, hop, fft = (config[k] for k in ('sample_rate', 'hop_length', 'n_fft'))
+        duration = len(audio) / rate
+        sample_count = round(duration * sample_rate)
+        classes = config['classes']
+        maximum = np.zeros(3)
+        events = []
+        for block in windows(audio, rate, [], config):
+            features = np.clip((block['features'] - self.mean) / self.std, -5, 5)
+            scores = np.asarray(self.model(features[None], training=False))
+            if (scores.shape != (1, len(features), 3) or not np.isfinite(scores).all()
+                    or np.any((scores < 0) | (scores > 1))):
+                raise ValueError('Invalid L030 frame scores')
+            start = block['start_sample']
+            for first in range(0, len(features) - 61, 62):
+                end = start + (first + 61) * hop + fft
+                if end > sample_count:
+                    break
+                pooled = scores[0, first:first + 62].max(axis=0)
+                maximum = np.maximum(maximum, pooled)
+                for i in np.flatnonzero(pooled >= self.thresholds):
+                    events.append(dict(label=classes[i], start_s=(start + first * hop) / sample_rate,
+                                       end_s=min(end / sample_rate, duration)))
+        respiratory = respiratory_measurements([], duration)
+        respiratory['reason'] = 'model_does_not_support_phases'
+        return BackendOutput(dict(
+            schema_version='lung-analysis-v1', mode='lung', model_version='EXP-L030-frame-temporal-delta',
+            quality=dict(valid=True, reason=None), supported_classes=classes,
+            analyzed_duration_s=duration, phase_intervals=[], respiratory=respiratory,
+            sound_events=sorted(events, key=lambda event: event['start_s']),
+            class_scores=[dict(label=label, maximum_frame_score=float(maximum[i]),
+                               threshold=float(self.thresholds[i])) for i, label in enumerate(classes)],
+            limitations=['Engineering test only. Intervals indicate positive clips and may overlap.',
+                         'Scores are uncalibrated. L030 does not estimate respiratory phases or rate.']),
+            'partial', [AnalysisError('LUNG_INSUFFICIENT_CYCLES', 'L030 does not estimate respiratory phases.', 'respiratory')])
+
+
+def l030_definition(pipeline: Path) -> BackendDefinition:
+    folder = pipeline / 'results/EXP-L030-frame-temporal-delta'
+    return BackendDefinition('lung', 'local-engineering-clip-v1', lambda: L030ClipBackend(folder),
+                             'EXP-L030-frame-temporal-delta', True, False, True)
+
+
+def definitions(manifest, *, exclude=frozenset()):
     config=json.loads(Path(manifest).read_text())
     if config.get('scope')!='engineering_test_only' or config.get('deployment_eligible') is not False:
         raise ValueError('Explicit engineering manifest required')
     result=[]
     for mode,item in config['models'].items():
+        if mode in exclude:
+            continue
         if mode not in ('heart','abdomen','lung') or not item['hashes']:
             raise ValueError('Unsupported engineering model')
         for key,expected in item['hashes'].items():

@@ -1,5 +1,10 @@
 # TESTING.md
 
+L030 engineering validation checks complete-clip thresholding, padded-tail
+exclusion, and the retained worker's three-class response with the actual
+tracked model. The check uses synthetic audio and does not access the official
+test set.
+
 2026-11-17 publication verification: production build, TypeScript checking and
 targeted lint pass. All 53 WebApp tests, four gateway tests, 14 serial/provisioning
 tests and ten production HTTP acceptance checks pass with generated fixtures.

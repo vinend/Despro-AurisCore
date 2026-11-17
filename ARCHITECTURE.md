@@ -445,6 +445,11 @@ unavailable/empty state. Research model activation remains a separate decision.
 
 ## Local Lung research release integration
 
+The engineering launcher can now select the tracked three-class L030
+checkpoint. Its retained Python backend pools complete clips and leaves
+respiratory measurements unavailable. Hosting includes the three L030 runtime
+assets in the image and keeps Heart and Abdomen in the private model mount.
+
 The optional engineering backend supports a hash-bound Lung release using the
 same source config, normalization and saved thresholds. It reuses the research
 frame decoder for exploratory intervals and retains partial respiratory states.
