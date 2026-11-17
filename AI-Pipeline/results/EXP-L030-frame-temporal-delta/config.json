@@ -1,0 +1,61 @@
+{
+  "experiment": "EXP-L030-frame-temporal-delta",
+  "classes": [
+    "wheeze",
+    "rhonchi",
+    "crackle"
+  ],
+  "preprocessing": {
+    "seed": 42,
+    "sample_rate": 8000,
+    "window_seconds": 5.0,
+    "overlap": 0.5,
+    "filter_enabled": false,
+    "filter_low_hz": 20,
+    "filter_high_hz": 1900,
+    "filter_order": 2,
+    "spectrogram_type": "logmel",
+    "spectrogram_center": false,
+    "n_fft": 512,
+    "hop_length": 128,
+    "n_mels": 96,
+    "feature_fmin": 20,
+    "feature_fmax": 1900,
+    "cnn_top_db": 80.0,
+    "spectrogram_normalization": "none",
+    "classes": [
+      "inhalation",
+      "exhalation",
+      "wheeze",
+      "rhonchi",
+      "stridor",
+      "crackle"
+    ],
+    "task": "events",
+    "epochs": 50,
+    "batch_size": 8,
+    "patience": 8,
+    "learning_rate": 0.001,
+    "augmentation_gain_db": 0.0,
+    "annotation_coverage_verified": true,
+    "coverage_policy": "annotated_respiration_and_positive_events_only",
+    "engineering_gate": null
+  },
+  "temporal_delta": true,
+  "clip_frames": 62,
+  "clip_decision": "maximum over physical frames, complete clips only",
+  "thresholds": [
+    0.65,
+    0.825,
+    0.525
+  ],
+  "threshold_selection": "per-class max F1 on inner only, grid .05..95 step .025, ties lowest",
+  "checkpoint_epoch": 11,
+  "epochs_run": 16,
+  "deployment_eligible": false,
+  "official_test": "sealed",
+  "sha256": {
+    "best_model.keras": "c99d4e5360a5596464dc250400a612d89a770a2103cab9133769737b4898d69b",
+    "normalization.npz": "00f8885bcb61678c5572bd316b695e405a83cbd7110fbbcc76a331e9fc61b9a8"
+  }
+}

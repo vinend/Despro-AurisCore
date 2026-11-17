@@ -1,0 +1,62 @@
+{
+  "evaluation": "HF development clips",
+  "metrics": {
+    "wheeze": {
+      "tn": 1442,
+      "fp": 1563,
+      "fn": 902,
+      "tp": 6095,
+      "sensitivity": 0.8710876089752752,
+      "specificity": 0.4798668885191348,
+      "precision": 0.7958997127187255,
+      "f1": 0.83179802115319,
+      "roc_auc": 0.7505746817568832,
+      "pr_auc": 0.858814701171446,
+      "accuracy": 0.7535492901419716,
+      "balanced_accuracy": 0.6754772487472049,
+      "scored_clips": 10002,
+      "excluded_slots": 60750
+    },
+    "rhonchi": {
+      "tn": 2390,
+      "fp": 1390,
+      "fn": 399,
+      "tp": 1481,
+      "sensitivity": 0.7877659574468086,
+      "specificity": 0.6322751322751323,
+      "precision": 0.5158481365377917,
+      "f1": 0.6234476952220586,
+      "roc_auc": 0.7572165231340762,
+      "pr_auc": 0.563744708598572,
+      "accuracy": 0.683922261484099,
+      "balanced_accuracy": 0.7100205448609704,
+      "scored_clips": 5660,
+      "excluded_slots": 65092
+    },
+    "crackle": {
+      "tn": 1239,
+      "fp": 1515,
+      "fn": 4326,
+      "tp": 9557,
+      "sensitivity": 0.6883958798530577,
+      "specificity": 0.44989106753812635,
+      "precision": 0.8631683526011561,
+      "f1": 0.7659386896413545,
+      "roc_auc": 0.5729986246194531,
+      "pr_auc": 0.8528890522425148,
+      "accuracy": 0.648915068822504,
+      "balanced_accuracy": 0.569143473695592,
+      "scored_clips": 16637,
+      "excluded_slots": 54115
+    }
+  },
+  "thresholds": [
+    0.65,
+    0.825,
+    0.525
+  ],
+  "macro_f1": 0.7403948020055343,
+  "macro_accuracy": 0.6954622068161914,
+  "macro_balanced_accuracy": 0.6515470891012558,
+  "macro_pr_auc": 0.7584828206708444
+}

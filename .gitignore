@@ -94,6 +94,14 @@ WebApp/artifacts/
 # Local Lung training launch records, machine paths, and terminal viewers
 AI-Pipeline/artifacts/lung-launch/
 AI-Pipeline/results/EXP-L*/
+# Explicitly published, frozen Lung research checkpoint.
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/
+AI-Pipeline/results/EXP-L030-frame-temporal-delta/*
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/README.md
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/best_model.keras
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/normalization.npz
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/config.json
+!AI-Pipeline/results/EXP-L030-frame-temporal-delta/metrics.json
 
 # ESP-IDF local configuration contains credentials; toolchain/build artifacts
 Firmware/**/sdkconfig

@@ -16,3 +16,6 @@ checkpoints. The official test remains sealed.
 
 [L031](manifest-l031.json) includes the checkpoint selected at epoch 13
 of 18, with its training history, normalization, and development metrics.
+
+The selected [L030 research checkpoint](../../results/EXP-L030-frame-temporal-delta/)
+is tracked directly in Git and is available after cloning or pulling master.
