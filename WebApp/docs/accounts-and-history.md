@@ -5,7 +5,7 @@ The deployed WebApp uses the dedicated Supabase project `AurisCore`
 The CTF project remains independent. Supabase Auth stores credentials and email.
 The initial screen presents login and an explicit guest option before mounting
 the examination workspace. Existing signed-in sessions enter the workspace.
-The profile icon in the workspace and Settings header opens a menu containing
+The profile icon in the workspace header opens a menu containing
 Settings and Keluar. The Settings item links to `/settings`, which edits name, date of birth, gender
 and Auth email. Email changes use `auth.updateUser` and remain subject to
 provider confirmation. Settings profile fields use a single-column layout at

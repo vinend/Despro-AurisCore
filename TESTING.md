@@ -1,8 +1,9 @@
 # TESTING.md
 
 Account-menu browser acceptance (2026-11-18): production Settings has no
-standalone Edit profil/Keluar buttons. Both workspace and Settings headers
-expose a profile icon with Settings and Keluar menu items. Verified Escape
+standalone Edit profil/Keluar buttons. The workspace header exposes a profile
+icon with Settings and Keluar menu items. The later Settings cleanup removes
+that icon from Settings itself, retaining the back link and save action. Verified Escape
 dismissal, navigation to Settings, and logout returning to the initial login
 screen. TypeScript, targeted lint and production build pass. No profile edits
 or recording uploads were submitted during this check.
