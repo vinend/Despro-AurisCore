@@ -49,6 +49,20 @@ test("Abdomen contract keeps window activity separate from event rates", () => {
     const bad = result(); mutate(bad); assert.throws(() => parseOrganAnalysisResult(bad, "abdomen"));
   }
 });
+
+test("A105 candidates require engineering scope and bounded ordered intervals", () => {
+  const value = result("abdomen", "partial");
+  value.usage_scope = "engineering_test_only";
+  value.errors = [{ code: "ABDOMEN_MOTILITY_NOT_VALIDATED", message: "Fixture", component: "bowel_events", retryable: false }];
+  value.analysis.activity = null;
+  value.analysis.bowel_events = [{ start_s: 1, end_s: 1.2, score: .8 }];
+  value.analysis.event_detection = { schema_version: "abdomen-event-candidates-v1", model_version: "fixture",
+    analyzed_duration_s: 4, discarded_tail_s: 1, onset_threshold: .45, offset_threshold: .36 };
+  assert.equal(parseOrganAnalysisResult(value).analysis.bowel_events.length, 1);
+  assert.throws(() => parseOrganAnalysisResult({ ...value, usage_scope: undefined }));
+  value.analysis.bowel_events[0].end_s = 4.1;
+  assert.throws(() => parseOrganAnalysisResult(value));
+});
 test("unavailable and invalid audio retain reasons without classifications", () => {
   for (const status of ["unavailable", "error"]) {
     const parsed = parseOrganAnalysisResult(result("abdomen", status));

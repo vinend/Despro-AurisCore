@@ -10,6 +10,28 @@ connection leases. Audio is published without replay or server-side recording.
 Use synthetic audio for this engineering deployment. Public-cloud handling of
 patient recordings requires a separately approved design.
 
+## Deploy from GitHub Actions
+
+The `Deploy AurisCore to Vercel` workflow targets the existing
+`auriscore-cloud` and `auriscore-inference` projects. It deploys both when
+deployment-related changes reach `master`. To deploy manually, open GitHub
+Actions, select the workflow, choose `master`, then choose `both`,
+`website`, or `inference`. Use `both` if a backend change needs a matching
+WebApp parser. Use `inference` for a compatible model-only update.
+
+One-time setup in GitHub Settings → Environments → `production`:
+add the environment secret `VERCEL_TOKEN` using a Vercel access token scoped to
+`rain-frogs-projects` with production deployment permission. Restrict the
+environment's deployment branches to `master`. Collaborators with repository
+write access can run the workflow using the saved secret. The public project
+and team IDs are in the workflow. Redis, pairing secrets and inference
+configuration are already managed in the existing Vercel projects.
+
+Inference uses the staging script and its selected tracked assets. Models
+stored outside Git, including a future Heart Murmur package, need an explicit
+private CI source before a deployment can include them. After a model update,
+verify the reported model version with authenticated synthetic audio.
+
 ## Provision the Vercel projects
 
 1. Create a FastAPI project for analysis. From the repository root, with the
@@ -55,11 +77,12 @@ application pairing. The WebApp needs to be able to reach Python before
 application bearer authentication. Configure Vercel deployment protection
 accordingly for these engineering endpoints.
 
-The staged service provides Heart DSP and the opt-in L030 Lung engineering
-model. L030 reports wheeze, rhonchi, and crackle clip candidates. Abdomen and
-Heart Murmur require their separately provisioned approved model packages or
-an explicit engineering manifest. Those assets are outside the default stage.
-The analysis responses retain the existing organ schemas.
+The staged service includes Heart DSP, opt-in L030 Lung clip candidates, and
+opt-in A105 Abdomen event candidates (`AURISCORE_ABDOMEN_ENGINEERING_A105=1`).
+A105 uses the tracked weights and exported training normalization vectors.
+The WebApp must support the versioned candidate interval fields before enabling
+A105. Heart Murmur requires its separate approved package or explicit
+engineering manifest and assets, which are outside the default stage.
 
 ## Prepare the ESP32
 

@@ -34,6 +34,7 @@ def build_service(*, heart_package: Path | None = None, lung_package: Path | Non
     definitions = [BackendDefinition("heart", "heart-dsp-prototype-0.1.0", HeartDSPBackend)]
     engineering = os.environ.get("AURISCORE_ENGINEERING_MODELS")
     use_l030 = os.environ.get("AURISCORE_LUNG_ENGINEERING_L030") == "1" and not lung_package
+    use_a105 = os.environ.get("AURISCORE_ABDOMEN_ENGINEERING_A105") == "1" and not abdomen_package
     if heart_package:
         from auriscore.heart_inference import heart_backend_definition
         definitions = [heart_backend_definition(heart_package)]
@@ -47,14 +48,17 @@ def build_service(*, heart_package: Path | None = None, lung_package: Path | Non
         if heart_package or abdomen_package:
             raise ValueError("Choose engineering configuration or deployment packages")
         from auriscore.engineering_inference import definitions as engineering_definitions
-        local_definitions = engineering_definitions(
-            engineering, exclude={"lung"} if use_l030 or lung_package else frozenset())
+        exclude = {mode for mode, skip in (("lung", use_l030 or lung_package), ("abdomen", use_a105)) if skip}
+        local_definitions = engineering_definitions(engineering, exclude=exclude)
         modes = {definition.mode for definition in local_definitions}
         definitions = [definition for definition in definitions if definition.mode not in modes] + local_definitions
     if use_l030:
         from auriscore.engineering_inference import l030_definition
         definitions.append(l030_definition(Path(__file__).resolve().parents[1]))
-    return AnalysisService(backends=definitions, allow_engineering=bool(engineering) or use_l030)
+    if use_a105:
+        from auriscore.abdomen_a105_engineering import a105_definition
+        definitions.append(a105_definition(Path(__file__).resolve().parents[1]))
+    return AnalysisService(backends=definitions, allow_engineering=bool(engineering) or use_l030 or use_a105)
 
 
 def main() -> None:

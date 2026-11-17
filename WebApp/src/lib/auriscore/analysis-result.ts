@@ -30,8 +30,22 @@ const activity = z.object({
 });
 export const abdomenAnalysisSchema = z.object({
   schema_version: z.literal("abdomen-analysis-v1"), mode: z.literal("abdomen"), quality,
-  activity: activity.nullable(), bowel_events: z.null(), bowel_rate_per_minute: z.null(),
+  activity: activity.nullable(),
+  bowel_events: z.array(z.object({ start_s: finite.nonnegative(), end_s: finite.positive(), score: unit })).max(4096).nullable(),
+  event_detection: z.object({
+    schema_version: z.literal("abdomen-event-candidates-v1"), model_version: z.string().min(1),
+    analyzed_duration_s: finite.positive(), discarded_tail_s: finite.nonnegative(),
+    onset_threshold: unit, offset_threshold: unit,
+  }).optional(),
+  bowel_rate_per_minute: z.null(),
   bowel_rate_variability: z.null(), pattern_categories: z.null(), limitations: z.array(z.string()).optional(),
+}).superRefine((value, ctx) => {
+  const { event_detection: detection, bowel_events: events } = value;
+  if ((!detection && events !== null) || (detection && (!events || value.activity !== null
+    || detection.offset_threshold >= detection.onset_threshold
+    || events.some((event, index) => event.start_s >= event.end_s || event.end_s > detection.analyzed_duration_s
+      || (index > 0 && event.start_s < events[index - 1].end_s)))))
+    ctx.addIssue({ code: "custom", message: "Invalid abdomen event candidates" });
 });
 const fields = {
   usage_scope: z.literal("engineering_test_only").optional(),
@@ -52,6 +66,8 @@ export const organAnalysisSchema = z.discriminatedUnion("mode", [
       || (value.status !== "completed" && value.errors.length === 0)
       || (value.analysis !== null && value.analysis.quality.valid !== value.quality.valid)
       || (value.mode === "abdomen" && value.analysis?.activity && value.analysis.activity.model_version !== value.model_version)
+      || (value.mode === "abdomen" && value.analysis?.event_detection && (value.status !== "partial"
+        || value.usage_scope !== "engineering_test_only" || value.analysis.event_detection.model_version !== value.model_version))
       || (value.mode === "heart" && value.analysis?.murmur?.status === "available" && value.analysis.murmur.model_version !== value.model_version)
       || (value.mode === "abdomen" && value.status === "completed" && !value.analysis?.activity))
     ctx.addIssue({ code: "custom", message: "Inconsistent analysis availability" });
@@ -68,7 +84,7 @@ export function parseOrganAnalysisResult(input: unknown, mode?: AnalysisMode): O
   return parsed.data;
 }
 export function analysisNotice(result: OrganAnalysisResult): string | null {
-  if (result.usage_scope === "engineering_test_only") return "Mode uji rekayasa lokal. Hasil model belum divalidasi pada alat ini. Periksa versi model pada hasil.";
+  if (result.usage_scope === "engineering_test_only") return "Mode uji rekayasa. Hasil model belum divalidasi pada alat ini. Periksa versi model pada hasil.";
   const code = result.errors[0]?.code;
   if (!code) return null;
   if (["MODEL_UNAVAILABLE", "MODEL_NOT_AUTHORIZED"].includes(code)) return result.mode === "heart"

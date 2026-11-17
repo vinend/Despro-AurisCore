@@ -1,5 +1,11 @@
 # TESTING.md
 
+The A105 cloud engineering check posts generated 8 kHz Abdomen audio to the
+staged Python service and verifies the model version, candidate schema, and
+unavailable motility fields. The WebApp contract tests reject out-of-bounds
+intervals and candidates without engineering scope. Test Heart DSP and L030
+after switching the production inference alias.
+
 Vercel engineering checks use a test Redis instance and two independent
 WebSocket listeners. Verify credential rejection, exclusive controller
 ownership, command/ack propagation, byte-identical PCM and gap invalidation.

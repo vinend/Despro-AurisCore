@@ -52,6 +52,7 @@ class BowelEventScorer:
         model_path: Path,
         config: dict[str, Any] | None = None,
         loader: Callable[[Path], Any] = default_model_loader,
+        frozen_normalization: tuple[np.ndarray, np.ndarray] | None = None,
     ):
         self.model_path = Path(model_path).resolve()
         if not self.model_path.exists():
@@ -60,6 +61,7 @@ class BowelEventScorer:
         self.config = config or {}
         self.loader = loader
         self._model: Any = None
+        self.frozen_normalization = frozen_normalization
 
         # Pre-compute bandpass filter (100 - 1000 Hz at 8000 Hz)
         self.sos = butter(4, [FMIN, FMAX], btype="bandpass", fs=TARGET_SR, output="sos")
@@ -81,7 +83,7 @@ class BowelEventScorer:
         """Validate, resample, and filter input audio."""
         import librosa
 
-        sig = np.asarray(audio, dtype=np.float32).flatten()
+        sig = np.asarray(audio, dtype=np.float64 if self.frozen_normalization is not None else np.float32).flatten()
         if len(sig) == 0 or not np.all(np.isfinite(sig)):
             raise ValueError("Input audio is empty or contains non-finite values.")
 
@@ -96,7 +98,7 @@ class BowelEventScorer:
             )
 
         # 4th-order Butterworth bandpass filter (100 - 1000 Hz)
-        filtered = sosfilt(self.sos, sig).astype(np.float32)
+        filtered = sig if self.frozen_normalization is not None else sosfilt(self.sos, sig).astype(np.float32)
         return filtered, duration_s
 
     def extract_logmel(self, chunk: np.ndarray) -> np.ndarray:
@@ -116,8 +118,8 @@ class BowelEventScorer:
         logmel = librosa.power_to_db(mel, ref=np.max, top_db=80.0).astype(np.float32)
         return logmel
 
-    def score_audio(self, audio: np.ndarray, sample_rate: int) -> dict[str, Any]:
-        """Score full audio signal, extract events, and compute analytics."""
+    def score_events(self, audio: np.ndarray, sample_rate: int) -> tuple[list[dict], float, float]:
+        """Extract candidate intervals, analyzed duration, and input duration."""
         filtered_audio, duration_s = self.preprocess_audio(audio, sample_rate)
 
         # Slice into 2.0s non-overlapping windows
@@ -127,6 +129,8 @@ class BowelEventScorer:
 
         for start_sample in range(0, len(filtered_audio) - step + 1, step):
             chunk = filtered_audio[start_sample : start_sample + step]
+            if self.frozen_normalization is not None:
+                chunk = sosfilt(self.sos, chunk)
             logmel = self.extract_logmel(chunk)
             mel_list.append(logmel)
             window_offsets.append(start_sample / float(TARGET_SR))
@@ -137,15 +141,21 @@ class BowelEventScorer:
         mels_arr = np.array(mel_list, dtype=np.float32)  # (N_windows, 40, 126)
 
         # Per-frequency normalization across windows
-        mean_freq = np.mean(mels_arr, axis=(0, 2), keepdims=True)
-        std_freq = np.std(mels_arr, axis=(0, 2), keepdims=True)
-        std_freq = np.where(std_freq < 1e-6, 1.0, std_freq)
+        if self.frozen_normalization is None:
+            mean_freq = np.mean(mels_arr, axis=(0, 2), keepdims=True)
+            std_freq = np.std(mels_arr, axis=(0, 2), keepdims=True)
+            std_freq = np.where(std_freq < 1e-6, 1.0, std_freq)
+        else:
+            mean_freq, std_freq = (value[None, :, None] for value in self.frozen_normalization)
 
         norm_mels = (mels_arr - mean_freq) / std_freq
         norm_mels = np.clip(norm_mels, -self.clip_val, self.clip_val)[..., np.newaxis]
 
         # Model batch prediction
         preds = self.model.predict(norm_mels, batch_size=32, verbose=0)  # (N_windows, 126, 1)
+        if (preds.shape != (len(mel_list), mels_arr.shape[2], 1)
+                or not np.isfinite(preds).all() or np.any((preds < 0) | (preds > 1))):
+            raise ValueError("Invalid Abdomen SED frame scores")
 
         # Extract events per window and offset timestamps
         all_events: list[dict[str, Any]] = []
@@ -168,6 +178,11 @@ class BowelEventScorer:
 
         # Build full unified analysis result
         analyzed_duration = float(len(window_offsets) * WINDOW_SECONDS)
+        return all_events, analyzed_duration, duration_s
+
+    def score_audio(self, audio: np.ndarray, sample_rate: int) -> dict[str, Any]:
+        """Score full audio signal, extract events, and compute analytics."""
+        all_events, analyzed_duration, _ = self.score_events(audio, sample_rate)
         analysis = build_unified_abdomen_analysis(
             events=all_events,
             analyzed_duration_s=analyzed_duration,

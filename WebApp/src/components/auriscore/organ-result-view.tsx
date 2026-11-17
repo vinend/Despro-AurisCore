@@ -12,6 +12,7 @@ export function OrganResultView({ result, timeOffset = 0 }: { result: OrganAnaly
   if (result.mode === "lung") return <>{notice && <p role="status" className="auris-heart-warning">{notice}</p>}
     {result.analysis && <LungResultView result={result.analysis} timeOffset={timeOffset} />}</>;
   const activity = result.analysis?.activity;
+  const detection = result.analysis?.event_detection;
   return <div className="auris-heart-result" aria-label="Hasil analisis Abdomen">
     <h3>Hasil Abdomen</h3>
     {notice && <p className="auris-heart-warning" role="status">{notice}</p>}
@@ -35,6 +36,17 @@ export function OrganResultView({ result, timeOffset = 0 }: { result: OrganAnaly
         <tbody>{activity.windows.map(w => <tr key={w.start_s}><td>{(w.start_s + timeOffset).toFixed(2)}–{(w.end_s + timeOffset).toFixed(2)} s</td>
           <td>{w.score.toFixed(3)}</td><td>{w.label === "present" ? "Aktivitas terdeteksi" : "Aktivitas tidak terdeteksi"}</td></tr>)}</tbody>
       </table></div>
+    </>}
+    {detection && <>
+      <dl className="auris-heart-result-grid">
+        <div><dt>Versi model</dt><dd>{detection.model_version}</dd></div>
+        <div><dt>Durasi dianalisis</dt><dd>{detection.analyzed_duration_s.toFixed(2)} s</dd></div>
+        <div><dt>Sisa audio tidak dianalisis</dt><dd>{detection.discarded_tail_s.toFixed(2)} s</dd></div>
+      </dl>
+      <EvidenceTimeline timeOffset={timeOffset} title="Kandidat bunyi usus" duration={detection.analyzed_duration_s + detection.discarded_tail_s}
+        intervals={(result.analysis?.bowel_events ?? []).map(event => ({ ...event, label: "Kandidat bunyi usus" }))}
+        explanation="Batas waktu merupakan estimasi model. Skor belum dikalibrasi sebagai probabilitas."
+        emptyMessage="Model tidak menandai kandidat pada bagian audio yang dianalisis." />
     </>}
     <p>Laju kejadian, variasi interval, dan kategori SB/MB/CRS/HS belum tersedia.</p>
     <p className="auris-heart-disclaimer">Keluaran skrining prototipe — bukan diagnosis.</p>

@@ -1,5 +1,13 @@
 # AI_PIPELINE.md
 
+A105 engineering inference binds the tracked Keras checkpoint and its
+export metadata by hash. It uses the stored training normalization vectors,
+complete two-second windows, and the fixed balanced profile (0.45 onset,
+0.36 offset, 20 ms merge gap, 25 ms minimum-duration setting). Candidate
+intervals are shown for engineering review. The run's development metrics
+do not validate event boundaries or bowel motility measures. No fitting or
+threshold selection takes place during deployment.
+
 L031 tests adding audited SPRSound TRAIN windows that have a confirmed
 rhonchi-positive frame to L030. The added windows supervise rhonchi only,
 with original known negatives retained for that class. HF-only statistics

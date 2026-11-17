@@ -11,6 +11,14 @@ or WAV to `POST /v1/analysis/{mode}/{pcm|wav}` over HTTPS with a server-only
 bearer token. Cloud WAV inputs are capped at 4 MiB. Existing analysis result
 schemas and 8 kHz live window sizes apply in both modes.
 
+Abdomen engineering A105 returns a partial `abdomen-analysis-v1` result
+with `event_detection.schema_version=abdomen-event-candidates-v1`.
+`bowel_events` contains ordered candidate intervals in seconds with their
+uncalibrated peak scores. The scope is `engineering_test_only`. The result
+identifies the analyzed duration, discarded tail, and thresholds. Window
+activity, bowel rate, variability and pattern categories are null for this
+backend. The existing window-classifier payload continues to use null events.
+
 2026-11-16 device integration: normal use remains the main AurisCore `/` workspace,
 with Heart/Lung/Abdomen. `/device-link-test` is an isolated engineering diagnostic;
 it never requests audio or inference and is not the normal examination page.

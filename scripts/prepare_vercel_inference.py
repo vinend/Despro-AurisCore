@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PIPELINE = ROOT / "AI-Pipeline"
 DEST = ROOT / ".runtime" / "vercel-inference"
 LUNG = Path("results/EXP-L030-frame-temporal-delta")
+ABDOMEN = Path("results/EXP-A105-abdomen-crnn-specaugment-noise")
 
 
 def main() -> None:
@@ -40,6 +41,9 @@ def main() -> None:
     (dest / LUNG).mkdir(parents=True)
     for name in ("config.json", "best_model.keras", "normalization.npz"):
         shutil.copyfile(PIPELINE / LUNG / name, dest / LUNG / name)
+    (dest / ABDOMEN).mkdir()
+    for name in ("best_model.keras", "tflite_metadata.json"):
+        shutil.copyfile(PIPELINE / ABDOMEN / name, dest / ABDOMEN / name)
     # Vercel removes dependency .pyi files, which librosa reads at runtime.
     for stub in stubs:
         target = (dest / "librosa-stubs" / stub.relative_to(librosa_root)).with_suffix(".pyi.txt")
