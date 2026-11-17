@@ -1,5 +1,12 @@
 # ARCHITECTURE.md
 
+2026-11-16 update: the new S3 passes the isolated Wi-Fi/gateway test with default
+brownout protection. Historical reset failures below describe earlier boards/tests.
+The main workspace remains the user-facing application. Wi-Fi configuration runs
+temporarily on a password-protected device AP, without an installed phone app.
+It is separate from analysis and leaves model/result/audio contracts unchanged.
+Physical microphone and phone acceptance are distinct from software/link checks.
+
 Dual-path networking (2026-11-14): router Wi-Fi and phone-hotspot/cellular are both
 supported by one configurable Wi-Fi client, not mutually exclusive firmware builds.
 Saved profiles have a priority and per-network gateway address. Association failure

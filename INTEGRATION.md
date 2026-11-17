@@ -1,5 +1,31 @@
 # INTEGRATION.md
 
+2026-11-16 device integration: normal use remains the main AurisCore `/` workspace,
+with Heart/Lung/Abdomen. `/device-link-test` is an isolated engineering diagnostic;
+it never requests audio or inference and is not the normal examination page.
+The main device form now includes browser-based Wi-Fi setup instructions.
+
+Wi-Fi capture 0.3.0 retains gateway v2, GPIO16/18/17, stereo I2S input and organ-only
+8 kHz PCM. A temporary, per-device WPA2 setup AP serves `/setup` at 192.168.4.1.
+It opens on an unconfigured device, after a full unsuccessful profile cycle (at
+least 30 s), or after holding BOOT/GPIO0 for 3 s after normal boot. It closes after
+10 minutes, or reboots after a valid configuration save. Setup HTTP is rejected
+on the ordinary station/LAN interface; configuration requires an AP-origin session
+nonce. No password or existing pairing token is returned in HTML. Four-profile
+upsert, priority and fallback remain intact. Setup preserves the current pairing
+when the submitted token is blank. Ordinary boot/status never prints the setup key;
+the physically connected owner may explicitly request SETUP_INFO once for labeling.
+SETUP_WIFI/SETUP_CLOSE are diagnostic serial controls. Saved Wi-Fi reconnects
+automatically; the ESP32 does not discover or follow a phone's current SSID.
+Local gateway reachability and correct per-network host are still required;
+cloud WSS deployment is separate. This does not add a cellular modem or BLE relay.
+
+The 127-tap FIR now skips discarded odd-phase sums while retaining every input,
+coefficients, emitted accumulation order, rounding and phase. CAPTURE_FAULT_CODE
+distinguishes read errors (1), short reads (2), DMA faults (3), and full output
+queues (4), while existing source_error still terminates failed streams.
+No model, scientific parameter, preprocessing coefficient or medical claim changes.
+
 Wi-Fi init-only bench control (2026-11-14): WIFI_INIT_ONLY_V1 separates direct
 driver initialization from manual esp_wifi_start. S reports DRIVER_READY,
 RADIO_STARTED, ATTEMPTED and uptime; R attempts one radio start per boot. It

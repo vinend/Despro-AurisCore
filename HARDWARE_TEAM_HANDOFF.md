@@ -1,5 +1,35 @@
 # Hardware team handoff for actual stethoscope streaming
 
+## Current device preparation — 2026-11-16
+
+Use the main AurisCore website, not `/device-link-test`, for actual organ work.
+From the repository root, `powershell -NoProfile -ExecutionPolicy Bypass -File
+scripts/start_auriscore.ps1` reuses healthy local services or starts them, detects
+the current LAN address, and displays the main URL and local pairing code.
+The laptop remains the local gateway/analysis server and must stay reachable.
+
+New S3: ESP32-S3 N16R8, USB-UART COM7 in this session. Capture firmware keeps
+16 kHz dual-slot I2S on BCLK16 / WS18 / DATA17 and publishes organ-slot mono 8 kHz.
+Power off before connecting the microphone wiring. The expected organ slot is
+left and noise slot is right; verify the physical L/R straps with the hardware
+team. Sensor presence cannot be proved from I2S driver initialization alone.
+ANC and ECG forwarding are not implemented by this Wi-Fi path.
+
+For saved networks the device reconnects automatically. For a new router/hotspot,
+hold BOOT for 3 seconds AFTER normal boot, join its AurisCore-Setup Wi-Fi using
+the per-device setup key, and open http://192.168.4.1/setup. Save the network once;
+the device retains older profiles and reboots into the new priority profile.
+Return the phone to the chosen network and reopen the main AurisCore website.
+The main connection form includes these instructions. Do not hold BOOT during
+power-on, which selects the ROM upload mode. Setup credentials remain private.
+
+On the main website, pair once per browser session; waveform follows received PCM.
+Choose the actual organ, then use recording or Prediksi langsung. Context windows
+remain Heart 10 s, Lung 30 s, Abdomen 5 s. No signal does not mean normal findings.
+GPIOs, microphone supply, real sound, continuity and loading with the attached
+microphones must still be checked on the assembled device. Development model
+results are not clinical validation or Murmur onset/offset ground truth.
+
 ## Current handoff — 2026-11-14
 
 `codex/hardware-esp32` contains capture firmware, provisioning, serial bridge and

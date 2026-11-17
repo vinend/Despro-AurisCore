@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Wifi, Link2, ShieldCheck, AlertCircle } from "lucide-react";
 import { defaultGatewayUrl } from "@/lib/auriscore/gateway-url";
 
@@ -10,6 +10,12 @@ export interface StreamSettings {
   token: string;
 }
 
+// Location is an external browser value. The empty server snapshot keeps
+// hydration consistent before React reads the actual LAN host on the client.
+const subscribeLocation = () => () => {};
+const readGatewayUrl = () => defaultGatewayUrl(window.location);
+const serverGatewayUrl = () => "";
+
 /** Physical-device controls; simulator adapters remain in engineering tooling. */
 export function DeviceConnect({ disabled, connected, onConnect, onDisconnect }: {
   disabled: boolean;
@@ -17,10 +23,11 @@ export function DeviceConnect({ disabled, connected, onConnect, onDisconnect }: 
   onConnect: (settings: StreamSettings) => void;
   onDisconnect: () => void;
 }) {
-  const [url, setUrl] = useState("");
+  const hostGatewayUrl = useSyncExternalStore(subscribeLocation, readGatewayUrl, serverGatewayUrl);
+  const [urlOverride, setUrlOverride] = useState<string | null>(null);
+  const url = urlOverride ?? hostGatewayUrl;
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { setUrl(defaultGatewayUrl(window.location)); }, []);
 
   return (
     <section aria-label="Koneksi ESP32" className="min-w-0 bg-white rounded-2xl border border-border/80 shadow-xs overflow-hidden">
@@ -51,13 +58,23 @@ export function DeviceConnect({ disabled, connected, onConnect, onDisconnect }: 
             <p className="text-xs text-muted-foreground">Audio alat melalui gateway laptop · HP dan laptop pada Wi-Fi yang sama.</p>
           </div>
         </div>
+        <details className="rounded-lg border border-border bg-background p-3 text-sm">
+          <summary className="cursor-pointer font-semibold">Atur Wi-Fi alat dari HP</summary>
+          <p className="mt-2">Untuk jaringan yang sudah disimpan, alat menyambung otomatis saat dinyalakan.</p>
+          <ol className="mt-2 list-decimal space-y-2 pl-5">
+            <li>Untuk Wi-Fi baru, tekan tombol BOOT alat selama 3 detik setelah alat menyala. Pilih jaringan AurisCore-Setup di pengaturan Wi-Fi HP, memakai kunci setup alat.</li>
+            <li>Buka <a className="underline" href="http://192.168.4.1/setup" target="_blank" rel="noreferrer">pengaturan Wi-Fi alat</a>. Simpan nama dan password Wi-Fi/hotspot sekali. Profil lama tetap disimpan.</li>
+            <li>Kembalikan HP ke jaringan pilihan, lalu buka kembali AurisCore dan hubungkan alat. Nama jaringan HP tidak dibaca otomatis oleh website.</li>
+          </ol>
+          <p className="mt-2 text-xs text-muted-foreground">Untuk server lokal, laptop harus dapat dijangkau dari jaringan yang dipilih; alamat gateway dapat berubah ketika jaringan laptop berubah.</p>
+        </details>
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <div className="min-w-0 space-y-1.5">
             <label htmlFor="gateway-url" className="text-xs font-semibold flex items-center gap-1">
               <Link2 className="w-3 h-3" /> URL Gateway
             </label>
             <input id="gateway-url" type="text" inputMode="url" autoCapitalize="none" autoCorrect="off"
-              spellCheck={false} value={url} disabled={disabled} onChange={event => setUrl(event.target.value)}
+              spellCheck={false} value={url} disabled={disabled} onChange={event => setUrlOverride(event.target.value)}
               placeholder="ws://alamat-laptop:8082/browser" required
               className="w-full min-w-0 min-h-[44px] px-3 py-2 rounded-lg border border-border bg-background font-mono text-base sm:text-xs" />
           </div>

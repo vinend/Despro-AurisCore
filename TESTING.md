@@ -1,5 +1,48 @@
 # TESTING.md
 
+2026-11-17 publication verification: production build, TypeScript checking and
+targeted lint pass. All 53 WebApp tests, four gateway tests, 14 serial/provisioning
+tests and ten production HTTP acceptance checks pass with generated fixtures.
+The gateway form reads its automatic browser URL through an SSR-safe external
+store, eliminating the pre-existing effect-state lint failure. The protected
+capture source matches the prior hardware-tested source hashes; hardware was
+not reflashed or re-tested for publication. Private credentials, binaries and
+runtime evidence are excluded. Upstream Lung research updates are preserved;
+no research result is automatically promoted to the active integration models.
+
+2026-11-16 new-board integration: the new S3 passes protected Wi-Fi association
+and gateway registration. Real setup-AP HTTP checks pass page delivery, no secret
+echo, missing-CSRF rejection, invalid-profile rejection, profile persistence and
+automatic reconnection after saving. Ordinary LAN setup access returns HTTP 403.
+Laptop Wi-Fi is restored after the bounded setup test. The setup AP is closed at
+handoff. Browser setup was exercised through the actual AP from this laptop;
+physical iPhone verification remains pending.
+
+The initial full-capture preflight failed with source_error while no brownout or
+reset was observed. The FIR was doing unused odd-phase sums. After skipping those
+sums and removing the emitted circular-index modulo, the actual S3 still matches
+the original exact frame/FIR golden hashes and profile/fallback/LED self-tests.
+The final actual DeviceConnection path receives 600 contiguous packets / 240,000
+samples in 30.051 s, without stream errors. Concurrent 36-second UART observation
+finds zero brownouts, resets and capture faults. This verifies transport while
+microphones are disconnected; it does not validate microphone audio or sound.
+
+Main backend HTTP checks on generated engineering PCM return finite H022-fold1,
+L006-fold0 and A005 outputs, retain engineering-only scope, and reject silence
+without fabricated analyses. L006 partial respiratory status is retained. The
+first Heart request includes 37.234 s cold loading; Lung and Abdomen requests in
+the retained worker take 0.734 s and 0.563 s. These are individual observations,
+not latency guarantees or clinical performance results. TypeScript checking,
+29 focused result/link tests, seven streaming checks, and launcher syntax pass.
+No training, patient audio review, held-out evaluation, model promotion or push
+was performed. Private evidence is `.runtime/hardware/mic-ready-20261116-202950/`.
+
+The actual main `/` workspace was paired to this S3 and visibly reached streaming
+with wifi-capture-0.3.0. Heart, Lung and Abdomen tab switching and the Wi-Fi help
+section were checked. Recording/inference were not started on the disconnected
+microphone input. A nonzero floating-input PCM level is not evidence of body sound.
+The browser controller was explicitly released afterward so the phone can pair.
+
 L020 focused checks (seven passed) cover clip coverage, physical-tail and
 annotation-independent score pooling, interval-loss values and gradients for
 separate positive runs, known negatives and fully masked input, and ICBHI

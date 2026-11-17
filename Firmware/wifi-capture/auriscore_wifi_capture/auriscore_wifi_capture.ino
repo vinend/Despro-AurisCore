@@ -21,7 +21,12 @@
 #include <cJSON.h>
 #include "audio_codec.h"
 #include "status_led.h"
+#include "setup_portal.h"
 static StatusLed statusLed;
+static WifiSetupPortal setupPortal;
+static String setupName, setupKey;
+static uint32_t noNetworkSince=0, setupButtonAt=0;
+static bool setupButtonLatched=false, setupFallbackAttempted=false;
 
 struct AudioBlock { int16_t samples[400]; int64_t queued; uint32_t generation; };
 static Preferences prefs;
@@ -30,6 +35,7 @@ static QueueHandle_t blocks;
 static QueueHandle_t i2sEvents;
 static portMUX_TYPE guard = portMUX_INITIALIZER_UNLOCKED;
 static bool enabled=false, failed=false;
+static uint8_t captureFault=0;
 static uint32_t generation=0, streamId=1, sequence=0;
 static uint64_t sampleIndex=0;
 static String ssid, password, host, token, input;
@@ -41,6 +47,12 @@ static bool radioStarted=false, radioHold=false, wasAssociated=false;
 static uint16_t gatewayPort=8082;
 static bool configured=false, networkStarted=false;
 static bool captureReady=false;
+static void haltCapture();
+static void startSetupPortal() {
+  if(setupPortal.running())return;
+  haltCapture();
+  if(setupPortal.start())radioStarted=true;
+}
 static unsigned fallbackProfile(unsigned current,unsigned count) { return count?(current+1)%count:0; }
 static bool attemptExpired(uint32_t now,uint32_t started) { return (uint32_t)(now-started)>=15000; }
 
@@ -67,7 +79,7 @@ static void networkEvent(WStype_t type, uint8_t *payload, size_t length) {
   if(cJSON_IsString(t) && !strcmp(t->valuestring,"authenticated")) {
     cJSON *h=cJSON_CreateObject(); cJSON_AddStringToObject(h,"type","device_hello");
     cJSON_AddNumberToObject(h,"protocol",2); cJSON_AddStringToObject(h,"device","ESP32S3-INMP441-WIFI");
-    cJSON_AddStringToObject(h,"fw","wifi-capture-0.2.0"); cJSON_AddStringToObject(h,"source","hardware");
+    cJSON_AddStringToObject(h,"fw","wifi-capture-0.3.0"); cJSON_AddStringToObject(h,"source","hardware");
     cJSON_AddNumberToObject(h,"streamId",streamId); cJSON_AddNumberToObject(h,"samplingRate",8000);
     cJSON_AddNumberToObject(h,"indicatorProtocol",1);
     cJSON_AddNumberToObject(h,"channels",1); cJSON_AddStringToObject(h,"encoding","pcm16le"); sendJson(h);
@@ -212,7 +224,16 @@ static void provision() {
       if(input=="STATUS") {
         input=""; Serial.println("AURISCORE_WIFI_CAPTURE_V1");
         Serial.print("PROFILE_COUNT="); Serial.println(profileCount);
-        Serial.print("RADIO_HOLD="); Serial.println(radioHold?1:0); continue;
+        Serial.print("RADIO_HOLD="); Serial.println(radioHold?1:0);
+        Serial.printf("CAPTURE_STATUS WIFI=%d I2S=%d SETUP=%d UPTIME_MS=%lu\n",WiFi.status()==WL_CONNECTED,captureReady,setupPortal.running(),(unsigned long)millis());
+        continue;
+      }
+      if(input=="SETUP_WIFI") { input=""; if(!radioHold)startSetupPortal(); continue; }
+      if(input=="SETUP_CLOSE") { input=""; setupPortal.stop();Serial.println("SETUP_AP_CLOSED");continue; }
+      // Explicit owner request only; ordinary status/boot logs never print this key.
+      if(input=="SETUP_INFO") {
+        input=""; Serial.print("SETUP_SSID=");Serial.println(setupName);
+        Serial.print("SETUP_KEY=");Serial.println(setupKey);continue;
       }
       if(input=="RETRY") { input=""; radioHold=false; Serial.println("WIFI_RETRY_REQUESTED"); continue; }
       if(input=="SELFTEST") { input=""; selfTest(); continue; }
@@ -248,7 +269,7 @@ static void captureTask(void*) {
       continue;
     }
     if(status!=ESP_OK || bytes!=sizeof(raw) || dmaFault) {
-      portENTER_CRITICAL(&guard); failed=true; enabled=false; portEXIT_CRITICAL(&guard); continue;
+      portENTER_CRITICAL(&guard); captureFault=dmaFault?3:status!=ESP_OK?1:2; failed=true; enabled=false; portEXIT_CRITICAL(&guard); continue;
     }
     for(size_t n=0;n<1024;n+=2) {
       int16_t output;
@@ -257,7 +278,7 @@ static void captureTask(void*) {
       if(fill==400) {
         block.queued=esp_timer_get_time(); block.generation=current;
         if(xQueueSend(blocks,&block,0)!=pdTRUE) {
-          portENTER_CRITICAL(&guard); failed=true; enabled=false; portEXIT_CRITICAL(&guard);
+          portENTER_CRITICAL(&guard); captureFault=4; failed=true; enabled=false; portEXIT_CRITICAL(&guard);
           break;
         }
         fill=0;
@@ -300,8 +321,21 @@ void setup() {
 #endif
   pinMode(7,OUTPUT); digitalWrite(7,LOW); // Keep the original buzzer inactive.
   prefs.begin("auris-wifi",false);
+  setupKey=prefs.getString("setup-pass","");
+  if(setupKey.length()<8) { setupKey=WifiSetupPortal::randomKey();prefs.putString("setup-pass",setupKey); }
+  String suffix=String((uint32_t)(ESP.getEfuseMac()>>32)&0xffffu,HEX);suffix.toUpperCase();
+  setupName="AurisCore-Setup-"+suffix;
   token=prefs.getString("token",""); loadProfiles();
   configured=profileCount>0 && token.length()>=16;
+  String initialHost=profileCount?profiles[0].host:"";
+  setupPortal.begin(setupName,setupKey,initialHost,[](const String&s,const String&p,const String&h,const String&t,const String&kind){
+    cJSON *j=cJSON_CreateObject();cJSON_AddStringToObject(j,"ssid",s.c_str());cJSON_AddStringToObject(j,"password",p.c_str());
+    cJSON_AddStringToObject(j,"host",h.c_str());cJSON_AddStringToObject(j,"token",(t.length()?t:token).c_str());
+    cJSON_AddStringToObject(j,"kind",kind.c_str());cJSON_AddBoolToObject(j,"primary",true);
+    bool saved=readConfig(j) && saveProfiles();cJSON_Delete(j);return saved;
+  });
+  // On the Dev Module, BOOT is GPIO0. Press only AFTER normal boot, for 3 s.
+  pinMode(0,INPUT_PULLUP);
   blocks=xQueueCreate(8,sizeof(AudioBlock));
   if(!blocks) { Serial.println("CAPTURE_QUEUE_FAILED"); while(true)delay(1000); }
   Serial.println(configured?"CONFIG_PRESENT":"PROVISION_OVER_USB_REQUIRED");
@@ -320,12 +354,22 @@ static void beginNetwork(unsigned index) {
 void loop() {
   statusLed.tick(millis());
   provision();
+  setupPortal.tick();
+  if(digitalRead(0)==LOW) {
+    if(!setupButtonAt)setupButtonAt=millis();
+    if(!setupButtonLatched && millis()-setupButtonAt>=3000) {
+      setupButtonLatched=true; if(!radioHold)startSetupPortal();
+    }
+  } else {setupButtonAt=0;setupButtonLatched=false;}
+  if(!configured && !radioHold && !setupFallbackAttempted && millis()-bootAt>=5000) {
+    setupFallbackAttempted=true;startSetupPortal();
+  }
   if(!configured || radioHold || (uint32_t)(millis()-bootAt)<5000) { delay(10); return; }
   if(!radioStarted) {
     Serial.printf("BROWNOUT_HW_ENABLE=%u\n",
       (unsigned)((REG_READ(RTC_CNTL_BROWN_OUT_REG)&RTC_CNTL_BROWN_OUT_ENA)!=0));
     Serial.println("WIFI_INIT_BEGIN"); Serial.flush();
-    if(!WiFi.mode(WIFI_STA)) {
+    if(!WiFi.mode(setupPortal.running()?WIFI_AP_STA:WIFI_STA)) {
       radioHold=true;
       Serial.println("WIFI_MODE_FAILED");
       return;
@@ -334,6 +378,10 @@ void loop() {
     WiFi.setSleep(false); WiFi.setAutoReconnect(false); radioStarted=true; beginNetwork(0);
   }
   if(WiFi.status()!=WL_CONNECTED) {
+    if(!noNetworkSince)noNetworkSince=millis();
+    if(!setupFallbackAttempted && millis()-noNetworkSince>=max(30000u,profileCount*15000u)) {
+      setupFallbackAttempted=true;startSetupPortal();
+    }
     haltCapture();
     if(wasAssociated) {
       ws.disconnect(); networkStarted=false; wasAssociated=false; attemptAt=millis();
@@ -343,6 +391,7 @@ void loop() {
     }
     delay(20); return;
   }
+  noNetworkSince=0;
   wasAssociated=true;
   if(!captureReady) startCapture();
   if(!networkStarted) {
@@ -351,9 +400,12 @@ void loop() {
     ws.begin(host,gatewayPort,"/device",""); networkStarted=true;
   }
   ws.loop();
-  bool fault, active; uint32_t current;
-  portENTER_CRITICAL(&guard); fault=failed; failed=false; active=enabled; current=generation; portEXIT_CRITICAL(&guard);
-  if(fault) { haltCapture(); ws.sendTXT("{\"type\":\"source_error\",\"reason\":\"Audio acquisition/queue overflow\"}"); }
+  bool fault, active; uint32_t current; uint8_t cause;
+  portENTER_CRITICAL(&guard); fault=failed; cause=captureFault; failed=false; captureFault=0; active=enabled; current=generation; portEXIT_CRITICAL(&guard);
+  if(fault) {
+    Serial.printf("CAPTURE_FAULT_CODE=%u\n",cause); // 1 read error, 2 short read, 3 DMA overflow, 4 output queue full.
+    haltCapture(); ws.sendTXT("{\"type\":\"source_error\",\"reason\":\"Audio acquisition/queue overflow\"}");
+  }
   AudioBlock block;
   if(active && xQueueReceive(blocks,&block,0)==pdTRUE && block.generation==current) {
     if(esp_timer_get_time()-block.queued>250000) { haltCapture(); ws.sendTXT("{\"type\":\"source_error\",\"reason\":\"Audio backlog\"}"); }

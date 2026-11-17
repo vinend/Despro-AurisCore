@@ -9,9 +9,18 @@ class AudioCodec {
  public:
  void reset(){memset(history,0,sizeof(history));at=phase=0;}
  bool push(int16_t sample,int16_t &output){
-  history[at]=sample; double sum=0;
-  for(unsigned k=0;k<127;k++)sum+=FIR[k]*history[(at+127-k)%127];
-  at=(at+1)%127; bool emit=(phase==0);phase^=1;
+  history[at]=sample; double sum=0; bool emit=(phase==0);
+  // Decimation discards odd-phase sums. Keep every input in history, and retain
+  // exactly the original coefficient/accumulation order for emitted samples.
+  if(emit) {
+    unsigned index=at;
+    for(unsigned k=0;k<127;k++) {
+      sum+=FIR[k]*history[index];
+      if(index==0)index=127;
+      --index;
+    }
+  }
+  if(++at==127)at=0; phase^=1;
   if(emit){double rounded=nearbyint(sum); if(rounded>32767)rounded=32767;if(rounded< -32768)rounded=-32768;output=(int16_t)rounded;}
   return emit;
  }
