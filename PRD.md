@@ -324,6 +324,9 @@ cloud account stores the user's name, date of birth, email and gender.
 An authenticated user can access their saved session results and replay their
 private recordings across phones. Unsynchronized captured recordings are
 retained locally for retry. Cloud storage and retrieval require connectivity.
+Login is presented before the examination workspace, with an explicit guest
+option. A separate Settings page supports profile and email changes. Email
+changes follow the Auth provider's confirmation flow.
 
 Session data should support longitudinal review. Backend responsibilities may include authentication, patient/session metadata, recording references, analysis metadata, report metadata, and telehealth signaling. Backend connectivity must not become a hidden requirement for local analysis.
 

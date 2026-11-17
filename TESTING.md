@@ -13,8 +13,16 @@ synthetic source was recorded through the normal gateway/browser entry point,
 analyzed by the production Heart DSP, and saved automatically. After reload,
 the saved result and WAV remained available. A second account saw an empty
 history. Synthetic accounts and objects were removed after acceptance.
-Confirmation/reset email delivery and Auth URL configuration remain pending
-provider setup.
+The owner confirmed Auth URL configuration was saved. Confirmation/reset email
+delivery remains pending provider setup (SMTP deferred at the owner's request).
+
+2026-11-18 entry/settings browser acceptance on production verifies the initial
+login screen precedes device capture, explicit guest access, absence of the
+account form in the examination workspace, the separate Settings link, login
+with a generated confirmed account, saved profile edits surviving navigation,
+and a failed email-change request preserving the saved profile and original
+Auth email. Sign-out returns to the initial login screen. The generated account
+was removed afterward. Email delivery itself was not verified.
 
 Outbox concurrency regressions verify a recording queued during an upload is
 included in a follow-up scan, account changes retain the latest owner's scan,

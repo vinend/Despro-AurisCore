@@ -4,8 +4,8 @@ import type { User } from "@supabase/supabase-js";
 import { accountClient, type Profile } from "@/lib/auriscore/account-client";
 
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
-type Account = { user: User | null; profile: Profile | null; ready: boolean; recovery: boolean; refresh: () => Promise<void> };
-const AccountContext = createContext<Account>({ user: null, profile: null, ready: !configured, recovery: false, refresh: async () => {} });
+type Account = { user: User | null; profile: Profile | null; ready: boolean; recovery: boolean; finishRecovery: () => void; refresh: () => Promise<void> };
+const AccountContext = createContext<Account>({ user: null, profile: null, ready: !configured, recovery: false, finishRecovery: () => {}, refresh: async () => {} });
 export const useAccount = () => useContext(AccountContext);
 
 export function AccountProvider({ children }: { children: ReactNode }) {
@@ -42,15 +42,15 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     });
     return () => { live = false; data.subscription.unsubscribe(); };
   }, [refresh]);
-  return <AccountContext.Provider value={{ user, profile, ready, recovery, refresh }}>{children}</AccountContext.Provider>;
+  return <AccountContext.Provider value={{ user, profile, ready, recovery, finishRecovery: () => setRecovery(false), refresh }}>{children}</AccountContext.Provider>;
 }
 
-export function AccountPanel() {
-  const { user, profile, ready, recovery, refresh } = useAccount();
+export function AccountPanel({ defaultEditing = false }: { defaultEditing?: boolean }) {
+  const { user, profile, ready, recovery, finishRecovery, refresh } = useAccount();
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(defaultEditing);
   const [passwordChanged, setPasswordChanged] = useState(false);
   const field = "min-h-11 rounded-lg border border-border bg-white px-3 py-2 w-full";
   if (!configured) return null;
@@ -83,13 +83,24 @@ export function AccountPanel() {
           if (changingPassword) {
             const { error } = await client.auth.updateUser({ password });
             if (error) throw error;
-            setPasswordChanged(true); setMessage("Password diperbarui.");
+            setPasswordChanged(true); finishRecovery(); setMessage("Password diperbarui.");
           } else if (profileForm) {
             const row: Profile = { user_id: user!.id, name: String(form.get("name")).trim(),
               date_of_birth: String(form.get("date_of_birth")), gender: String(form.get("gender")) as Profile["gender"] };
             const { error } = await client.from("auriscore_profiles").upsert({ ...row, updated_at: new Date().toISOString() });
             if (error) throw error;
-            await refresh(); setEditing(false); setMessage("Profil tersimpan.");
+            if (email && email !== user!.email) {
+              const { error: emailError } = await client.auth.updateUser({ email }, { emailRedirectTo: window.location.origin + "/settings" });
+              if (emailError) {
+                await refresh();
+                setMessage("Profil tersimpan, tetapi perubahan email belum berhasil. Coba lagi nanti.");
+                return;
+              }
+            }
+            await refresh(); setEditing(false);
+            setMessage(email && email !== user!.email
+              ? "Profil tersimpan. Permintaan perubahan email dikirim; selesaikan konfirmasi pada email lama dan/atau baru sesuai pengaturan akun."
+              : "Profil tersimpan.");
           } else if (mode === "signup") {
             const { error } = await client.auth.signUp({ email, password, options: {
               emailRedirectTo: window.location.origin,
@@ -119,6 +130,10 @@ export function AccountPanel() {
           <option value="other">Lainnya</option><option value="prefer_not_to_say">Tidak ingin menyebutkan</option>
         </select></label>
       </div>}
+      {profileForm && !changingPassword && <label className="block">Email
+        <input className={field} type="email" name="email" required autoComplete="email" defaultValue={user?.email ?? ""} />
+        <span className="mt-1 block text-sm text-muted-foreground">Perubahan email memerlukan konfirmasi melalui email.</span>
+      </label>}
       {!profileForm && <div className="grid gap-3 sm:grid-cols-2">
         {!changingPassword && <label>Email<input className={field} type="email" name="email" required autoComplete="email" /></label>}
         {(mode !== "reset" || changingPassword) && <label>{changingPassword ? "Password baru" : "Password"}

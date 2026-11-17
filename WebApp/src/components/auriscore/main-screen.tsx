@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { HeartPulse, Wind, Activity, Stethoscope, Radio, AlertCircle } from "lucide-react";
 import { ConnectionBadge } from "./connection-badge";
 import { DeviceStatusCard } from "./device-status-card";
@@ -20,7 +21,7 @@ import { useSignalMeter } from "@/hooks/use-signal-meter";
 import { LIVE_RATE, LIVE_WINDOW_SAMPLES } from "@/lib/auriscore/live-analysis";
 import { ORGAN_MODE_LABELS } from "@/lib/auriscore/format";
 import { EXPECTED_SAMPLING_RATE } from "@/lib/auriscore/protocol";
-import { AccountPanel, useAccount } from "./account-panel";
+import { useAccount } from "./account-panel";
 import { SavedSessionHistory } from "./saved-session-history";
 import { useSessionHistory } from "@/hooks/use-session-history";
 
@@ -95,13 +96,16 @@ export function MainScreen() {
             <span className="auris-product-label">Stetoskop Digital</span>
           </a>
 
-          <ConnectionBadge state={stream.state} isMock={stream.isMock} />
+          <div className="flex flex-wrap items-center gap-3">
+            <ConnectionBadge state={stream.state} isMock={stream.isMock} />
+            {busy ? <span className="text-sm text-muted-foreground">Settings tersedia setelah rekaman selesai</span>
+              : <Link href="/settings" className="min-h-11 inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium">Settings</Link>}
+          </div>
         </div>
       </header>
 
       {/* Main Container */}
       <main className="auris-main">
-        <AccountPanel />
         {/* Page Heading */}
         <div className="auris-page-heading">
           <div>

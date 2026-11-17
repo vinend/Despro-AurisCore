@@ -1,5 +1,9 @@
 # INTEGRATION.md
 
+Account UI starts at `/`; `/settings` manages profiles and requests Auth email
+changes with a confirmation redirect to `/settings`. Database/result schemas
+and private WAV ownership are unchanged.
+
 Authenticated account persistence uses Supabase Auth and the tables
 `auriscore_profiles` and `auriscore_sessions`. Email comes from Auth;
 profiles contain name, date of birth and gender. Saved sessions retain the

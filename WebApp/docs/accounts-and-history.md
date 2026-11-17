@@ -3,6 +3,13 @@
 The deployed WebApp uses the dedicated Supabase project `AurisCore`
 (`eillyzplrheparplfikw`) in Singapore, in the same organization as Netlab CTF.
 The CTF project remains independent. Supabase Auth stores credentials and email.
+The initial screen presents login and an explicit guest option before mounting
+the examination workspace. Existing signed-in sessions enter the workspace.
+The workspace links to `/settings`, which edits name, date of birth, gender
+and Auth email. Email changes use `auth.updateUser` and remain subject to
+provider confirmation; saving profile fields does not require an email change.
+The Settings link is unavailable during active recording/analysis. Navigating
+away ends the current workspace and its transient guest history.
 The profile table stores name, date of birth and gender. The session table
 stores the existing analysis envelope and immutable WAV identity.
 
@@ -16,6 +23,7 @@ Configure `NEXT_PUBLIC_SUPABASE_URL` and
 In Supabase Auth URL Configuration set the Site URL to
 `https://auriscore-cloud.vercel.app` and allow
 `https://auriscore-cloud.vercel.app/**` for confirmation and recovery links.
+The owner confirmed these Auth URL settings were saved on 2026-11-18.
 Use Supabase's email provider settings to configure delivery for the team's
 actual users. Supabase's default email service has recipient and sending-rate
 restrictions. A custom SMTP provider is needed for general signup and recovery

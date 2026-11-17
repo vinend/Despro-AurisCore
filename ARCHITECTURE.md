@@ -1,5 +1,9 @@
 # ARCHITECTURE.md
 
+The root account-entry screen mounts the examination workspace after session
+restoration or an explicit guest choice. `/settings` hosts profile/email
+management separately from device capture. Storage ownership rules are unchanged.
+
 Account persistence uses the dedicated AurisCore Supabase project in Singapore.
 Supabase Auth owns credentials and verified email. PostgreSQL owns profiles and
 immutable session metadata/results, and a private Storage bucket owns WAV bytes.
