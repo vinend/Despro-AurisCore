@@ -45,35 +45,25 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   return <AccountContext.Provider value={{ user, profile, ready, recovery, finishRecovery: () => setRecovery(false), refresh }}>{children}</AccountContext.Provider>;
 }
 
-export function AccountPanel({ defaultEditing = false, presentation = "settings" }: { defaultEditing?: boolean; presentation?: "entry" | "settings" }) {
+export function AccountPanel({ presentation = "settings" }: { presentation?: "entry" | "settings" }) {
   const { user, profile, ready, recovery, finishRecovery, refresh } = useAccount();
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [editing, setEditing] = useState(defaultEditing);
   const [passwordChanged, setPasswordChanged] = useState(false);
   const field = "mt-2 min-h-12 w-full rounded-xl border border-border bg-[#fbfcfb] px-3.5 py-3 text-base font-normal transition-shadow placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-emerald-700/25 focus:border-emerald-700";
   if (!configured) return null;
-  const profileForm = user && (!profile || editing);
+  const profileForm = Boolean(user);
   const changingPassword = recovery && !passwordChanged;
   const Heading = presentation === "entry" ? "h1" : "h2";
   return <section className={presentation === "entry" ? "space-y-6" : "rounded-2xl border bg-white p-4 space-y-4"} aria-label="Akun AurisCore">
     <div className="flex flex-wrap justify-between items-center gap-3">
       <div><Heading className={presentation === "entry" ? "text-2xl font-semibold tracking-tight" : "font-semibold"}>
         {user ? "Akun AurisCore" : mode === "signup" ? "Buat akun Anda" : mode === "reset" ? "Lupa password?" : "Selamat datang kembali"}</Heading>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{user ? `${profile?.name ?? user.email} · ${user.email}`
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{user ? `${profile?.name ?? String(user.user_metadata.name ?? "Akun Anda")} · ${user.email}`
           : mode === "signup" ? "Simpan profil dan riwayat pemeriksaan dalam satu akun."
           : mode === "reset" ? "Masukkan email untuk menerima tautan reset password."
           : "Masuk untuk melanjutkan pemeriksaan dan mengakses riwayat Anda."}</p></div>
-      {user && <div className="flex gap-2">
-        <button className="border rounded-lg px-3 py-2" disabled={busy} onClick={() => setEditing(value => !value)}>Edit profil</button>
-        <button className="border rounded-lg px-3 py-2" disabled={busy} onClick={async () => {
-          setBusy(true);
-          const { error } = await accountClient().auth.signOut({ scope: "local" });
-          setMessage(error ? "Keluar belum berhasil. Coba lagi." : null);
-          await refresh(); setBusy(false);
-        }}>Keluar</button>
-      </div>}
     </div>
     {!ready && <p role="status">Memuat akun…</p>}
     {ready && (!user || profileForm || changingPassword) && <form className="space-y-5" key={profile?.user_id ?? mode}
@@ -101,7 +91,7 @@ export function AccountPanel({ defaultEditing = false, presentation = "settings"
                 return;
               }
             }
-            await refresh(); setEditing(false);
+            await refresh();
             setMessage(email && email !== user!.email
               ? "Profil tersimpan. Permintaan perubahan email dikirim; selesaikan konfirmasi pada email lama dan/atau baru sesuai pengaturan akun."
               : "Profil tersimpan.");

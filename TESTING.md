@@ -1,5 +1,12 @@
 # TESTING.md
 
+Account-menu browser acceptance (2026-11-18): production Settings has no
+standalone Edit profil/Keluar buttons. Both workspace and Settings headers
+expose a profile icon with Settings and Keluar menu items. Verified Escape
+dismissal, navigation to Settings, and logout returning to the initial login
+screen. TypeScript, targeted lint and production build pass. No profile edits
+or recording uploads were submitted during this check.
+
 Settings layout check (2026-11-18): the deployed authenticated form places
 Name, date of birth, gender and email on successive rows with the same left
 edge and width on desktop. TypeScript, targeted lint and production build pass.
