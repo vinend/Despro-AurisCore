@@ -45,22 +45,26 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   return <AccountContext.Provider value={{ user, profile, ready, recovery, finishRecovery: () => setRecovery(false), refresh }}>{children}</AccountContext.Provider>;
 }
 
-export function AccountPanel({ defaultEditing = false }: { defaultEditing?: boolean }) {
+export function AccountPanel({ defaultEditing = false, presentation = "settings" }: { defaultEditing?: boolean; presentation?: "entry" | "settings" }) {
   const { user, profile, ready, recovery, finishRecovery, refresh } = useAccount();
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editing, setEditing] = useState(defaultEditing);
   const [passwordChanged, setPasswordChanged] = useState(false);
-  const field = "min-h-11 rounded-lg border border-border bg-white px-3 py-2 w-full";
+  const field = "mt-2 min-h-12 w-full rounded-xl border border-border bg-[#fbfcfb] px-3.5 py-3 text-base font-normal transition-shadow placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-emerald-700/25 focus:border-emerald-700";
   if (!configured) return null;
   const profileForm = user && (!profile || editing);
   const changingPassword = recovery && !passwordChanged;
-  return <section className="rounded-2xl border bg-white p-4 space-y-3" aria-label="Akun AurisCore">
+  const Heading = presentation === "entry" ? "h1" : "h2";
+  return <section className={presentation === "entry" ? "space-y-6" : "rounded-2xl border bg-white p-4 space-y-4"} aria-label="Akun AurisCore">
     <div className="flex flex-wrap justify-between items-center gap-3">
-      <div><h2 className="font-semibold">Akun AurisCore</h2>
-        <p className="text-sm text-muted-foreground">{user ? `${profile?.name ?? user.email} · ${user.email}`
-          : "Masuk untuk menyimpan profil, hasil analisis, dan rekaman di perangkat lain."}</p></div>
+      <div><Heading className={presentation === "entry" ? "text-2xl font-semibold tracking-tight" : "font-semibold"}>
+        {user ? "Akun AurisCore" : mode === "signup" ? "Buat akun Anda" : mode === "reset" ? "Lupa password?" : "Selamat datang kembali"}</Heading>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{user ? `${profile?.name ?? user.email} · ${user.email}`
+          : mode === "signup" ? "Simpan profil dan riwayat pemeriksaan dalam satu akun."
+          : mode === "reset" ? "Masukkan email untuk menerima tautan reset password."
+          : "Masuk untuk melanjutkan pemeriksaan dan mengakses riwayat Anda."}</p></div>
       {user && <div className="flex gap-2">
         <button className="border rounded-lg px-3 py-2" disabled={busy} onClick={() => setEditing(value => !value)}>Edit profil</button>
         <button className="border rounded-lg px-3 py-2" disabled={busy} onClick={async () => {
@@ -72,7 +76,7 @@ export function AccountPanel({ defaultEditing = false }: { defaultEditing?: bool
       </div>}
     </div>
     {!ready && <p role="status">Memuat akun…</p>}
-    {ready && (!user || profileForm || changingPassword) && <form className="space-y-3" key={profile?.user_id ?? mode}
+    {ready && (!user || profileForm || changingPassword) && <form className="space-y-5" key={profile?.user_id ?? mode}
       onSubmit={async event => {
         event.preventDefault(); setBusy(true); setMessage(null);
         const form = new FormData(event.currentTarget);
@@ -120,7 +124,7 @@ export function AccountPanel({ defaultEditing = false }: { defaultEditing?: bool
         } catch { setMessage("Belum berhasil. Periksa data, konfirmasi email, dan koneksi. Coba lagi beberapa saat."); }
         finally { setBusy(false); }
       }}>
-      {(profileForm || mode === "signup") && !changingPassword && <div className="grid gap-3 sm:grid-cols-3">
+      {(profileForm || mode === "signup") && !changingPassword && <div className={presentation === "entry" ? "grid gap-4" : "grid gap-3 sm:grid-cols-3"}>
         <label>Nama<input className={field} name="name" required maxLength={120}
           autoComplete="name" defaultValue={profile?.name ?? String(user?.user_metadata.name ?? "")} /></label>
         <label>Tanggal lahir<input className={field} type="date" name="date_of_birth" required min="1900-01-01"
@@ -134,19 +138,20 @@ export function AccountPanel({ defaultEditing = false }: { defaultEditing?: bool
         <input className={field} type="email" name="email" required autoComplete="email" defaultValue={user?.email ?? ""} />
         <span className="mt-1 block text-sm text-muted-foreground">Perubahan email memerlukan konfirmasi melalui email.</span>
       </label>}
-      {!profileForm && <div className="grid gap-3 sm:grid-cols-2">
-        {!changingPassword && <label>Email<input className={field} type="email" name="email" required autoComplete="email" /></label>}
-        {(mode !== "reset" || changingPassword) && <label>{changingPassword ? "Password baru" : "Password"}
+      {!profileForm && <div className="grid gap-5">
+        {!changingPassword && <label className="block text-sm font-medium">Email<input className={field} type="email" name="email" required autoComplete="email" placeholder="nama@email.com" /></label>}
+        {(mode !== "reset" || changingPassword) && <label className="block text-sm font-medium">{changingPassword ? "Password baru" : "Password"}
           <input className={field} type="password" name="password" required minLength={8} maxLength={128}
+            placeholder={mode === "signup" || changingPassword ? "Minimal 8 karakter" : "Masukkan password"}
             autoComplete={mode === "signup" || changingPassword ? "new-password" : "current-password"} /></label>}
       </div>}
       {mode === "signup" && <p className="text-sm text-muted-foreground">Profil dan rekaman tersimpan privat di akun. Password minimal 8 karakter.</p>}
-      <button disabled={busy} className="bg-emerald-800 text-white rounded-lg px-4 py-2">
+      <button disabled={busy} className="min-h-12 w-full rounded-xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2">
         {busy ? "Memproses…" : changingPassword ? "Simpan password" : profileForm ? "Simpan profil" : mode === "signup" ? "Daftar" : mode === "reset" ? "Kirim tautan reset" : "Masuk"}</button>
     </form>}
-    {!user && <div className="flex flex-wrap gap-4 text-sm">
+    {!user && <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
       {(["login", "signup", "reset"] as const).filter(item => item !== mode).map(item =>
-        <button key={item} className="underline" disabled={busy} onClick={() => { setMode(item); setMessage(null); }}>
+        <button key={item} className="min-h-9 rounded-md font-medium text-emerald-800 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700" disabled={busy} onClick={() => { setMode(item); setMessage(null); }}>
           {item === "login" ? "Sudah punya akun? Masuk" : item === "signup" ? "Buat akun" : "Lupa password?"}
         </button>)}
     </div>}

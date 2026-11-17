@@ -1,5 +1,11 @@
 # TESTING.md
 
+Login styling acceptance (2026-11-18): production browser checks confirm Email
+above Password at desktop (1280 px) and phone (390 px) widths, with no horizontal
+overflow. Signup/reset mode navigation retains the matching single-column
+entry layout. TypeScript, targeted lint and the production build pass. This
+presentation change does not alter Auth, model or storage contracts.
+
 Account/storage acceptance (2026-11-18) uses two generated Supabase accounts
 and a synthetic mono WAV. Verified owner profile writes, denial of another
 account's profile/session/object reads and writes, anonymous denial, idempotent
