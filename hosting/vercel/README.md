@@ -1,5 +1,11 @@
 # AurisCore Vercel engineering deployment
 
+The WebApp also uses Supabase Auth, Postgres and private WAV Storage for
+optional cross-phone accounts and session history.
+See [accounts and history](../../WebApp/docs/accounts-and-history.md) for
+configuration and ownership rules. Account data does not go to the inference
+deployment.
+
 The ESP32 opens a TLS WebSocket to the WebApp. The browser pairs over a second
 WebSocket. The gateway relays unmodified v2 PCM16 frames and capture controls
 through Redis Pub/Sub. The browser sends live PCM windows or recorded WAV to

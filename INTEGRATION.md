@@ -1,5 +1,17 @@
 # INTEGRATION.md
 
+Authenticated account persistence uses Supabase Auth and the tables
+`auriscore_profiles` and `auriscore_sessions`. Email comes from Auth;
+profiles contain name, date of birth and gender. Saved sessions retain the
+versioned `organ-analysis-v1` result, recording time, organ, source,
+duration, immutable audio SHA-256, size, and private object path.
+The WAV path is `<auth-user-uuid>/<session-uuid>.wav` in
+`auriscore-recordings`. RLS limits rows and object reads to their owner.
+Uploads progress from `uploading` to `ready`. Retries reuse their UUID and
+verify an already uploaded object's bytes before finishing. Session results
+are immutable after insertion. The UI paginates saved history and downloads
+audio with the user's token for local playback.
+
 The Vercel engineering gateway accepts authenticated WebSockets at
 `/api/gateway/device` and `/api/gateway/browser`, with different pairing
 credentials and an exact allowed browser origin. The v2 binary frame and JSON

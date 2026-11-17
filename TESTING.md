@@ -1,5 +1,21 @@
 # TESTING.md
 
+Account/storage acceptance (2026-11-18) uses two generated Supabase accounts
+and a synthetic mono WAV. Verified owner profile writes, denial of another
+account's profile/session/object reads and writes, anonymous denial, idempotent
+session saves, byte-identical private WAV download and history after a fresh
+login. The session repository regression tests check a completed retry,
+recovery after a lost upload response, rejection of a different existing
+object, and account changes during local-outbox processing. Supabase security
+advisors reported no findings after the schema was applied. Browser acceptance
+covers login, profile editing and private-recording playback. A ten-second
+synthetic source was recorded through the normal gateway/browser entry point,
+analyzed by the production Heart DSP, and saved automatically. After reload,
+the saved result and WAV remained available. A second account saw an empty
+history. Synthetic accounts and objects were removed after acceptance.
+Confirmation/reset email delivery and Auth URL configuration remain pending
+provider setup.
+
 The A105 cloud engineering check posts generated 8 kHz Abdomen audio to the
 staged Python service and verifies the model version, candidate schema, and
 unavailable motility fields. The WebApp contract tests reject out-of-bounds

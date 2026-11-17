@@ -80,4 +80,8 @@ export class RecordingSession {
     this.update({ phase: "idle", elapsedMs: 0, error: null, result: null, file: null });
   }
   dispose() { this.reset(); }
+  clearHistory() {
+    this.reset();
+    this.update({ history: [] });
+  }
 }

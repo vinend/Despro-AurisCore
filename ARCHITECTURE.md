@@ -1,5 +1,13 @@
 # ARCHITECTURE.md
 
+Account persistence uses the dedicated AurisCore Supabase project in Singapore.
+Supabase Auth owns credentials and verified email. PostgreSQL owns profiles and
+immutable session metadata/results, and a private Storage bucket owns WAV bytes.
+Browser requests carry the individual Auth session. RLS checks ownership for
+every profile, session and object. An IndexedDB outbox retains pending uploads
+until the database marks them ready. The inference service receives audio for
+analysis through the existing operator-authorized API.
+
 The optional Vercel engineering path uses separate ESP32 and browser WSS
 connections to Next.js Functions. Redis Pub/Sub joins connections across
 Function instances. The browser assembles the existing analysis windows and

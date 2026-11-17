@@ -319,6 +319,12 @@ Analysis must support recorded waveform/PCG playback, organ-specific numeric out
 
 Core analysis must work offline.
 
+Account and history extension (2026-11-18, user-authorized): an optional
+cloud account stores the user's name, date of birth, email and gender.
+An authenticated user can access their saved session results and replay their
+private recordings across phones. Unsynchronized captured recordings are
+retained locally for retry. Cloud storage and retrieval require connectivity.
+
 Session data should support longitudinal review. Backend responsibilities may include authentication, patient/session metadata, recording references, analysis metadata, report metadata, and telehealth signaling. Backend connectivity must not become a hidden requirement for local analysis.
 
 Preferred tele-auscultation path:

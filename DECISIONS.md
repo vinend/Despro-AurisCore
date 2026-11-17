@@ -207,3 +207,14 @@ backend factory. Cloud sessions require TLS, scoped credentials, and a new
 capture after a transport interruption. This path is for synthetic engineering
 audio. No validated model, clinical claim, data split, or offline product
 requirement changes. See [the deployment runbook](hosting/vercel/README.md).
+
+## ADR-013 — Account profiles and private session recording storage
+
+Accepted for the user's cross-phone account/history request, 2026-11-18.
+Use a dedicated AurisCore Supabase project in the CTF owner's organization.
+Email/password authentication uses Supabase Auth. Profiles and session results
+use Postgres with owner RLS, and WAVs use a private bucket with owner path
+checks. The browser uses a publishable key and individual session tokens.
+Uploads have immutable UUID identities, SHA-256 checks and a durable local
+outbox. A saved session becomes ready after its WAV exists. No account secret
+or private recording is included in deployment source.

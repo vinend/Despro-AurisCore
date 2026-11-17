@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HeartPulse, Wind, Activity, Stethoscope, Radio, AlertCircle } from "lucide-react";
 import { ConnectionBadge } from "./connection-badge";
 import { DeviceStatusCard } from "./device-status-card";
@@ -20,6 +20,9 @@ import { useSignalMeter } from "@/hooks/use-signal-meter";
 import { LIVE_RATE, LIVE_WINDOW_SAMPLES } from "@/lib/auriscore/live-analysis";
 import { ORGAN_MODE_LABELS } from "@/lib/auriscore/format";
 import { EXPECTED_SAMPLING_RATE } from "@/lib/auriscore/protocol";
+import { AccountPanel, useAccount } from "./account-panel";
+import { SavedSessionHistory } from "./saved-session-history";
+import { useSessionHistory } from "@/hooks/use-session-history";
 
 /**
  * Layar utama responsif untuk ponsel & desktop:
@@ -28,6 +31,10 @@ import { EXPECTED_SAMPLING_RATE } from "@/lib/auriscore/protocol";
  * riwayat → footer.
  */
 export function MainScreen() {
+  const account = useAccount();
+  const sessions = useSessionHistory();
+  const recordingOwner = useRef<string | undefined>(undefined);
+  const priorAccount = useRef<string | undefined>(undefined);
   const [settings, setSettings] = useState<StreamSettings>({
     source: "hardware",
     url: "",
@@ -39,6 +46,18 @@ export function MainScreen() {
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("heart");
   const operatorToken = process.env.NEXT_PUBLIC_AURISCORE_CLOUD === "1" ? settings.token : undefined;
   const recording = useRecording(stream, analysisMode, operatorToken);
+  useEffect(() => {
+    if (priorAccount.current !== account.user?.id) {
+      priorAccount.current = account.user?.id;
+      recordingOwner.current = undefined;
+      recording.clear();
+    }
+  }, [account.user?.id, recording.clear]);
+  const completed = recording.history[0];
+  useEffect(() => {
+    if (recording.phase === "done" && recording.file && completed)
+      void sessions.save(recording.file, completed, recordingOwner.current);
+  }, [recording.phase, recording.file, completed, sessions.save]);
   useEffect(() => {
     if (stream.isConnected) stream.setIndicator?.(analysisMode, recording.phase);
   }, [stream.isConnected, stream.setIndicator, analysisMode, recording.phase]);
@@ -82,6 +101,7 @@ export function MainScreen() {
 
       {/* Main Container */}
       <main className="auris-main">
+        <AccountPanel />
         {/* Page Heading */}
         <div className="auris-page-heading">
           <div>
@@ -269,7 +289,7 @@ export function MainScreen() {
               isMock={!stream.isHardware && stream.isMock && analysisMode === "heart"}
               durationMs={recording.durationMs}
               disabled={!stream.isConnected}
-              onStart={recording.start}
+              onStart={() => { recordingOwner.current = account.user?.id; recording.start(); }}
               onStop={recording.stop}
               onCommitBpm={stream.commitBpm}
             />
@@ -303,7 +323,13 @@ export function MainScreen() {
         </section>
 
         {/* Session History List */}
-        <HistoryList entries={recording.history} />
+        {account.user ? <SavedSessionHistory key={account.user.id} {...sessions}
+          onRetry={() => {
+            if (recording.phase === "done" && recording.file && completed)
+              void sessions.save(recording.file, completed, recordingOwner.current).then(() => sessions.retry());
+            else void sessions.retry();
+          }} onMore={() => { void sessions.loadMore(); }} />
+          : <HistoryList entries={recording.history} />}
       </main>
 
       {/* Footer */}
