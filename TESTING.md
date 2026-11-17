@@ -1,5 +1,10 @@
 # TESTING.md
 
+Settings layout check (2026-11-18): the deployed authenticated form places
+Name, date of birth, gender and email on successive rows with the same left
+edge and width on desktop. TypeScript, targeted lint and production build pass.
+Verification did not submit or modify the user's profile.
+
 Login styling acceptance (2026-11-18): production browser checks confirm Email
 above Password at desktop (1280 px) and phone (390 px) widths, with no horizontal
 overflow. Signup/reset mode navigation retains the matching single-column

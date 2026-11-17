@@ -124,7 +124,7 @@ export function AccountPanel({ defaultEditing = false, presentation = "settings"
         } catch { setMessage("Belum berhasil. Periksa data, konfirmasi email, dan koneksi. Coba lagi beberapa saat."); }
         finally { setBusy(false); }
       }}>
-      {(profileForm || mode === "signup") && !changingPassword && <div className={presentation === "entry" ? "grid gap-4" : "grid gap-3 sm:grid-cols-3"}>
+      {(profileForm || mode === "signup") && !changingPassword && <div className="grid grid-cols-1 gap-4">
         <label>Nama<input className={field} name="name" required maxLength={120}
           autoComplete="name" defaultValue={profile?.name ?? String(user?.user_metadata.name ?? "")} /></label>
         <label>Tanggal lahir<input className={field} type="date" name="date_of_birth" required min="1900-01-01"
