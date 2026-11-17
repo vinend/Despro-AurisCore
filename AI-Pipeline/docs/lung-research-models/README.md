@@ -13,3 +13,6 @@ L020–L023 checkpoints and aggregate evaluations are indexed in [the follow-up 
 L024–L030 checkpoints and aggregate development evaluations are indexed in
 [the L024–L030 manifest](manifest-l024-l030.json). These are research
 checkpoints. The official test remains sealed.
+
+[L031](manifest-l031.json) includes the checkpoint selected at epoch 13
+of 18, with its training history, normalization, and development metrics.

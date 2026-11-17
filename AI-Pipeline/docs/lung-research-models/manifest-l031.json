@@ -1,0 +1,14 @@
+{
+  "research_only": true,
+  "release": "https://github.com/vinend/Despro-AurisCore/releases/tag/lung-research-models-l031",
+  "assets": [
+    {
+      "experiment": "L031",
+      "asset": "EXP-L031-lung-research.zip",
+      "models": 1,
+      "bytes": 6038154,
+      "sha256": "2af3e7e2ba147d13635e4029a12d648982e61408299f954c817818986ada4daf",
+      "download_url": "https://github.com/vinend/Despro-AurisCore/releases/download/lung-research-models-l031/EXP-L031-lung-research.zip"
+    }
+  ]
+}
