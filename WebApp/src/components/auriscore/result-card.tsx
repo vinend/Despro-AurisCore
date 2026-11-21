@@ -16,7 +16,7 @@ export function ResultCard({
   file: File | null;
 }) {
   return (
-    <section className="auris-result" aria-labelledby="result-heading" aria-live="polite">
+    <section className="auris-result" aria-labelledby="result-heading">
       <div className="auris-section-heading">
         <h2 id="result-heading" className="flex items-center gap-1.5">
           <Activity className="w-4 h-4 text-emerald-600" />
@@ -52,8 +52,8 @@ export function ResultCard({
         </div>
       )}
 
-      {file && <RecordingPlayback file={file} />}
-      {result && <OrganResultView result={result} />}
+      {file && <RecordingPlayback file={file} result={result} />}
+      {result && <OrganResultView result={result} showTimeline={!file} />}
     </section>
   );
 }

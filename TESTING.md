@@ -679,6 +679,9 @@ Test:
 - file simulator;
 - waveform rendering;
 - recording/playback;
+- waveform and spectrogram show the captured WAV on a shared time axis;
+- scrubber and candidate clicks seek audio, and playback moves the shared line;
+- verify overlapping labels and Heart DSP without Murmur window evidence;
 - invalid signal warning;
 - BPM/rhythm rendering;
 - S1/S2 and interval annotations;

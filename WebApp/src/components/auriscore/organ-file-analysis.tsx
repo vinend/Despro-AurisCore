@@ -124,7 +124,7 @@ export function OrganFileAnalysis({
         </div>
       </form>
 
-      {file && <RecordingPlayback file={file} />}
+      {file && <RecordingPlayback file={file} result={result} />}
 
       <div aria-live="polite" className="mt-3">
         {loading && (

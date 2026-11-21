@@ -4,29 +4,29 @@ import { accountClient } from "@/lib/auriscore/account-client";
 import type { SavedSession } from "@/lib/auriscore/session-repository";
 import { OrganResultView } from "./organ-result-view";
 import { useAccount } from "./account-panel";
+import { RecordingPlayback } from "./recording-playback";
 
 function SavedSessionDetails({ entry }: { entry: SavedSession }) {
   const { user } = useAccount();
-  const [url, setUrl] = useState<string | null>(null);
+  const [file, setFile] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let current = true;
-    let objectUrl: string | null = null;
     void (async () => {
       try {
         if (user?.id !== entry.user_id) throw new Error();
         const { data, error: failure } = await accountClient().storage.from("auriscore-recordings").download(entry.audio_path);
         if (failure || !data) throw new Error();
-        if (current) { objectUrl = URL.createObjectURL(data); setUrl(objectUrl); }
+        if (current) setFile(data);
       } catch { if (current) setError("Rekaman belum dapat diputar. Coba buka sesi ini lagi."); }
     })();
-    return () => { current = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+    return () => { current = false; };
   }, [entry.audio_path, entry.user_id, user?.id]);
   return <div className="space-y-3">
     {error && <p role="alert">{error}</p>}
-    {url ? <audio className="w-full" controls preload="metadata" src={url} aria-label="Putar rekaman tersimpan" />
+    {file ? <RecordingPlayback file={file} result={entry.result} />
       : !error && <p role="status">Memuat rekaman privat…</p>}
-    <OrganResultView result={entry.result} />
+    <OrganResultView result={entry.result} showTimeline={!file} />
   </div>;
 }
 

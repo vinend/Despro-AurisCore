@@ -712,6 +712,13 @@ Live result timelines offset their local model windows using the received stream
 startSample / 8000. WAV upload starts at zero. Stream samples omit no synthetic
 padding, and model discarded tails remain explicitly unanalyzed.
 
+Completed and saved sessions display a waveform and spectrogram computed in the
+browser from the same PCM16 mono WAV used by playback. Result labels use the
+recording-relative timestamps, support overlapping intervals, and can seek the
+player. The browser uses candidate timestamps already returned by each backend.
+Heart DSP events remain visible when Murmur results or window evidence are
+unavailable. No result schema or recording format changes.
+
 ## Lung release and live-only main screen — 2026-11-14
 
 The local hardware launcher and private hosting image now enable

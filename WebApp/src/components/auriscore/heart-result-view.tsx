@@ -2,7 +2,9 @@ import { heartDisplay, HEART_SCREENING_NOTICE } from "@/lib/auriscore/heart-disp
 import type { HeartAnalysisResult } from "@/lib/auriscore/heart-result";
 import { EvidenceTimeline } from "./evidence-timeline";
 
-export function HeartResultView({ result, timeOffset = 0 }: { result: HeartAnalysisResult; timeOffset?: number }) {
+export function HeartResultView({ result, timeOffset = 0, showTimeline = true }: {
+  result: HeartAnalysisResult; timeOffset?: number; showTimeline?: boolean;
+}) {
   const display = heartDisplay(result);
   const murmur = result.murmur;
   return (
@@ -38,7 +40,7 @@ export function HeartResultView({ result, timeOffset = 0 }: { result: HeartAnaly
       {result.quality.valid && <p>SD menunjukkan variasi interval dalam milidetik. CV membandingkan SD dengan rata-rata interval. Keduanya dihitung dari kandidat S1; batas penilaian keteraturan irama masih memerlukan validasi.</p>}
       {murmur?.status === "available" && murmur.probability_is_calibrated === false &&
         <p>Skor model belum dikalibrasi sebagai probabilitas.</p>}
-      {murmur?.status === "available" && murmur.temporal_evidence ?
+      {murmur?.status === "available" && murmur.temporal_evidence ? showTimeline &&
         <EvidenceTimeline timeOffset={timeOffset} title="Segmen dengan skor Murmur tinggi" duration={murmur.temporal_evidence.duration_s}
           intervals={murmur.temporal_evidence.windows.filter(w => w.score >= murmur.threshold).map(w => ({...w, label: "Kandidat Murmur per jendela"}))}
           explanation={`Rentang menunjukkan seluruh jendela yang mencapai ambang referensi rekaman ${murmur.threshold.toFixed(3)}. Ketepatan awal/akhir murmur belum tervalidasi. Sisa audio ${murmur.temporal_evidence.discarded_tail_s.toFixed(2)} detik tidak dianalisis.`}

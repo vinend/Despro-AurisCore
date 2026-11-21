@@ -300,14 +300,10 @@ export function MainScreen() {
               onStop={recording.stop}
               onCommitBpm={stream.commitBpm}
             />
-            <ResultCard
-              phase={recording.phase}
-              result={recording.result}
-              error={recording.error}
-              file={recording.file}
-            />
           </aside>
         </div>
+
+        <ResultCard phase={recording.phase} result={recording.result} error={recording.error} file={recording.file} />
 
         <section className="auris-result" aria-labelledby="live-analysis-heading">
           <div className="auris-section-heading">
