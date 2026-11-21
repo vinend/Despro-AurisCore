@@ -1,5 +1,17 @@
 # DECISIONS.md
 
+## ADR-014 — Account-authorized cloud device connection
+
+Accepted for the explicit no-user-pairing-code request, 2026-11-21. The current
+deployment has one gateway namespace/device. Assign authorized verified account
+emails in the server-only AURISCORE_DEVICE_ACCOUNT_EMAILS setting. Validate the
+individual Supabase access token at WebSocket authentication and periodically
+thereafter; analysis endpoints use the same assignment check. Positive checks
+are cached up to 30 seconds and never beyond JWT expiry. Device credentials stay
+in ESP32/server. Browser token refresh comes from Supabase, including reconnects.
+Signup is not an access grant. A future device fleet requires per-device ownership
+and routing; this single-device assignment is not a fleet management design.
+
 # Architecture Decision Records
 
 Use this file to record accepted decisions that affect more than one module or materially affect product implementation.

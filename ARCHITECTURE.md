@@ -1,5 +1,13 @@
 # ARCHITECTURE.md
 
+Cloud device controls now use the existing account boundary: a verified Supabase
+session and server-provisioned assignment replace manual operator-code entry.
+The browser checks /api/device-access before opening the cloud socket and obtains
+fresh account credentials on every reconnect. The gateway validates account
+access before Redis lease acquisition and every 30 seconds while connected.
+Account switches disconnect the prior account's stream. ESP32 authentication,
+PCM, inference model selection and storage ownership remain unchanged.
+
 The root account-entry screen mounts the examination workspace after session
 restoration or an explicit guest choice. `/settings` hosts profile/email
 management separately from device capture. Storage ownership rules are unchanged.

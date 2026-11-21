@@ -301,6 +301,15 @@ If harmonic-sound patterns are used as an indicator associated with stenosis, pr
 
 # 9. MOBILE PRODUCT REQUIREMENTS
 
+Cloud WebApp use (user-authorized 2026-11-21): a verified account assigned to
+the deployment's stethoscope connects automatically without entering an operator
+pairing code. Assignment is provisioned by the operator; signup alone grants no
+device access. The initial single-device deployment stores its authorized account
+emails server-side. Guests may browse the workspace but cannot acquire cloud
+audio or request cloud analysis. New Wi-Fi credentials still require one-time
+setup; normal power-on reconnects saved networks without a chassis Wi-Fi button.
+This changes the cloud prototype flow, not offline/mobile or clinical validation goals.
+
 Major capabilities/screens:
 
 1. Authentication / security

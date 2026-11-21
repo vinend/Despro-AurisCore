@@ -1,5 +1,17 @@
 # INTEGRATION.md
 
+Cloud account access (2026-11-21): GET /api/device-access accepts Authorization:
+Bearer <Supabase access token> and returns only device availability/label or 403.
+The cloud WebSocket authenticate.token is that account token for the browser;
+the device continues using its private device credential. Browser credentials
+are checked against verified Supabase identity and AURISCORE_DEVICE_ACCOUNT_EMAILS
+(a server-only comma-separated assignment for the single namespace/device).
+The existing X-AurisCore-Operator-Token analysis header carries the account
+token in production. Legacy static analysis credentials remain only for local
+engineering deployments without the assignment setting. Missing assignment in
+Vercel production fails closed.
+The account token and operator/device secrets are never returned by device-access.
+
 Account UI starts at `/`; `/settings` manages profiles and requests Auth email
 changes with a confirmation redirect to `/settings`. Database/result schemas
 and private WAV ownership are unchanged.
@@ -17,11 +29,11 @@ are immutable after insertion. The UI paginates saved history and downloads
 audio with the user's token for local playback.
 
 The Vercel engineering gateway accepts authenticated WebSockets at
-`/api/gateway/device` and `/api/gateway/browser`, with different pairing
+`/api/gateway/device` and `/api/gateway/browser`, with separate device/account
 credentials and an exact allowed browser origin. The v2 binary frame and JSON
 control formats are shared with LAN. A device profile uses
 `wss://<hostname>` to select TLS on port 443 and the cloud device path.
-The browser sends its pairing credential as `X-AurisCore-Operator-Token`
+The browser sends its account credential as `X-AurisCore-Operator-Token`
 for cloud requests to the existing analysis API. Its backend forwards raw PCM
 or WAV to `POST /v1/analysis/{mode}/{pcm|wav}` over HTTPS with a server-only
 bearer token. Cloud WAV inputs are capped at 4 MiB. Existing analysis result

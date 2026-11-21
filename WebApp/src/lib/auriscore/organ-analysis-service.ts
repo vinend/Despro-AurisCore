@@ -1,6 +1,7 @@
 import { parseOrganAnalysisResult, type AnalysisMode, type OrganAnalysisResult } from "./analysis-result.ts";
 import { validateHeartFile } from "./heart-analysis-service.ts";
 import { pcmToWavFile, type AnalysisReadyAudio } from "./heart-audio-source.ts";
+import { currentDeviceAccountToken } from "./device-account";
 
 export interface OrganAnalysisService {
   analyze(file: File, mode: AnalysisMode, signal?: AbortSignal): Promise<OrganAnalysisResult>;
@@ -13,7 +14,7 @@ export class HttpOrganAnalysisService implements OrganAnalysisService {
     const form = new FormData();
     form.set("audio", file);
     form.set("mode", mode);
-    const token = this.getOperatorToken();
+    const token = process.env.NEXT_PUBLIC_AURISCORE_CLOUD === "1" ? await currentDeviceAccountToken() : this.getOperatorToken();
     const response = await this.request.call(globalThis, "/api/analysis", { method: "POST", body: form, signal,
       headers: token ? { "X-AurisCore-Operator-Token": token } : undefined });
     const body: unknown = await response.json();

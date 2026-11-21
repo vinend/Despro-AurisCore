@@ -9,7 +9,7 @@ export function createAnalysisHandler(fixedMode?: AnalysisMode, legacyHeart = fa
   return async (request: Request): Promise<Response> => {
     const failure = (error: string, status: number) => Response.json({ error }, { status });
     const cloud = cloudAnalysisEnabled();
-    if (cloud && !cloudOperatorAuthorized(request)) return failure("Kode pairing operator diperlukan.", 401);
+    if (cloud && !await cloudOperatorAuthorized(request)) return failure("Masuk dengan akun yang memiliki akses alat untuk analisis.", 401);
     const maxWav = cloud ? CLOUD_WAV_BYTES : MAX_HEART_WAV_BYTES;
     const maxBody = maxWav + 64 * 1024;
     const tooLarge = () => failure(`Berkas WAV terlalu besar (maksimum ${maxWav / 1024 ** 2} MB).`, 413);

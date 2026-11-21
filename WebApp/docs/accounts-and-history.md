@@ -1,5 +1,15 @@
 # Accounts and saved recordings
 
+Cloud device access uses verified accounts with explicit operator assignment.
+Set AURISCORE_DEVICE_ACCOUNT_EMAILS on the WebApp server (comma-separated verified
+emails). Each permitted account controls the single device/namespace assigned to
+this deployment; adding arbitrary registered users is not supported. The normal
+UI auto-connects after login and has no gateway URL/pairing-code form. A temporary
+network setup key remains necessary when provisioning an unfamiliar Wi-Fi network.
+Guest access does not grant cloud capture/analysis. A second browser still cannot
+take over an active controller. The shared operator secret is never sent to the
+new UI, and legacy operator codes are not accepted by the cloud browser endpoint.
+
 Login failures now give separate guidance for incorrect credentials,
 unconfirmed email, provider email restrictions and connectivity/rate limits.
 Only an unconfirmed-email response exposes the user-initiated confirmation

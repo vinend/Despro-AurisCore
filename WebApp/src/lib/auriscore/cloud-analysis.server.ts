@@ -1,12 +1,13 @@
 import { parseOrganAnalysisResult, type AnalysisMode } from "./analysis-result.ts";
 import { AnalysisPythonError } from "./analysis-python.server.ts";
 import { matchesToken } from "./cloud-auth.server.ts";
+import { deviceAccountAuthorized } from "./device-account.server.ts";
 
 export const CLOUD_WAV_BYTES = 4 * 1024 * 1024;
 export const cloudAnalysisEnabled = () => process.env.VERCEL === "1" || process.env.AURISCORE_CLOUD_ANALYSIS === "1";
-export const cloudOperatorAuthorized = (request: Request) => matchesToken(
-  request.headers.get("x-auriscore-operator-token"), process.env.AURISCORE_OPERATOR_TOKEN,
-);
+export const cloudOperatorAuthorized = async (request: Request) => process.env.VERCEL === "1" || process.env.AURISCORE_DEVICE_ACCOUNT_EMAILS
+  ? deviceAccountAuthorized(request.headers.get("x-auriscore-operator-token"))
+  : matchesToken(request.headers.get("x-auriscore-operator-token"), process.env.AURISCORE_OPERATOR_TOKEN);
 
 export async function analyzeInCloud(bytes: Uint8Array, format: "pcm" | "wav", mode: AnalysisMode, signal: AbortSignal) {
   const base = process.env.AURISCORE_INFERENCE_URL;

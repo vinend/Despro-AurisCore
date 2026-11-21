@@ -48,8 +48,8 @@ export interface PcgStream {
  * seluruh pohon UI. Render React hanya terjadi saat status (1 dtk), mode,
  * atau state koneksi berubah.
  */
-export function usePcgStream(settings: { source: "mock" | "hardware"; url: string; token: string } = { source: "mock", url: "", token: "" }, connectionAttempt = 0): PcgStream {
-  const { source, url, token } = settings;
+export function usePcgStream(settings: { source: "mock" | "hardware"; url: string; token: string; getToken?: () => Promise<string> } = { source: "mock", url: "", token: "" }, connectionAttempt = 0): PcgStream {
+  const { source, url, token, getToken } = settings;
   const [error, setError] = useState<string | null>(null);
   const [gatewayRttMs, setGatewayRttMs] = useState<number | null>(null);
   // Buffer gelombang dibuat sekali per komponen lewat lazy state initializer
@@ -71,11 +71,13 @@ export function usePcgStream(settings: { source: "mock" | "hardware"; url: strin
   const [bpmDraft, setBpmDraft] = useState<number | null>(null);
 
   useEffect(() => {
-    if (source === "hardware" && (!url || token.length < 16)) {
+    if (source === "hardware" && (!url || (!getToken && token.length < 16))) {
       ring.clear(); ring.resetSequence();
-      setState("disconnected"); setHello(null); setStatus(null); setError(null); setGatewayRttMs(null);
+      const clear = setTimeout(() => {
+        setState("disconnected"); setHello(null); setStatus(null); setError(null); setGatewayRttMs(null);
+      }, 0);
       for (const listener of connectionListeners.current) listener("disconnected");
-      return;
+      return () => clearTimeout(clear);
     }
     const handlers = {
       onHello: (msg: HelloMsg) => {
@@ -123,7 +125,7 @@ export function usePcgStream(settings: { source: "mock" | "hardware"; url: strin
       onLatency: (milliseconds: number | null) => setGatewayRttMs(milliseconds),
     };
     ring.clear(); ring.resetSequence();
-    const connection = source === "hardware" ? new DeviceConnection({ url, token }, handlers)
+    const connection = source === "hardware" ? new DeviceConnection({ url, token, getToken }, handlers)
       : new PcgConnection(resolveDeviceUrl(), handlers);
 
     connRef.current = connection;
@@ -133,7 +135,7 @@ export function usePcgStream(settings: { source: "mock" | "hardware"; url: strin
       connection.close();
       connRef.current = null;
     };
-  }, [ring, source, url, token, connectionAttempt]);
+  }, [ring, source, url, token, getToken, connectionAttempt]);
 
   const setOrganMode = useCallback((mode: OrganMode) => {
     connRef.current?.setMode(mode);

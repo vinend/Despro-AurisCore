@@ -1,6 +1,6 @@
 import { AudioContinuity, decodeAudioFrame, parseDeviceHello, type DeviceHello } from "./device-protocol.ts";
 import type { PcgConnectionHandlers, PcgConnectionState } from "./pcg-connection.ts";
-export interface DeviceConnectionOptions { url: string; token: string }
+export interface DeviceConnectionOptions { url: string; token: string; getToken?: () => Promise<string> }
 /** Physical gateway connection: socket open is not device/audio readiness. */
 export class DeviceConnection {
   private socket: WebSocket | null = null;
@@ -27,7 +27,17 @@ export class DeviceConnection {
     this.authenticated = false; this.ping = null; this.lastPingAt = -Infinity;
     this.handlers.onLatency?.(null);
     const socket = new WebSocket(this.options.url); this.socket = socket; socket.binaryType = "arraybuffer";
-    socket.onopen = () => { socket.send(JSON.stringify({ type: "authenticate", token: this.options.token })); };
+    socket.onopen = async () => {
+      try {
+        const token = this.options.getToken ? await this.options.getToken() : this.options.token;
+        if (this.socket === socket && !this.closed && socket.readyState === WebSocket.OPEN)
+          socket.send(JSON.stringify({ type: "authenticate", token }));
+      } catch {
+        if (this.socket !== socket || this.closed) return;
+        this.handlers.onError?.("Masuk kembali ke akun AurisCore untuk menghubungkan alat.");
+        this.closed = true; socket.close();
+      }
+    };
     socket.onmessage = event => {
       if (this.socket !== socket) return;
       try {
@@ -77,7 +87,9 @@ export class DeviceConnection {
     socket.onclose = event => {
       if (this.socket !== socket) return;
       if (event.code === 1008 && !this.hello) {
-        this.closed = true; this.handlers.onError?.("Pairing atau kontrol gateway ditolak. Periksa kode pairing dan koneksi browser lain.");
+        this.closed = true; this.handlers.onError?.(this.options.getToken
+          ? "Akses alat ditolak atau alat sedang digunakan di browser lain. Periksa akun dan tutup koneksi lain."
+          : "Pairing atau kontrol gateway ditolak. Periksa kode pairing dan koneksi browser lain.");
       }
       this.state("disconnected"); this.hello = null; this.continuity = null; this.started = false;
       this.authenticated = false; this.ping = null; this.handlers.onLatency?.(null);
@@ -103,7 +115,7 @@ export class DeviceConnection {
   private startStream() {
     if (!this.started && this.socket?.readyState === WebSocket.OPEN) {
       this.started = true;
-      // Correlation ID only; authentication still uses the pairing token.
+      // Correlation ID only; authentication uses the credential supplied above.
       // randomUUID is unavailable on HTTP LAN origins in mobile browsers.
       const id = `stream-${Date.now()}-${++this.commandSequence}`;
       this.socket.send(JSON.stringify({ type: "command", id, command: "start_stream" }));

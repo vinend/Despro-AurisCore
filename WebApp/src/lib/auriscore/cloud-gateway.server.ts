@@ -11,7 +11,8 @@ const release = "if redis.call('GET',KEYS[1]) == ARGV[1] then return redis.call(
 const publish = "if redis.call('GET',KEYS[1]) == ARGV[1] then return redis.call('PUBLISH',KEYS[2],ARGV[2]) end return -1";
 const validId = (id: unknown): id is string => typeof id === "string" && /^[\w-]{1,64}$/.test(id);
 
-export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: string; namespace: string; token: string }) {
+export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: string; namespace: string; token: string;
+  authorize?: (token: unknown) => Promise<boolean> }) {
   const prefix = `auriscore:{${options.namespace}}`;
   const peer: Role = role === "device" ? "browser" : "device";
   const key = (r: Role) => `${prefix}:lease:${r}`;
@@ -30,6 +31,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
   let windowStart = Date.now(), messages = 0, queued = 0;
   let queue = Promise.resolve();
   let missedPongs = 0;
+  let accountToken: unknown = null, lastAuthorization = 0, reauthorizing = false;
   const send = (value: unknown) => { if (ws.readyState === 1) ws.send(JSON.stringify(value)); };
   const state = (status: string, reason: string | null = null) => ({ type: "device_state", status, reason });
   const relay = async (payload: unknown, target?: string) => {
@@ -61,8 +63,18 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
       .finally(() => { queued--; });
   }
   const deadline = setTimeout(() => close(1008, "Authentication required"), 5000);
-  const watchdog = setInterval(() => enqueue(async () => {
-    if (!authenticated) return;
+  const watchdog = setInterval(() => {
+    if (closed || !authenticated) return;
+    // Provider latency must not pause PCM relay or Redis lease renewal.
+    if (options.authorize && !reauthorizing && Date.now() - lastAuthorization > 30_000) {
+      reauthorizing = true;
+      void options.authorize(accountToken).then(allowed => {
+        if (!allowed) close(1008, "Account access expired");
+        else lastAuthorization = Date.now();
+      }).catch(() => close(1008, "Account access unavailable"))
+        .finally(() => { reauthorizing = false; });
+    }
+    enqueue(async () => {
     if (++missedPongs > 3) { close(1011, "Peer disconnected"); return; }
     ws.ping();
     if (await redis.eval(renew, 1, key(role), owner, leaseMs) !== 1) throw Error("Lease lost");
@@ -76,7 +88,8 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
       await relay(state("error", "Audio or control stalled"));
       close(1008, "Audio or control stalled");
     }
-  }), 1000);
+    });
+  }, 1000);
 
   subscriber.on("error", () => close(1011, "Relay unavailable"));
   redis.on("error", () => close(1011, "Relay unavailable"));
@@ -145,12 +158,16 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
       }
       const message = JSON.parse(bytes.toString());
       if (!authenticated) {
-        if (message?.type !== "authenticate" || !matchesToken(message.token, options.token)) throw Error("Authentication failed");
+        if (message?.type !== "authenticate"
+            || !(options.authorize ? await options.authorize(message.token) : matchesToken(message.token, options.token)))
+          throw Error("Authentication failed");
+        if (closed) return;
         await Promise.all([redis.connect(), subscriber.connect()]);
         owned = await redis.set(key(role), owner, "PX", leaseMs, "NX") === "OK";
         if (!owned || closed) throw Error("Connection unavailable");
         await subscriber.subscribe(channel(role));
         authenticated = true;
+        accountToken = message.token; lastAuthorization = Date.now();
         clearTimeout(deadline);
         send({ type: "authenticated", role });
         if (role === "browser") { send(state("offline")); await relay({ type: "discover" }); }

@@ -10,7 +10,7 @@ export function createLiveAnalysisHandler(
   return async (request: Request) => {
     const fail = (error: string, status: number) => Response.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
     const cloud = cloudAnalysisEnabled();
-    if (cloud && !cloudOperatorAuthorized(request)) return fail("Kode pairing operator diperlukan.", 401);
+    if (cloud && !await cloudOperatorAuthorized(request)) return fail("Masuk dengan akun yang memiliki akses alat untuk analisis.", 401);
     const mode = new URL(request.url).searchParams.get("mode");
     if (mode !== "heart" && mode !== "lung" && mode !== "abdomen") return fail("Mode analisis tidak valid.", 400);
     if (request.headers.get("content-type") !== "application/octet-stream") return fail("Gunakan PCM16 little-endian.", 415);

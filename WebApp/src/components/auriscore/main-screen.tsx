@@ -10,6 +10,7 @@ import { PcgWaveform } from "./pcg-waveform";
 import { RecordingControls } from "./recording-controls";
 import { ResultCard } from "./result-card";
 import { DeviceConnect, type StreamSettings } from "./device-connect";
+import { AccountDeviceConnect } from "./account-device-connect";
 import { LiveListening } from "./live-listening";
 import { OrganResultView } from "./organ-result-view";
 import type { AnalysisMode } from "@/lib/auriscore/analysis-result";
@@ -31,6 +32,9 @@ import { useSessionHistory } from "@/hooks/use-session-history";
  * area gelombang → kontrol (rekam, timer, slider BPM) → kartu hasil →
  * riwayat → footer.
  */
+const cloudDeviceAccess = process.env.NEXT_PUBLIC_AURISCORE_CLOUD === "1";
+const DeviceControls = cloudDeviceAccess ? AccountDeviceConnect : DeviceConnect;
+const disconnectedSettings: StreamSettings = { source: "hardware", url: "", token: "" };
 export function MainScreen() {
   const account = useAccount();
   const sessions = useSessionHistory();
@@ -42,7 +46,7 @@ export function MainScreen() {
     token: "",
   });
   const [connectionAttempt, setConnectionAttempt] = useState(0);
-  const stream = usePcgStream(settings, connectionAttempt);
+  const stream = usePcgStream(cloudDeviceAccess && settings.ownerId !== account.user?.id ? disconnectedSettings : settings, connectionAttempt);
   const signalMetrics = useSignalMeter(stream);
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("heart");
   const operatorToken = process.env.NEXT_PUBLIC_AURISCORE_CLOUD === "1" ? settings.token : undefined;
@@ -121,7 +125,7 @@ export function MainScreen() {
         </div>
 
         {/* Device Connection Settings Card */}
-        <DeviceConnect
+        <DeviceControls
           disabled={busy}
           connected={stream.isConnected}
           onConnect={(next) => {

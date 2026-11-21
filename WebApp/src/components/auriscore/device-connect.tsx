@@ -8,6 +8,8 @@ export interface StreamSettings {
   source: "mock" | "hardware";
   url: string;
   token: string;
+  getToken?: () => Promise<string>;
+  ownerId?: string;
 }
 
 // Location is an external browser value. The empty server snapshot keeps
@@ -65,7 +67,7 @@ export function DeviceConnect({ disabled, connected, onConnect, onDisconnect }: 
           <summary className="cursor-pointer font-semibold">Atur Wi-Fi alat dari HP</summary>
           <p className="mt-2">Untuk jaringan yang sudah disimpan, alat menyambung otomatis saat dinyalakan.</p>
           <ol className="mt-2 list-decimal space-y-2 pl-5">
-            <li>Untuk Wi-Fi baru, tekan tombol BOOT alat selama 3 detik setelah alat menyala. Pilih jaringan AurisCore-Setup di pengaturan Wi-Fi HP, memakai kunci setup alat.</li>
+            <li>Nyalakan alat. Jika jaringan tersimpan tidak ditemukan, tunggu AurisCore-Setup muncul otomatis. Pilih jaringan itu di HP memakai kunci setup alat. Tombol BOOT hanya pintasan teknis untuk membuka setup lebih awal.</li>
             <li>Buka <a className="underline" href="http://192.168.4.1/setup" target="_blank" rel="noreferrer">pengaturan Wi-Fi alat</a>. Simpan nama dan password Wi-Fi/hotspot sekali. Profil lama tetap disimpan.</li>
             <li>Kembalikan HP ke jaringan pilihan, lalu buka kembali AurisCore dan hubungkan alat. Nama jaringan HP tidak dibaca otomatis oleh website.</li>
           </ol>

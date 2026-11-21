@@ -1,5 +1,20 @@
 # TESTING.md
 
+Account device access regression (2026-11-21): provider-verified, confirmed,
+explicitly assigned identity is required; shared operator strings, unconfirmed
+identities, other accounts, expired tokens and provider failures are rejected.
+Unauthorized WebSocket authentication closes before Redis acquisition. Exercise
+fresh browser credentials on reconnect and stale-socket completion rejection.
+Provider revalidation runs outside the PCM/lease queue; a pending provider check
+does not block relay heartbeats, and a revoked grant closes control. Production
+analysis rejects missing assignment and accepts only the assigned account session.
+Verification: 68 WebApp tests pass; one isolated-Redis integration check is skipped
+without its dedicated URL. Typecheck, lint for changed sources, and the cloud-mode
+production build pass. These tests use generated identities, not a real user's
+successful login or a physical-phone/ESP32 stream acceptance test.
+The cloud integration test still requires an isolated Redis URL. Hardware
+continuity, physical microphone fidelity and clinical acceptance are separate gates.
+
 Login feedback regression (2026-11-21): distinguish unconfirmed email,
 invalid credentials, provider delivery restrictions, network failures and
 rate limits without echoing arbitrary provider messages. The confirmation

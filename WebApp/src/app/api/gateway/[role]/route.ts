@@ -1,5 +1,6 @@
 import { upgradeWebSocket } from "@vercel/functions";
 import { attachCloudSocket } from "@/lib/auriscore/cloud-gateway.server";
+import { deviceAccountAuthorized } from "@/lib/auriscore/device-account.server";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -20,5 +21,6 @@ export async function GET(request: Request, context: { params: Promise<{ role: s
   if (request.headers.get("upgrade")?.toLowerCase() !== "websocket") return new Response(null, { status: 426 });
   return upgradeWebSocket(ws => attachCloudSocket(ws, role, {
     url, namespace, token: role === "device" ? deviceToken : operatorToken,
+    authorize: role === "browser" ? deviceAccountAuthorized : undefined,
   }), { maxPayload: 2048 });
 }
