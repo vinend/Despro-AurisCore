@@ -61,6 +61,10 @@ A slow publish reply or connection health check does not stall PCM parsing.
 Lease loss, publish failure or backlog overflow still ends the stream.
 Each authorized publish renews its 20-second lease in the same Redis operation.
 Browser heartbeats also renew the browser lease, independently of server timers.
+Validated audio or browser heartbeats count as peer activity alongside transport
+pongs. The gateway probes idle peers and closes them after 7 seconds of silence.
+Firmware 0.3.6 writes each complete cloud batch with its WebSocket header in
+one TLS write and drains queued batches without an extra pacing delay.
 The WebApp pins its cloud gateway function to Singapore (`sin1`) to shorten
 the relay path for the current deployment; the analysis route is independent.
 

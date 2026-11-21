@@ -23,7 +23,8 @@ class WifiSetupPortal {
   void headers() {
     server.sendHeader("Cache-Control","no-store");
     server.sendHeader("X-Content-Type-Options","nosniff");
-    server.sendHeader("Referrer-Policy","no-referrer");
+    // Keep the same-origin POST's Origin header for configure().
+    server.sendHeader("Referrer-Policy","same-origin");
     server.sendHeader("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
   }
   void page() {

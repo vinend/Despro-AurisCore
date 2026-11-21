@@ -118,3 +118,30 @@ test("cloud gateway pairs separate listeners, relays PCM and fails closed on a s
   device.socket.send(Buffer.concat([Buffer.from(frame(9, 3600)), Buffer.from(frame(11, 4400))]));
   await browser.take(message => message.type === "device_state" && message.status === "offline" && message.reason);
 });
+
+
+test("active mobile heartbeat keeps the browser lease across delayed WebSocket pongs", { skip: !url, timeout: 20000 }, async t => {
+  const token = randomUUID();
+  const server = new WebSocketServer({ host: "127.0.0.1", port: 0 });
+  t.after(async () => {
+    for (const peer of server.clients) peer.terminate();
+    await new Promise(resolve => server.close(resolve));
+  });
+  server.on("connection", socket => attachCloudSocket(socket, "browser", { url, namespace: randomUUID(), token }));
+  await once(server, "listening");
+  const client = new WebSocket(`ws://127.0.0.1:${server.address().port}`, { autoPong: false });
+  await once(client, "open");
+  const auth = once(client, "message");
+  client.send(JSON.stringify({ type: "authenticate", token }));
+  assert.equal(JSON.parse((await auth)[0]).type, "authenticated");
+  for (let i = 0; i < 5; i++) {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    assert.equal(client.readyState, WebSocket.OPEN);
+    const ack = once(client, "message");
+    client.send(JSON.stringify({ type: "heartbeat", id: String(i) }));
+    assert.equal(JSON.parse((await ack)[0]).id, String(i));
+  }
+  const [code, reason] = await once(client, "close");
+  assert.equal(code, 1011);
+  assert.equal(reason.toString(), "Peer disconnected");
+});

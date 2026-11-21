@@ -40,7 +40,6 @@ static constexpr unsigned cloudQueueBlocks=140;
 static constexpr int64_t cloudBacklogUs=6500000;
 static constexpr int64_t lanBacklogUs=250000;
 static constexpr unsigned cloudFramesPerMessage=4;
-static constexpr uint32_t cloudBatchSpacingMs=100;
 static constexpr size_t wireFrameSize=832;
 // Only the Arduino loop writes these counters. Do not log audio or credentials.
 struct TransportTiming {
@@ -55,7 +54,6 @@ static Preferences prefs;
 static WebSocketsClient ws;
 static QueueHandle_t blocks;
 static StaticQueue_t cloudQueueControl;
-static uint32_t lastCloudSendAt=0;
 static QueueHandle_t i2sEvents;
 static portMUX_TYPE guard = portMUX_INITIALIZER_UNLOCKED;
 static bool enabled=false, failed=false;
@@ -110,7 +108,7 @@ static void networkEvent(WStype_t type, uint8_t *payload, size_t length) {
   if(cJSON_IsString(t) && !strcmp(t->valuestring,"authenticated")) {
     cJSON *h=cJSON_CreateObject(); cJSON_AddStringToObject(h,"type","device_hello");
     cJSON_AddNumberToObject(h,"protocol",2); cJSON_AddStringToObject(h,"device","ESP32S3-INMP441-WIFI");
-    cJSON_AddStringToObject(h,"fw","wifi-capture-0.3.4"); cJSON_AddStringToObject(h,"source","hardware");
+    cJSON_AddStringToObject(h,"fw","wifi-capture-0.3.6"); cJSON_AddStringToObject(h,"source","hardware");
     cJSON_AddNumberToObject(h,"streamId",streamId); cJSON_AddNumberToObject(h,"samplingRate",8000);
     cJSON_AddNumberToObject(h,"indicatorProtocol",1);
     cJSON_AddNumberToObject(h,"channels",1); cJSON_AddStringToObject(h,"encoding","pcm16le"); sendJson(h);
@@ -132,7 +130,7 @@ static void networkEvent(WStype_t type, uint8_t *payload, size_t length) {
       cJSON_AddBoolToObject(ack,"ok",start||stop); sendJson(ack);
       if(start) {
         statusLed.update(0,0,millis());
-        sequence=0; sampleIndex=0; lastCloudSendAt=0; transportTiming={};
+        sequence=0; sampleIndex=0; transportTiming={};
         portENTER_CRITICAL(&guard); failed=false; enabled=true; portEXIT_CRITICAL(&guard);
         Serial.println("AUDIO_START_WIFI_ONLY");
       }
@@ -471,9 +469,10 @@ void loop() {
   }
   const bool cloud=host.startsWith("wss://");
   const unsigned target=cloud?cloudFramesPerMessage:1;
-  if(active && (!cloud || millis()-lastCloudSendAt>=cloudBatchSpacingMs)
-      && uxQueueMessagesWaiting(blocks)>=target) {
-    static uint8_t frames[wireFrameSize*cloudFramesPerMessage];
+  if(active && uxQueueMessagesWaiting(blocks)>=target) {
+    // The cloud client can send its WebSocket header and PCM in one TLS write.
+    static uint8_t packet[WEBSOCKETS_MAX_HEADER_SIZE + wireFrameSize*cloudFramesPerMessage];
+    uint8_t *frames=packet+WEBSOCKETS_MAX_HEADER_SIZE;
     unsigned count=0;
     AudioBlock block;
     for(unsigned n=0;n<target && xQueueReceive(blocks,&block,0)==pdTRUE;n++) {
@@ -491,8 +490,8 @@ void loop() {
     }
     if(count) {
       const uint32_t sendStarted=millis();
-      lastCloudSendAt=sendStarted;
-      const bool sent=ws.sendBIN(frames,count*wireFrameSize);
+      const bool sent=cloud ? ws.sendBIN(packet,count*wireFrameSize,true)
+                            : ws.sendBIN(frames,count*wireFrameSize);
       transportTiming.longestSendMs=max(transportTiming.longestSendMs,(uint32_t)(millis()-sendStarted));
       if(!sent) { Serial.println("CAPTURE_SEND_FAILED"); reportTransportTiming(); haltCapture(); ws.disconnect(); }
       else { sequence+=count; sampleIndex+=count*400; transportTiming.frames+=count; }

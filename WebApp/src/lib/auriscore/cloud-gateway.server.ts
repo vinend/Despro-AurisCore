@@ -37,7 +37,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
   const waitingAudio: { data: Buffer; target: string }[] = [];
   let publishingAudio = false;
   let queue = Promise.resolve();
-  let missedPongs = 0, checkingConnection = false;
+  let lastPeerActivity = Date.now(), checkingConnection = false;
   let refreshingBrowserLease = false;
   let accountToken: unknown = null, lastAuthorization = 0, reauthorizing = false;
   const send = (value: unknown) => { if (ws.readyState === 1) ws.send(JSON.stringify(value)); };
@@ -142,11 +142,12 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
     checkingConnection = true;
     // A delayed lease check must not hold up PCM parsing or browser controls.
     void (async () => {
-      // An ESP32 blocked briefly in a TLS send cannot read WebSocket pings.
-      if (++missedPongs > (role === "device" ? Math.ceil(CLOUD_AUDIO_STALL_MS / 1000) : 3)) {
+      // Mobile and embedded clients can deliver application data before a pong.
+      const idleMs = Date.now() - lastPeerActivity;
+      if (idleMs > CLOUD_AUDIO_STALL_MS) {
         close(1011, "Peer disconnected"); return;
       }
-      ws.ping();
+      if (idleMs >= 2000) ws.ping();
       if (role === "device" && captureOwner) {
         // An audio publish atomically checks both leases and renews the device.
         // A second Redis round trip is unnecessary during an active capture.
@@ -230,7 +231,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
     }
   }));
 
-  ws.on("pong", () => { missedPongs = 0; });
+  ws.on("pong", () => { lastPeerActivity = Date.now(); });
   ws.on("close", () => close());
   ws.on("error", () => close(1011, "Socket error"));
   ws.on("message", (raw: RawData, binary: boolean) => {
@@ -250,7 +251,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
           if (continuity.accept(decodeAudioFrame(frame))) accepted.push(frame);
         }
         if (accepted.length === 0) return;
-        lastAudio = Date.now();
+        lastAudio = lastPeerActivity = Date.now();
         const contiguous = accepted.length === 1 ? accepted[0] : Buffer.concat(accepted);
         relayAudio(contiguous, captureOwner);
         return;
@@ -267,7 +268,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
         if (!owned) { close(1013, "Controller slot busy"); return; }
         await subscriber.subscribe(channel(role));
         authenticated = true;
-        accountToken = message.token; lastAuthorization = Date.now();
+        accountToken = message.token; lastAuthorization = lastPeerActivity = Date.now();
         clearTimeout(deadline);
         send({ type: "authenticated", role });
         if (role === "browser") await relay({ type: "discover" });
@@ -276,6 +277,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
       if (message.type === "heartbeat") {
         if (role === "browser" && message.id !== undefined) {
           if (!validId(message.id)) throw Error("Invalid heartbeat");
+          lastPeerActivity = Date.now();
           if (!refreshingBrowserLease) {
             refreshingBrowserLease = true;
             void redis.eval(renew, 1, key(role), owner, leaseMs).then(result => {
@@ -308,7 +310,11 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
           if (message.ok) await relay(state(captureOwner ? "streaming" : "ready"), browser);
           return;
         }
-        if (message.type === "source_error") await relay(state("error", "Device audio source failed"));
+        if (message.type === "source_error") {
+          await relay(state("error", "Device audio source failed"));
+          close(1011, "Device audio source failed");
+          return;
+        }
         throw Error("Unexpected device message");
       }
       if (message.type === "command" && deviceOwner && validId(message.id)

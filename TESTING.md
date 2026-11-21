@@ -1035,3 +1035,5 @@ respiratory metrics. Archive/model hashes matched the published release.
 
 Cloud gateway regression coverage includes initial device discovery, automatic
 browser retry on a busy slot, persistent contention and rejected credentials.
+
+Cloud gateway tests exercise mobile application heartbeats with delayed WebSocket pongs and eventual disconnect after both fall silent. On hardware, compare TLS send time, queue depth, continuity and 10/30-second recordings on each power source.
