@@ -12,6 +12,10 @@ Verification: 68 WebApp tests pass; one isolated-Redis integration check is skip
 without its dedicated URL. Typecheck, lint for changed sources, and the cloud-mode
 production build pass. These tests use generated identities, not a real user's
 successful login or a physical-phone/ESP32 stream acceptance test.
+Production smoke check: the deployed UI restored an existing authorized account,
+omitted gateway/pairing inputs and received a gateway heartbeat (243.9 ms observed).
+Anonymous and synthetic legacy-token device-access requests returned 403; anonymous
+analysis returned 401. The ESP32 was offline, so physical capture remains unverified.
 The cloud integration test still requires an isolated Redis URL. Hardware
 continuity, physical microphone fidelity and clinical acceptance are separate gates.
 
