@@ -39,6 +39,11 @@ or WAV to `POST /v1/analysis/{mode}/{pcm|wav}` over HTTPS with a server-only
 bearer token. Cloud WAV inputs are capped at 4 MiB. Existing analysis result
 schemas and 8 kHz live window sizes apply in both modes.
 
+During cloud discovery the browser waits for the device hello. An authenticated
+client that encounters an occupied slot receives close code 1013. The browser
+retries through the 20-second lease before reporting persistent contention.
+Rejected credentials still terminate the attempt with code 1008.
+
 Cloud capture tolerates up to 7 seconds without incoming audio while the
 connection remains open. Firmware 0.3.3 uses a PSRAM queue for up to 140
 50 ms blocks and discards an entire stream if queued audio exceeds 6.5 seconds.

@@ -126,7 +126,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
       .catch(() => close(1008, "Invalid message or relay unavailable"))
       .finally(() => { queued--; });
   }
-  const deadline = setTimeout(() => close(1008, "Authentication required"), 5000);
+  const deadline = setTimeout(() => close(1013, "Gateway handshake timed out"), 5000);
   const watchdog = setInterval(() => {
     if (closed || !authenticated) return;
     // Provider latency must not pause PCM relay or Redis lease renewal.
@@ -263,13 +263,14 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
         if (closed) return;
         await Promise.all([redis.connect(), subscriber.connect()]);
         owned = await redis.set(key(role), owner, "PX", leaseMs, "NX") === "OK";
-        if (!owned || closed) throw Error("Connection unavailable");
+        if (closed) return;
+        if (!owned) { close(1013, "Controller slot busy"); return; }
         await subscriber.subscribe(channel(role));
         authenticated = true;
         accountToken = message.token; lastAuthorization = Date.now();
         clearTimeout(deadline);
         send({ type: "authenticated", role });
-        if (role === "browser") { send(state("offline")); await relay({ type: "discover" }); }
+        if (role === "browser") await relay({ type: "discover" });
         return;
       }
       if (message.type === "heartbeat") {

@@ -1032,3 +1032,6 @@ The authorized local Lung release adapter was exercised with a synthetic
 30-second PCM input through POST /api/analysis/live. HTTP 200/partial contained
 L006 scores and intervals with LUNG_INSUFFICIENT_CYCLES, preserving null
 respiratory metrics. Archive/model hashes matched the published release.
+
+Cloud gateway regression coverage includes initial device discovery, automatic
+browser retry on a busy slot, persistent contention and rejected credentials.

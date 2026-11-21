@@ -12,6 +12,7 @@ export class DeviceConnection {
   private continuity: AudioContinuity | null = null;
   private lastAudio = 0;
   private attempt = 0;
+  private busySince = 0;
   private started = false;
   private packetSequence = 0;
   private commandSequence = 0;
@@ -56,6 +57,7 @@ export class DeviceConnection {
         }
         const message = JSON.parse(event.data);
         if (message.type === "authenticated") {
+          this.busySince = 0;
           this.authenticated = true; this.probeLatency(); return;
         }
         if (message.type === "heartbeat_ack") {
@@ -87,6 +89,14 @@ export class DeviceConnection {
     socket.onerror = () => {};
     socket.onclose = event => {
       if (this.socket !== socket) return;
+      if (event.code === 1013 && event.reason === "Controller slot busy") {
+        // Give a previous tab's 20-second lease time to expire.
+        this.busySince ||= Date.now();
+        if (Date.now() - this.busySince >= 20_000) {
+          this.closed = true;
+          this.handlers.onError?.("Koneksi alat masih dipakai sesi lain. Tutup sesi itu lalu hubungkan kembali.");
+        }
+      }
       if (event.code === 1008 && !this.hello) {
         this.closed = true; this.handlers.onError?.(this.options.getToken
           ? "Akses alat ditolak atau alat sedang digunakan di browser lain. Periksa akun dan tutup koneksi lain."
@@ -94,7 +104,10 @@ export class DeviceConnection {
       }
       this.state("disconnected"); this.hello = null; this.continuity = null; this.started = false;
       this.authenticated = false; this.ping = null; this.handlers.onLatency?.(null);
-      if (!this.closed) this.retry = setTimeout(() => this.connect(), Math.min(5000, 1000 * 2 ** this.attempt++));
+      if (!this.closed) {
+        this.state("connecting");
+        this.retry = setTimeout(() => this.connect(), Math.min(5000, 1000 * 2 ** this.attempt++));
+      }
     };
     if (!this.watchdog) this.watchdog = setInterval(() => {
       if (this.ping && performance.now() - this.ping.sentAt > 5000) {
@@ -131,6 +144,7 @@ export class DeviceConnection {
   setMode() {} // Location is browser examination metadata, not a fabricated hardware command.
   setBpm() {} // Physical acquisition cannot set a patient's BPM.
   close() {
+    this.busySince = 0;
     this.closed = true; if (this.retry) clearTimeout(this.retry); if (this.watchdog) clearInterval(this.watchdog);
     this.retry = null; this.watchdog = null;
     this.authenticated = false; this.ping = null; this.handlers.onLatency?.(null);

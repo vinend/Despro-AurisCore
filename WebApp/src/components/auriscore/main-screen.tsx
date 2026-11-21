@@ -127,6 +127,7 @@ export function MainScreen() {
         {/* Device Connection Settings Card */}
         <DeviceControls
           disabled={busy}
+          connecting={stream.state === "connecting"}
           connected={stream.isConnected}
           onConnect={(next) => {
             recording.reset();

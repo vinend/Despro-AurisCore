@@ -5,8 +5,8 @@ import { useAccount } from "./account-panel";
 import type { StreamSettings } from "./device-connect";
 import { currentDeviceAccountToken } from "@/lib/auriscore/device-account";
 
-export function AccountDeviceConnect({ disabled, connected, onConnect, onDisconnect }: {
-  disabled: boolean; connected: boolean;
+export function AccountDeviceConnect({ disabled, connected, connecting, onConnect, onDisconnect }: {
+  disabled: boolean; connected: boolean; connecting: boolean;
   onConnect: (settings: StreamSettings) => void; onDisconnect: () => void;
 }) {
   const { user } = useAccount();
@@ -49,9 +49,9 @@ export function AccountDeviceConnect({ disabled, connected, onConnect, onDisconn
     {!user ? <p>Masuk dengan akun AurisCore yang memiliki akses alat. <a className="underline" href="/">Buka halaman masuk</a>.</p>
       : <><p role="status" className="text-sm">{connected ? "Alat terhubung. Pilih organ dan mulai pemeriksaan." : checking ? "Memeriksa akses alat…" : message}</p>
         <div className="flex gap-2 flex-wrap">
-          <button type="button" disabled={disabled || checking} onClick={() => { void connect(); }}
-            className="min-h-11 rounded-xl bg-emerald-900 text-white px-4 py-2 font-medium disabled:opacity-50">{connected ? "Hubungkan ulang" : "Hubungkan alat"}</button>
-          {connected && <button type="button" disabled={disabled} onClick={() => {
+          <button type="button" disabled={disabled || checking || connecting} onClick={() => { void connect(); }}
+            className="min-h-11 rounded-xl bg-emerald-900 text-white px-4 py-2 font-medium disabled:opacity-50">{connecting ? "Menunggu alat…" : connected ? "Hubungkan ulang" : "Hubungkan alat"}</button>
+          {(connecting || connected) && <button type="button" disabled={disabled} onClick={() => {
             attempt.current?.abort(); callbacks.current.onDisconnect(); setMessage("Koneksi dihentikan. Tekan Hubungkan alat untuk menyambung kembali.");
           }} className="min-h-11 rounded-xl border px-4 py-2">Putuskan koneksi</button>}
         </div></>}

@@ -9,6 +9,34 @@ import { cloudOperatorAuthorized } from "../src/lib/auriscore/cloud-analysis.ser
 import { createLiveAnalysisHandler } from "../src/lib/auriscore/live-analysis-route.server.ts";
 import Redis from "ioredis";
 
+test("a browser retries a busy lease and stops if the owner persists", t => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout", "setInterval"], now: 1000 });
+  const sockets = [];
+  class Socket {
+    constructor() { sockets.push(this); }
+    close() {}
+  }
+  const previous = globalThis.WebSocket;
+  globalThis.WebSocket = Socket;
+  t.after(() => { globalThis.WebSocket = previous; });
+  const errors = [];
+  const connection = new DeviceConnection({ url: "wss://example.invalid", token: "" }, {
+    onError: message => errors.push(message),
+  });
+  t.after(() => connection.close());
+  const busy = () => sockets.at(-1).onclose({ code: 1013, reason: "Controller slot busy" });
+  connection.connect();
+  busy();
+  t.mock.timers.tick(1000);
+  assert.equal(sockets.length, 2);
+  assert.deepEqual(errors, []);
+  t.mock.timers.tick(20000);
+  busy();
+  assert.match(errors[0], /sesi lain/);
+  t.mock.timers.tick(5000);
+  assert.equal(sockets.length, 2);
+});
+
 test("fresh account credentials are requested on each connection and late credentials cannot authenticate a closed socket",async t=>{
   const previous=globalThis.WebSocket;const sockets=[];
   class Socket {

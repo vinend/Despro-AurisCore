@@ -67,9 +67,9 @@ test("cloud gateway pairs separate listeners, relays PCM and fails closed on a s
   device.send(hello);
   const browser = await connectBrowser();
   await browser.take(message => message.type === "authenticated");
-  assert.deepEqual(await browser.take(message => message.type === "device_hello"), hello);
+  assert.deepEqual(await browser.take(message => ["device_hello", "device_state"].includes(message.type)), hello);
   const duplicate = await connectBrowser();
-  assert.equal((await once(duplicate.socket, "close"))[0], 1008);
+  assert.equal((await once(duplicate.socket, "close"))[0], 1013);
 
   const start = { type: "command", id: "start-1", command: "start_stream" };
   const frame = (seq, firstSample) => encodeAudioFrame({
