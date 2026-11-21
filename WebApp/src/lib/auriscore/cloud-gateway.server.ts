@@ -37,7 +37,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
   const waitingAudio: { data: Buffer; target: string }[] = [];
   let publishingAudio = false;
   let queue = Promise.resolve();
-  let lastPeerActivity = Date.now(), checkingConnection = false;
+  let lastPeerActivity = performance.now(), checkingConnection = false;
   let refreshingBrowserLease = false;
   let accountToken: unknown = null, lastAuthorization = 0, reauthorizing = false;
   const send = (value: unknown) => { if (ws.readyState === 1) ws.send(JSON.stringify(value)); };
@@ -143,7 +143,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
     // A delayed lease check must not hold up PCM parsing or browser controls.
     void (async () => {
       // Mobile and embedded clients can deliver application data before a pong.
-      const idleMs = Date.now() - lastPeerActivity;
+      const idleMs = performance.now() - lastPeerActivity;
       if (idleMs > CLOUD_AUDIO_STALL_MS) {
         close(1011, "Peer disconnected"); return;
       }
@@ -231,7 +231,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
     }
   }));
 
-  ws.on("pong", () => { lastPeerActivity = Date.now(); });
+  ws.on("pong", () => { lastPeerActivity = performance.now(); });
   ws.on("close", () => close());
   ws.on("error", () => close(1011, "Socket error"));
   ws.on("message", (raw: RawData, binary: boolean) => {
@@ -251,7 +251,8 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
           if (continuity.accept(decodeAudioFrame(frame))) accepted.push(frame);
         }
         if (accepted.length === 0) return;
-        lastAudio = lastPeerActivity = Date.now();
+        lastAudio = Date.now();
+        lastPeerActivity = performance.now();
         const contiguous = accepted.length === 1 ? accepted[0] : Buffer.concat(accepted);
         relayAudio(contiguous, captureOwner);
         return;
@@ -268,7 +269,8 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
         if (!owned) { close(1013, "Controller slot busy"); return; }
         await subscriber.subscribe(channel(role));
         authenticated = true;
-        accountToken = message.token; lastAuthorization = lastPeerActivity = Date.now();
+        accountToken = message.token; lastAuthorization = Date.now();
+        lastPeerActivity = performance.now();
         clearTimeout(deadline);
         send({ type: "authenticated", role });
         if (role === "browser") await relay({ type: "discover" });
@@ -277,7 +279,7 @@ export function attachCloudSocket(ws: WebSocket, role: Role, options: { url: str
       if (message.type === "heartbeat") {
         if (role === "browser" && message.id !== undefined) {
           if (!validId(message.id)) throw Error("Invalid heartbeat");
-          lastPeerActivity = Date.now();
+          lastPeerActivity = performance.now();
           if (!refreshingBrowserLease) {
             refreshingBrowserLease = true;
             void redis.eval(renew, 1, key(role), owner, leaseMs).then(result => {
