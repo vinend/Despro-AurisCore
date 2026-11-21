@@ -3,6 +3,8 @@ export const DEVICE_PROTOCOL = 2;
 export const AUDIO_HEADER_BYTES = 32;
 export const AUDIO_SAMPLES = 400;
 export const AUDIO_FRAME_BYTES = AUDIO_HEADER_BYTES + AUDIO_SAMPLES * 2;
+export const CLOUD_AUDIO_BATCH_FRAMES = 4;
+export const CLOUD_AUDIO_BATCH_BYTES = CLOUD_AUDIO_BATCH_FRAMES * AUDIO_FRAME_BYTES;
 export interface DeviceHello { type: "device_hello"; protocol: 2; device: string; fw: string;
   source: "hardware" | "engineering"; streamId: number; samplingRate: 8000; channels: 1; encoding: "pcm16le"; indicatorProtocol?: 1 }
 export interface AudioFrame { streamId: number; seq: number; firstSample: number; flags: number; samples: Int16Array }

@@ -1,5 +1,20 @@
 # TESTING.md
 
+Cloud recording and RGB bench check (2026-11-21): firmware 0.3.4 was built
+with Arduino-ESP32 3.3.12, flashed on ESP32-S3, and passed its on-device LED,
+profile, frame and FIR self-tests. LED PWM is configured for the team's
+common-anode wiring. The LED and microphone were not physically attached,
+so their visual and acoustic checks remain pending.
+
+The automated WebApp suite passed 71 tests with the Redis test namespace
+enabled. Coverage includes original PCM order, a simulated 4.1-second pause
+in a complete 30-second WAV, fail-closed gaps, and matching HTTPS publications
+with the TCP subscriber. Gateway-specific tests were rerun after audio
+coalescing. On the final Singapore production deployment, a single ESP32
+stream sent 1,440 consecutive 50 ms frames (72 seconds); the browser showed
+Lung streaming and audio input at the end. This was a live transport check,
+with no test recording saved to the user's account.
+
 Account device access regression (2026-11-21): provider-verified, confirmed,
 explicitly assigned identity is required; shared operator strings, unconfirmed
 identities, other accounts, expired tokens and provider failures are rejected.

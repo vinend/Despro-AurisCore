@@ -39,6 +39,26 @@ or WAV to `POST /v1/analysis/{mode}/{pcm|wav}` over HTTPS with a server-only
 bearer token. Cloud WAV inputs are capped at 4 MiB. Existing analysis result
 schemas and 8 kHz live window sizes apply in both modes.
 
+Cloud capture tolerates up to 7 seconds without incoming audio while the
+connection remains open. Firmware 0.3.3 uses a PSRAM queue for up to 140
+50 ms blocks and discards an entire stream if queued audio exceeds 6.5 seconds.
+Boards without available PSRAM use 40 blocks. Buffered frames retain their
+original order and sample clock. The recording clock advances only on received
+samples. Disconnects and sample gaps still invalidate an active recording.
+The binary frame and LAN stall threshold are unchanged. Cloud device uploads
+can group up to four consecutive frames in one WebSocket message. The gateway
+verifies the entire group before publishing it to the relay and sends individual
+v2 frames to the browser. Previous devices sending one frame remain supported.
+Redis PCM publishes are ordered with at most 32 responses pending. If the
+deployment configures HTTPS Redis credentials, a single in-flight HTTP
+pipeline publishes queued audio into the same instance as the TCP subscriber.
+A slow publish reply or connection health check does not stall PCM parsing.
+Lease loss, publish failure or backlog overflow still ends the stream.
+Each authorized publish renews its 20-second lease in the same Redis operation.
+Browser heartbeats also renew the browser lease, independently of server timers.
+The WebApp pins its cloud gateway function to Singapore (`sin1`) to shorten
+the relay path for the current deployment; the analysis route is independent.
+
 Abdomen engineering A105 returns a partial `abdomen-analysis-v1` result
 with `event_detection.schema_version=abdomen-event-candidates-v1`.
 `bowel_events` contains ordered candidate intervals in seconds with their
@@ -123,9 +143,12 @@ Firmware computes red/green/blue boot test (300 ms each), slow white disconnecte
 blink (300 ms on / 2 s), dim white before mode selection, mode color with two
 confirmation blinks, breathing during recording, and three blinks on successful
 completion. Processing/error retain mode color; neither triggers completion.
-An unset LED GPIO disables physical output. Wiring/type is pending hardware team
-integration; `AURISCORE_RGB_DATA_PIN` supports a confirmed addressable RGB LED only.
-The built-in diagnostic LED is not assumed to be the external RGB LED.
+Wi-Fi capture 0.3.4 drives a 4-pin common-anode RGB LED at 5 kHz. The common
+anode goes to 3.3 V and the R/G/B cathodes each go through a 150–220 Ω resistor
+to GPIO4/5/6 respectively. Heart is red, Lung is blue, and Abdomen is purple
+(red plus blue). The green channel remains available for boot and white status.
+Do not share these GPIOs with the AD8232 while running this build. The separate
+USB ECG sketch still documents its own wiring and is unchanged.
 
 USB diagnostics connector selection: the Wi-Fi build script accepts `-NativeUsb`
 to enable hardware CDC on boot in a separate build directory. USB 115200 then

@@ -1,5 +1,6 @@
 import { AudioContinuity, decodeAudioFrame, parseDeviceHello, type DeviceHello } from "./device-protocol.ts";
 import type { PcgConnectionHandlers, PcgConnectionState } from "./pcg-connection.ts";
+import { CLOUD_AUDIO_STALL_MS, LAN_AUDIO_STALL_MS } from "./stream-timing.ts";
 export interface DeviceConnectionOptions { url: string; token: string; getToken?: () => Promise<string> }
 /** Physical gateway connection: socket open is not device/audio readiness. */
 export class DeviceConnection {
@@ -100,7 +101,8 @@ export class DeviceConnection {
         this.ping = null; this.handlers.onLatency?.(null);
       }
       if (performance.now() - this.lastPingAt >= 2000) this.probeLatency();
-      if (this.lastAudio && Date.now() - this.lastAudio > 2000) {
+      const audioStallMs = this.options.getToken ? CLOUD_AUDIO_STALL_MS : LAN_AUDIO_STALL_MS;
+      if (this.lastAudio && Date.now() - this.lastAudio > audioStallMs) {
         this.lastAudio = 0; this.state("disconnected"); this.handlers.onError?.("Audio perangkat berhenti; ulangi rekaman.");
       }
     }, 500);

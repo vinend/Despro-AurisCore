@@ -50,7 +50,7 @@ export function MainScreen() {
   const signalMetrics = useSignalMeter(stream);
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("heart");
   const operatorToken = process.env.NEXT_PUBLIC_AURISCORE_CLOUD === "1" ? settings.token : undefined;
-  const recording = useRecording(stream, analysisMode, operatorToken);
+  const recording = useRecording(stream, analysisMode);
   useEffect(() => {
     if (priorAccount.current !== account.user?.id) {
       priorAccount.current = account.user?.id;

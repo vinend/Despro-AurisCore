@@ -10,6 +10,7 @@ import { encodeAudioFrame } from "../src/lib/auriscore/device-protocol.ts";
 import { RecordingSession } from "../src/lib/auriscore/recording-session.ts";
 import { defaultGatewayUrl } from "../src/lib/auriscore/gateway-url.ts";
 import { SignalMeter } from "../src/lib/auriscore/signal-meter.ts";
+import { CLOUD_AUDIO_STALL_MS } from "../src/lib/auriscore/stream-timing.ts";
 const require = createRequire(new URL("../mini-services/device-gateway/package.json", import.meta.url));
 const { WebSocket } = require("ws");
 const token = "fictional-streaming-test-token", origin = "http://localhost:3000";
@@ -186,4 +187,36 @@ test("recording watchdog refuses absent samples without calling analysis", async
   session.start("heart", "websocket-device");
   await new Promise(resolve => setTimeout(resolve, 2200));
   assert.equal(session.getSnapshot().phase, "error"); assert.equal(calls, 0); session.dispose();
+});
+
+test("30-second cloud recording keeps delayed contiguous samples and aborts when audio does not return", async t => {
+  t.mock.timers.enable({ apis: ["Date", "setInterval"], now: 1000 });
+  const uploads = [];
+  const session = new RecordingSession({ analyze: async file => {
+    uploads.push(file);
+    return {status: "completed"};
+  } }, CLOUD_AUDIO_STALL_MS);
+  t.after(() => session.dispose());
+  const accept = seq => session.accept({
+    type: "pcg_packet", seq, ts: seq * 50, samplingRate: 8000, channels: 1,
+    organMode: "mitral", qualityFlag: "good", samples: Array.from(samples(seq))
+  });
+  session.start("lung", "websocket-device");
+  for (let seq = 0; seq < 25; seq++) { accept(seq); t.mock.timers.tick(50); }
+  t.mock.timers.tick(4100);
+  assert.equal(session.getSnapshot().phase, "recording");
+  assert.equal(session.getSnapshot().elapsedMs, 1250);
+  for (let seq = 25; seq < 600; seq++) { accept(seq); t.mock.timers.tick(50); }
+  await Promise.resolve();
+  assert.equal(session.getSnapshot().phase, "done");
+  assert.equal(uploads.length, 1);
+  const wav = new DataView(await uploads[0].arrayBuffer());
+  assert.equal(wav.byteLength, 44 + 240000 * 2);
+  assert.equal(wav.getInt16(44 + 10000 * 2, true), samples(25)[0]);
+
+  session.start("heart", "websocket-device");
+  accept(0);
+  t.mock.timers.tick(CLOUD_AUDIO_STALL_MS + 100);
+  assert.equal(session.getSnapshot().phase, "error");
+  assert.equal(uploads.length, 1);
 });

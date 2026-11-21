@@ -2,6 +2,7 @@
 import { PcgCaptureBuffer, pcmToWavFile, type AudioSourceKind } from "./heart-audio-source.ts";
 import type { AnalysisMode, OrganAnalysisResult } from "./analysis-result.ts";
 import type { OrganAnalysisService } from "./organ-analysis-service.ts";
+import { LAN_AUDIO_STALL_MS } from "./stream-timing.ts";
 export type RecordingPhase = "idle" | "recording" | "processing" | "done" | "error";
 export const RECORD_DURATION_MS = 10_000;
 export function recordingDurationMs(mode: AnalysisMode) { return mode === "lung" ? 30_000 : RECORD_DURATION_MS; }
@@ -22,7 +23,7 @@ export class RecordingSession {
   private sequence = 0;
   private receivedSamples = 0;
   private lastPacketAt = 0;
-  constructor(private readonly service: OrganAnalysisService) {}
+  constructor(private readonly service: OrganAnalysisService, private readonly audioStallMs = LAN_AUDIO_STALL_MS) {}
   getSnapshot = () => this.snapshot;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   private update(patch: Partial<RecordingSnapshot>) {
@@ -38,7 +39,8 @@ export class RecordingSession {
     this.update({ phase: "recording", elapsedMs: 0, error: null, result: null, file: null });
     this.timer = setInterval(() => {
       this.update({ elapsedMs: this.receivedSamples / 8 });
-      if (Date.now() - this.lastPacketAt > 2000 || Date.now() - this.started > recordingDurationMs(this.mode) + 5000) {
+      if (Date.now() - this.lastPacketAt > this.audioStallMs
+        || Date.now() - this.started > recordingDurationMs(this.mode) + Math.max(5000, this.audioStallMs + 1000)) {
         this.disconnect();
       }
     }, 100);

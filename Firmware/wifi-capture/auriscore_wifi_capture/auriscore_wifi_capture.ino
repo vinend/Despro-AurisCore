@@ -11,6 +11,7 @@
 #include <driver/i2s.h>
 #include <esp_timer.h>
 #include <esp_system.h>
+#include <esp_heap_caps.h>
 #include <soc/soc.h>
 #include <soc/rtc_cntl_reg.h>
 #ifndef AURISCORE_DISABLE_BROWNOUT
@@ -34,9 +35,27 @@ static uint32_t noNetworkSince=0, setupButtonAt=0;
 static bool setupButtonLatched=false, setupFallbackAttempted=false;
 
 struct AudioBlock { int16_t samples[400]; int64_t queued; uint32_t generation; };
+static constexpr unsigned defaultQueueBlocks=40;
+static constexpr unsigned cloudQueueBlocks=140;
+static constexpr int64_t cloudBacklogUs=6500000;
+static constexpr int64_t lanBacklogUs=250000;
+static constexpr unsigned cloudFramesPerMessage=4;
+static constexpr uint32_t cloudBatchSpacingMs=100;
+static constexpr size_t wireFrameSize=832;
+// Only the Arduino loop writes these counters. Do not log audio or credentials.
+struct TransportTiming {
+  uint32_t frames=0;
+  uint32_t largestQueue=0;
+  uint32_t longestPollMs=0;
+  uint32_t longestSendMs=0;
+  uint32_t oldestBlockMs=0;
+};
+static TransportTiming transportTiming;
 static Preferences prefs;
 static WebSocketsClient ws;
 static QueueHandle_t blocks;
+static StaticQueue_t cloudQueueControl;
+static uint32_t lastCloudSendAt=0;
 static QueueHandle_t i2sEvents;
 static portMUX_TYPE guard = portMUX_INITIALIZER_UNLOCKED;
 static bool enabled=false, failed=false;
@@ -66,6 +85,12 @@ static void haltCapture() {
   portENTER_CRITICAL(&guard); enabled=false; generation++; portEXIT_CRITICAL(&guard);
   xQueueReset(blocks);
 }
+static void reportTransportTiming() {
+  Serial.printf("CAPTURE_TRANSPORT FRAMES=%lu QUEUE_MAX=%lu POLL_MAX_MS=%lu SEND_MAX_MS=%lu BLOCK_MAX_MS=%lu RSSI_DBM=%ld\n",
+    (unsigned long)transportTiming.frames, (unsigned long)transportTiming.largestQueue,
+    (unsigned long)transportTiming.longestPollMs, (unsigned long)transportTiming.longestSendMs,
+    (unsigned long)transportTiming.oldestBlockMs, WiFi.status()==WL_CONNECTED?(long)WiFi.RSSI():0L);
+}
 static void sendJson(cJSON *json) {
   char *value=cJSON_PrintUnformatted(json);
   if(value) { ws.sendTXT(value); free(value); }
@@ -85,7 +110,7 @@ static void networkEvent(WStype_t type, uint8_t *payload, size_t length) {
   if(cJSON_IsString(t) && !strcmp(t->valuestring,"authenticated")) {
     cJSON *h=cJSON_CreateObject(); cJSON_AddStringToObject(h,"type","device_hello");
     cJSON_AddNumberToObject(h,"protocol",2); cJSON_AddStringToObject(h,"device","ESP32S3-INMP441-WIFI");
-    cJSON_AddStringToObject(h,"fw","wifi-capture-0.3.0"); cJSON_AddStringToObject(h,"source","hardware");
+    cJSON_AddStringToObject(h,"fw","wifi-capture-0.3.4"); cJSON_AddStringToObject(h,"source","hardware");
     cJSON_AddNumberToObject(h,"streamId",streamId); cJSON_AddNumberToObject(h,"samplingRate",8000);
     cJSON_AddNumberToObject(h,"indicatorProtocol",1);
     cJSON_AddNumberToObject(h,"channels",1); cJSON_AddStringToObject(h,"encoding","pcm16le"); sendJson(h);
@@ -107,7 +132,7 @@ static void networkEvent(WStype_t type, uint8_t *payload, size_t length) {
       cJSON_AddBoolToObject(ack,"ok",start||stop); sendJson(ack);
       if(start) {
         statusLed.update(0,0,millis());
-        sequence=0; sampleIndex=0;
+        sequence=0; sampleIndex=0; lastCloudSendAt=0; transportTiming={};
         portENTER_CRITICAL(&guard); failed=false; enabled=true; portEXIT_CRITICAL(&guard);
         Serial.println("AUDIO_START_WIFI_ONLY");
       }
@@ -183,8 +208,11 @@ static void selfTest() {
   ledPass=ledPass && led.color(2000).r==16 && led.color(2500).r==0;
   led.update(0,0,3000); ledPass=ledPass && led.color(3000).r==8;
   led.update(1,0,4000); ledPass=ledPass && led.color(4000).r==32 && led.color(4100).r==0 && led.color(4400).r==32;
+  ledPass=ledPass && led.color(4400).g==0 && led.color(4400).b==0;
   led.update(2,1,5000); ledPass=ledPass && led.color(6000).b==4 && led.color(7000).b==32;
-  led.update(3,3,8000); ledPass=ledPass && led.color(8500).g==0 && led.color(8600).g==32;
+  ledPass=ledPass && led.color(7000).r==0 && led.color(7000).g==0;
+  led.update(3,3,8000); ledPass=ledPass && led.color(8500).r==0 && led.color(8500).b==0;
+  ledPass=ledPass && led.color(8600).r==24 && led.color(8600).g==0 && led.color(8600).b==32;
   led.disconnect(); ledPass=ledPass && led.color(10000).r==16;
   Serial.println(ledPass?"SELFTEST_LED_PASS":"SELFTEST_LED_FAIL");
   // Exercise the ACTUAL profile binding without NVS writes or real credentials.
@@ -235,6 +263,7 @@ static void provision() {
         Serial.print("PROFILE_COUNT="); Serial.println(profileCount);
         Serial.print("RADIO_HOLD="); Serial.println(radioHold?1:0);
         Serial.printf("CAPTURE_STATUS WIFI=%d I2S=%d SETUP=%d UPTIME_MS=%lu\n",WiFi.status()==WL_CONNECTED,captureReady,setupPortal.running(),(unsigned long)millis());
+        reportTransportTiming();
         continue;
       }
       if(input=="SETUP_WIFI") { input=""; if(!radioHold)startSetupPortal(); continue; }
@@ -345,7 +374,16 @@ void setup() {
   });
   // On the Dev Module, BOOT is GPIO0. Press only AFTER normal boot, for 3 s.
   pinMode(0,INPUT_PULLUP);
-  blocks=xQueueCreate(8,sizeof(AudioBlock));
+  // Audio blocks are copied by tasks, so the backing buffer can live in PSRAM.
+  // Keep a smaller queue on boards without available PSRAM.
+  uint8_t *cloudQueueStorage=(uint8_t*)heap_caps_malloc(cloudQueueBlocks*sizeof(AudioBlock),MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
+  if(cloudQueueStorage)blocks=xQueueCreateStatic(cloudQueueBlocks,sizeof(AudioBlock),cloudQueueStorage,&cloudQueueControl);
+  if(!blocks) {
+    free(cloudQueueStorage);
+    cloudQueueStorage=nullptr;
+    blocks=xQueueCreate(defaultQueueBlocks,sizeof(AudioBlock));
+  }
+  Serial.printf("CAPTURE_QUEUE_BLOCKS=%u\n",cloudQueueStorage && blocks?cloudQueueBlocks:defaultQueueBlocks);
   if(!blocks) { Serial.println("CAPTURE_QUEUE_FAILED"); while(true)delay(1000); }
   Serial.println(configured?"CONFIG_PRESENT":"PROVISION_OVER_USB_REQUIRED");
   // A recovery interval permits provisioning before any radio power surge.
@@ -420,20 +458,44 @@ void loop() {
     ws.onEvent(networkEvent); ws.setReconnectInterval(3000);
     networkStarted=true;
   }
+  const uint32_t pollStarted=millis();
   ws.loop();
+  transportTiming.longestPollMs=max(transportTiming.longestPollMs,(uint32_t)(millis()-pollStarted));
+  transportTiming.largestQueue=max(transportTiming.largestQueue,(uint32_t)uxQueueMessagesWaiting(blocks));
   bool fault, active; uint32_t current; uint8_t cause;
   portENTER_CRITICAL(&guard); fault=failed; cause=captureFault; failed=false; captureFault=0; active=enabled; current=generation; portEXIT_CRITICAL(&guard);
   if(fault) {
     Serial.printf("CAPTURE_FAULT_CODE=%u\n",cause); // 1 read error, 2 short read, 3 DMA overflow, 4 output queue full.
+    reportTransportTiming();
     haltCapture(); ws.sendTXT("{\"type\":\"source_error\",\"reason\":\"Audio acquisition/queue overflow\"}");
   }
-  AudioBlock block;
-  if(active && xQueueReceive(blocks,&block,0)==pdTRUE && block.generation==current) {
-    if(esp_timer_get_time()-block.queued>250000) { haltCapture(); ws.sendTXT("{\"type\":\"source_error\",\"reason\":\"Audio backlog\"}"); }
-    else {
-      uint8_t frame[832]; encodeAudio(frame,block.samples,streamId,sequence,sampleIndex);
-      if(!ws.sendBIN(frame,sizeof(frame))) { haltCapture(); ws.disconnect(); }
-      else { sequence++; sampleIndex+=400; }
+  const bool cloud=host.startsWith("wss://");
+  const unsigned target=cloud?cloudFramesPerMessage:1;
+  if(active && (!cloud || millis()-lastCloudSendAt>=cloudBatchSpacingMs)
+      && uxQueueMessagesWaiting(blocks)>=target) {
+    static uint8_t frames[wireFrameSize*cloudFramesPerMessage];
+    unsigned count=0;
+    AudioBlock block;
+    for(unsigned n=0;n<target && xQueueReceive(blocks,&block,0)==pdTRUE;n++) {
+      if(block.generation!=current)continue;
+      const int64_t age=esp_timer_get_time()-block.queued;
+      transportTiming.oldestBlockMs=max(transportTiming.oldestBlockMs,(uint32_t)(age/1000));
+      if(age>(cloud?cloudBacklogUs:lanBacklogUs)) {
+        Serial.println("CAPTURE_BACKLOG_EXPIRED"); reportTransportTiming();
+        haltCapture(); ws.sendTXT("{\"type\":\"source_error\",\"reason\":\"Audio backlog\"}");
+        count=0;
+        break;
+      }
+      encodeAudio(frames+count*wireFrameSize,block.samples,streamId,sequence+count,sampleIndex+count*400);
+      count++;
+    }
+    if(count) {
+      const uint32_t sendStarted=millis();
+      lastCloudSendAt=sendStarted;
+      const bool sent=ws.sendBIN(frames,count*wireFrameSize);
+      transportTiming.longestSendMs=max(transportTiming.longestSendMs,(uint32_t)(millis()-sendStarted));
+      if(!sent) { Serial.println("CAPTURE_SEND_FAILED"); reportTransportTiming(); haltCapture(); ws.disconnect(); }
+      else { sequence+=count; sampleIndex+=count*400; transportTiming.frames+=count; }
     }
   }
   delay(1);
