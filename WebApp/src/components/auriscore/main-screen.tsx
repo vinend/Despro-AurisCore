@@ -326,7 +326,7 @@ export function MainScreen() {
         </section>
 
         {/* Session History List */}
-        {account.user ? <SavedSessionHistory key={account.user.id} {...sessions}
+        {account.user ? <SavedSessionHistory key={account.user.id} {...sessions} busy={busy}
           onRetry={() => {
             if (recording.phase === "done" && recording.file && completed)
               void sessions.save(recording.file, completed, recordingOwner.current).then(() => sessions.retry());
@@ -340,7 +340,7 @@ export function MainScreen() {
         <p>
           Prototipe penelitian.{" "}
           {stream.isMock
-            ? "Audio simulator untuk uji rekayasa."
+            ? "Audio dari simulator."
             : "Analisis memakai audio yang diterima."}{" "}
           Keluaran skrining bukan diagnosis.
         </p>

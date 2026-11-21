@@ -84,14 +84,16 @@ export function parseOrganAnalysisResult(input: unknown, mode?: AnalysisMode): O
   return parsed.data;
 }
 export function analysisNotice(result: OrganAnalysisResult): string | null {
-  if (result.usage_scope === "engineering_test_only") return "Mode uji rekayasa. Hasil model belum divalidasi pada alat ini. Periksa versi model pada hasil.";
   const code = result.errors[0]?.code;
   if (!code) return null;
   if (["MODEL_UNAVAILABLE", "MODEL_NOT_AUTHORIZED"].includes(code)) return result.mode === "heart"
     ? "Analisis Murmur belum tersedia; hasil DSP Heart tetap ditampilkan."
     : result.mode === "lung" ? "Model Lung belum tersedia; pelatihan dan persetujuan model diperlukan."
     : "Model aktivitas abdomen belum tersedia untuk digunakan.";
-  if (code === "LUNG_INSUFFICIENT_CYCLES") return "Siklus napas lengkap belum cukup. Laju napas dan I:E tidak ditampilkan.";
+  if (code === "LUNG_INSUFFICIENT_CYCLES")
+    return result.mode === "lung" && result.analysis?.respiratory.reason === "model_does_not_support_phases"
+      ? null : "Siklus napas lengkap belum cukup. Laju napas dan I:E tidak ditampilkan.";
+  if (code === "ABDOMEN_MOTILITY_NOT_VALIDATED") return null;
   if (code === "LUNG_BRANCH_UNAVAILABLE") return "Sebagian jenis suara Lung belum didukung model ini.";
   if (["LOW_SIGNAL_QUALITY", "INVALID_AUDIO", "MURMUR_INSUFFICIENT_AUDIO", "ABDOMEN_INSUFFICIENT_AUDIO"].includes(code))
     return "Audio belum cukup untuk dianalisis. Gunakan WAV mono dengan sinyal jelas dan rekam ulang lebih lama.";

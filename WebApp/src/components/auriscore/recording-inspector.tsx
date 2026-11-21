@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef } from "react";
+import { ChevronDown } from "lucide-react";
 import type { OrganAnalysisResult } from "@/lib/auriscore/analysis-result";
 import { recordingLabels, recordingMarks, type recordingWaveform } from "@/lib/auriscore/recording-waveform";
 
 type Waveform = ReturnType<typeof recordingWaveform>;
 const colors = ["#5eead4", "#fde68a", "#fda4af", "#c4b5fd", "#93c5fd", "#bef264", "#fdba74"];
 const seconds = (value: number) => `${value.toFixed(2)} dtk`;
+const markerTime = (start: number, end: number) =>
+  end > start ? `${start.toFixed(2)}–${seconds(end)}` : seconds(start);
 
 export function RecordingInspector({ wave, result, position, playing, onSeek }: {
   wave: Waveform;
@@ -100,7 +103,7 @@ export function RecordingInspector({ wave, result, position, playing, onSeek }: 
           <span className="pointer-events-none sticky left-1 z-10 rounded bg-[#102520] px-1 text-[10px] font-medium"
             style={{ color: colors[lane % colors.length] }}>{recordingLabels[label]}</span>
           {entries.map((mark, index) => {
-            const name = `${recordingLabels[label]} · ${seconds(mark.start_s)}${mark.end_s > mark.start_s ? ` – ${seconds(mark.end_s)}` : ""}`;
+            const name = `${recordingLabels[label]} · ${markerTime(mark.start_s, mark.end_s)}`;
             return <button key={index} type="button" onClick={() => seek(mark.start_s)} title={name} aria-label={name}
               className="absolute bottom-0 h-5 min-w-[4px] rounded-sm border border-[#102520] focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-white"
               style={{ left: percent(mark.start_s), width: percent(mark.end_s - mark.start_s),
@@ -121,6 +124,21 @@ export function RecordingInspector({ wave, result, position, playing, onSeek }: 
       {activeLabels.length ? activeLabels.join(", ")
         : marks.length ? "Tidak ada penanda pada posisi ini." : result ? "Belum ada penanda untuk rekaman ini." : "Penanda muncul setelah hasil analisis tersedia."}
     </p>
+    {marks.length > 0 && <details className="group rounded-lg border border-border bg-background">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+        <span>Waktu deteksi <span className="font-normal text-muted-foreground">({marks.length})</span></span>
+        <ChevronDown aria-hidden="true" className="size-4 group-open:rotate-180" />
+      </summary>
+      <ul className="max-h-64 divide-y divide-border overflow-y-auto border-t border-border">
+        {marks.map((mark, index) => <li key={index}>
+          <button type="button" onClick={() => seek(mark.start_s)}
+            className="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-3 py-2 text-left text-sm hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2">
+            <span>{recordingLabels[mark.label]}</span>
+            <span className="text-xs tabular-nums text-muted-foreground">{markerTime(mark.start_s, mark.end_s)}</span>
+          </button>
+        </li>)}
+      </ul>
+    </details>}
     {lanes.some(([label]) => label === "murmur") &&
       <p className="text-xs text-muted-foreground">Penanda Murmur menunjukkan jendela yang melewati ambang referensi rekaman. Batas awal dan akhir belum divalidasi.</p>}
   </section>;

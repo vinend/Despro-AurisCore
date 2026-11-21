@@ -7,6 +7,8 @@ import { listSessions, pendingSessions, queueSession, removePending, sha256, syn
 import type { HistoryEntry } from "@/lib/auriscore/recording-session";
 import { createSessionSyncQueue } from "@/lib/auriscore/session-sync-queue";
 
+export type SessionToSave = Pick<HistoryEntry, "ts" | "mode" | "durationMs" | "result"> & { source: string };
+
 export function useSessionHistory() {
   const { user } = useAccount();
   const [entries, setEntries] = useState<SavedSession[]>([]);
@@ -54,8 +56,8 @@ export function useSessionHistory() {
     };
   }, [user?.id, retry]);
 
-  const save = useCallback(async (file: File, entry: HistoryEntry, userId: string | undefined) => {
-    if (!userId || savedFiles.current.has(file)) return;
+  const save = useCallback(async (file: File, entry: SessionToSave, userId: string | undefined) => {
+    if (!userId || owner.current !== userId || savedFiles.current.has(file)) return false;
     savedFiles.current.add(file);
     try {
       const id = crypto.randomUUID();
@@ -67,7 +69,12 @@ export function useSessionHistory() {
       await queueSession(pending);
       setMessage("Rekaman tersimpan lokal. Menyinkronkan…");
       if (owner.current === userId) await retry();
-    } catch { savedFiles.current.delete(file); setMessage("Rekaman belum tersimpan. Coba simpan lagi sebelum meninggalkan halaman."); }
+      return true;
+    } catch {
+      savedFiles.current.delete(file);
+      if (owner.current === userId) setMessage("Rekaman belum tersimpan. Coba simpan lagi sebelum meninggalkan halaman.");
+      return false;
+    }
   }, [retry]);
   const loadMore = async () => {
     if (!user || !entries.length) return;

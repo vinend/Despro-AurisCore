@@ -712,6 +712,12 @@ Live result timelines offset their local model windows using the received stream
 startSample / 8000. WAV upload starts at zero. Stream samples omit no synthetic
 padding, and model discarded tails remain explicitly unanalyzed.
 
+Signed-in users can add the attributed CirCor 1.0.3 training recording
+`2530_AV.wav` from account history. The WebApp verifies the official WAV hash,
+requests Heart analysis as usual, and queues the WAV and analysis through the
+existing private session sync. The session source identifies the dataset and
+file. Only the account initiating the import can access its saved session.
+
 Completed and saved sessions display a waveform and spectrogram computed in the
 browser from the same PCM16 mono WAV used by playback. Result labels use the
 recording-relative timestamps, support overlapping intervals, and can seek the

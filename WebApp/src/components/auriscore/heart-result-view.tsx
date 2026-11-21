@@ -12,7 +12,6 @@ export function HeartResultView({ result, timeOffset = 0, showTimeline = true }:
       <div className="auris-section-heading">
         <h3>Hasil Heart</h3><span>{result.schema_version}</span>
       </div>
-      {result.usage_scope === "engineering_test_only" && <p role="status">Uji rekayasa lokal. Skor dan waktu kandidat belum divalidasi pada alat ini.</p>}
       <dl className="auris-heart-result-grid">
         <div><dt>Kualitas sinyal</dt><dd>{display.quality}</dd></div>
         {result.quality.valid && <>
