@@ -46,7 +46,11 @@ and H022 fold 1 (Heart Murmur) on per-organ synthetic audio as PCM and WAV.
 It checks model identity and output agreement and confirms silence is rejected.
 After deployment the workflow checks public WebApp reachability and anonymous
 denials, then repeats authenticated inference against the production Python
-function. Its logs include model versions, Lung and Murmur scores, and Abdomen
+function. The production check also downloads the reference WAV from the
+website, verifies its SHA-256, and runs it through H022. The workflow sets the
+production inference hostname on the WebApp and supplies the same GitHub
+environment secret to both Vercel deployments and the smoke test. Its logs
+include model versions, Lung and Murmur scores, and Abdomen
 candidate counts and thresholds. Each deployment carries the source SHA in
 `sourceCommit` metadata.
 A failed production smoke marks the run failed for operator investigation.

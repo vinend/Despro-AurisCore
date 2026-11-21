@@ -1,5 +1,6 @@
 """Verify authenticated Heart, Lung and Abdomen inference using generated audio."""
 import argparse
+import hashlib
 import io
 import json
 import math
@@ -18,6 +19,7 @@ LUNG_MODEL = "EXP-L030-frame-temporal-delta"
 ABDOMEN_MODEL = "EXP-A105-abdomen-crnn-specaugment-noise"
 HEART_MODEL = "H022-fold1-engineering"
 CLASSES = {"wheeze", "rhonchi", "crackle"}
+HEART_REFERENCE_SHA256 = "493602122456932b91e62a694bd42f4d2c14f952804d17be85a1613f1ccd4e9f"
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -156,6 +158,7 @@ def check_mode(base: str, mode: str, token: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("base_url")
+    parser.add_argument("--reference-url", help="Download and verify the published Heart reference WAV")
     args = parser.parse_args()
     base = args.base_url.rstrip("/")
     url = urlsplit(base)
@@ -170,6 +173,12 @@ def main() -> None:
         except (SystemExit, OSError, ValueError, KeyError, TypeError) as error:
             failures.append(f"{mode}: {error}")
     require(not failures, "\n".join(failures))
+    if args.reference_url:
+        require(urlsplit(args.reference_url).scheme == "https", "Use HTTPS for the Heart reference")
+        with opener.open(args.reference_url, timeout=20) as response:
+            wav = response.read(4 * 1024 * 1024 + 1)
+        require(hashlib.sha256(wav).hexdigest() == HEART_REFERENCE_SHA256, "Heart reference checksum mismatch")
+        check_prediction("heart", "reference WAV", *request(base, "heart", "wav", wav, token))
 
 
 if __name__ == "__main__":

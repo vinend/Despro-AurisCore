@@ -20,6 +20,11 @@ export async function analyzeInCloud(bytes: Uint8Array, format: "pcm" | "wav", m
     signal: AbortSignal.any([signal, AbortSignal.timeout(55_000)]), redirect: "error", cache: "no-store",
   });
   if (response.status === 429) throw new AnalysisPythonError("Analisis sedang sibuk.", 429);
-  if (!response.ok) throw new AnalysisPythonError("Layanan cloud tidak dapat memproses audio.", 502);
+  if (!response.ok) {
+    console.warn("auriscore.analysis.upstream_rejected", { mode, format, status: response.status });
+    if (response.status === 401 || response.status === 403)
+      throw new AnalysisPythonError("Koneksi ke layanan analisis ditolak. Hubungi pengelola AurisCore.", 502);
+    throw new AnalysisPythonError("Layanan cloud tidak dapat memproses audio. Coba lagi.", 502);
+  }
   return parseOrganAnalysisResult(await response.json(), mode);
 }

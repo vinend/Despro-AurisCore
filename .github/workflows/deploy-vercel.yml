@@ -159,18 +159,23 @@ jobs:
         env:
           VERCEL_PROJECT_ID: prj_CwJAkPRlFSo6uxircot3ryjMgdT0
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          AURISCORE_INFERENCE_TOKEN: ${{ secrets.AURISCORE_INFERENCE_TOKEN }}
         working-directory: ${{ runner.temp }}/auriscore-web
         run: |
-          vercel deploy --prod --yes --non-interactive --meta "sourceCommit=$GITHUB_SHA"
+          vercel deploy --prod --yes --non-interactive --meta "sourceCommit=$GITHUB_SHA" \
+            --env AURISCORE_INFERENCE_URL=https://auriscore-inference.vercel.app \
+            --env "AURISCORE_INFERENCE_TOKEN=$AURISCORE_INFERENCE_TOKEN"
 
       - name: Deploy inference
         if: inputs.target != 'website'
         env:
           VERCEL_PROJECT_ID: prj_MiS9oCSlSTUwK95SKHtXFa03k6k7
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          AURISCORE_INFERENCE_TOKEN: ${{ secrets.AURISCORE_INFERENCE_TOKEN }}
         working-directory: ${{ runner.temp }}/auriscore-inference
         run: |
           vercel deploy --prod --yes --non-interactive --meta "sourceCommit=$GITHUB_SHA" \
+            --env "AURISCORE_INFERENCE_TOKEN=$AURISCORE_INFERENCE_TOKEN" \
             --env AURISCORE_LUNG_ENGINEERING_L030=1 --env AURISCORE_ABDOMEN_ENGINEERING_A105=1
 
       - name: Verify production reachability and access controls
@@ -184,4 +189,6 @@ jobs:
       - name: Verify production model predictions for Heart, Lung and Abdomen
         env:
           AURISCORE_INFERENCE_TOKEN: ${{ secrets.AURISCORE_INFERENCE_TOKEN }}
-        run: python scripts/smoke_vercel_inference.py https://auriscore-inference.vercel.app
+        run: |
+          python scripts/smoke_vercel_inference.py https://auriscore-inference.vercel.app \
+            --reference-url https://auriscore-cloud.vercel.app/api/reference/heart
