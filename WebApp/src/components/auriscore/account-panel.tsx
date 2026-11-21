@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { accountClient, type Profile } from "@/lib/auriscore/account-client";
+import { accountFailure } from "@/lib/auriscore/account-feedback";
 
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 type Account = { user: User | null; profile: Profile | null; ready: boolean; recovery: boolean; finishRecovery: () => void; refresh: () => Promise<void> };
@@ -18,7 +19,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     if (!configured) return;
     const version = ++revision.current;
     const client = accountClient();
-    const { data } = await client.auth.getSession();
+    try {
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
     if (version !== revision.current) return;
     setUser(data.session?.user ?? null);
     setProfile(null);
@@ -27,12 +30,16 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       if (version !== revision.current) return;
       setProfile(response.data as Profile | null);
     }
-    setReady(true);
+    } catch {
+      if (version === revision.current) { setUser(null); setProfile(null); }
+    } finally {
+      if (version === revision.current) setReady(true);
+    }
   }, []);
   useEffect(() => {
     if (!configured) return;
     let live = true;
-    void refresh();
+    const initialRefresh = setTimeout(() => { if (live) void refresh(); }, 0);
     const { data } = accountClient().auth.onAuthStateChange(event => {
       if (!live) return;
       if (event === "PASSWORD_RECOVERY") setRecovery(true);
@@ -40,7 +47,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       // Run queries after the Auth callback releases its session lock.
       setTimeout(() => { if (live) void refresh(); }, 0);
     });
-    return () => { live = false; data.subscription.unsubscribe(); };
+    return () => { live = false; clearTimeout(initialRefresh); data.subscription.unsubscribe(); };
   }, [refresh]);
   return <AccountContext.Provider value={{ user, profile, ready, recovery, finishRecovery: () => setRecovery(false), refresh }}>{children}</AccountContext.Provider>;
 }
@@ -51,6 +58,9 @@ export function AccountPanel({ presentation = "settings" }: { presentation?: "en
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [passwordChanged, setPasswordChanged] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState(false);
+  const [resendAt, setResendAt] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const field = "mt-2 min-h-12 w-full rounded-xl border border-border bg-[#fbfcfb] px-3.5 py-3 text-base font-normal transition-shadow placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-emerald-700/25 focus:border-emerald-700";
   if (!configured) return null;
   const profileForm = Boolean(user);
@@ -66,9 +76,9 @@ export function AccountPanel({ presentation = "settings" }: { presentation?: "en
           : "Masuk untuk melanjutkan pemeriksaan dan mengakses riwayat Anda."}</p></div>
     </div>
     {!ready && <p role="status">Memuat akun…</p>}
-    {ready && (!user || profileForm || changingPassword) && <form className="space-y-5" key={profile?.user_id ?? mode}
+    {ready && (!user || profileForm || changingPassword) && <form ref={formRef} className="space-y-5" key={profile?.user_id ?? mode}
       onSubmit={async event => {
-        event.preventDefault(); setBusy(true); setMessage(null);
+        event.preventDefault(); setBusy(true); setMessage(null); setConfirmEmail(false);
         const form = new FormData(event.currentTarget);
         const email = String(form.get("email") ?? "").trim();
         const password = String(form.get("password") ?? "");
@@ -111,7 +121,10 @@ export function AccountPanel({ presentation = "settings" }: { presentation?: "en
             if (error) throw error;
             await refresh();
           }
-        } catch { setMessage("Belum berhasil. Periksa data, konfirmasi email, dan koneksi. Coba lagi beberapa saat."); }
+        } catch (error) {
+          const feedback = accountFailure(error);
+          setMessage(feedback.message); setConfirmEmail(feedback.confirmEmail);
+        }
         finally { setBusy(false); }
       }}>
       {(profileForm || mode === "signup") && !changingPassword && <div className="grid grid-cols-1 gap-4">
@@ -146,6 +159,21 @@ export function AccountPanel({ presentation = "settings" }: { presentation?: "en
         </button>)}
     </div>}
     {message && <p role="status" className="text-sm">{message}</p>}
+    {confirmEmail && !user && mode === "login" && <button type="button" disabled={busy}
+      className="min-h-11 rounded-xl border border-emerald-800 px-4 py-2 text-sm font-medium text-emerald-900 disabled:opacity-60"
+      onClick={async () => {
+        const input = formRef.current?.elements.namedItem("email") as HTMLInputElement | null;
+        if (!input || !input.reportValidity()) return;
+        if (Date.now() < resendAt) { setMessage("Tunggu satu menit sebelum meminta email konfirmasi lagi."); return; }
+        setBusy(true); setResendAt(Date.now() + 60_000);
+        try {
+          const { error } = await accountClient().auth.resend({ type: "signup", email: input.value.trim(),
+            options: { emailRedirectTo: window.location.origin } });
+          if (error) throw error;
+          setMessage("Permintaan konfirmasi dikirim. Periksa inbox dan spam, lalu buka tautan jika email diterima.");
+        } catch (error) { setMessage(accountFailure(error).message); }
+        finally { setBusy(false); }
+      }}>Kirim ulang konfirmasi</button>}
     {user && !profile && <p className="text-sm">Lengkapi profil untuk akun ini.</p>}
   </section>;
 }

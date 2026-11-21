@@ -1,5 +1,11 @@
 # Accounts and saved recordings
 
+Login failures now give separate guidance for incorrect credentials,
+unconfirmed email, provider email restrictions and connectivity/rate limits.
+Only an unconfirmed-email response exposes the user-initiated confirmation
+resend action. It requests the existing signup confirmation and does not
+confirm the account itself. Provider email limits and SMTP requirements remain.
+
 The deployed WebApp uses the dedicated Supabase project `AurisCore`
 (`eillyzplrheparplfikw`) in Singapore, in the same organization as Netlab CTF.
 The CTF project remains independent. Supabase Auth stores credentials and email.

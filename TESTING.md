@@ -1,5 +1,13 @@
 # TESTING.md
 
+Login feedback regression (2026-11-21): distinguish unconfirmed email,
+invalid credentials, provider delivery restrictions, network failures and
+rate limits without echoing arbitrary provider messages. The confirmation
+resend action is user-initiated and locally throttled to once per minute;
+provider limits still apply. Session-restoration errors must release the
+loading state and fail closed. No email confirmation or authentication check
+is bypassed. External email delivery needs configured SMTP and separate verification.
+
 Account-menu browser acceptance (2026-11-18): production Settings has no
 standalone Edit profil/Keluar buttons. The workspace header exposes a profile
 icon with Settings and Keluar menu items. The later Settings cleanup removes
