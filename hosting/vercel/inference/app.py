@@ -61,6 +61,9 @@ max_wav_bytes = 4 * 1024 * 1024
 def service():
     packages = {mode + "_package": Path(value) for mode in pcm_bytes
                 if (value := os.environ.get("AURISCORE_" + mode.upper() + "_PACKAGE"))}
+    staged_heart = root / "heart-engineering" / "manifest.json"
+    if staged_heart.is_file() and "heart_package" not in packages:
+        os.environ.setdefault("AURISCORE_ENGINEERING_MODELS", str(staged_heart))
     return build_service(**packages)
 
 

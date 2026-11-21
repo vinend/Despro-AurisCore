@@ -1,5 +1,12 @@
 # TESTING.md
 
+Vercel release gate: GitHub Actions uses generated audio to check PCM and WAV
+for each organ, rejects anonymous requests and silent input, and reports model
+versions and prediction fields. PR checks use tracked Lung L030 and Abdomen
+A105 plus the hash-pinned Heart H022 fold 1 release. After deployment the same
+check requires all three models on the production endpoint. See
+[Vercel deployment](hosting/vercel/README.md).
+
 Cloud recording and RGB bench check (2026-11-21): firmware 0.3.4 was built
 with Arduino-ESP32 3.3.12, flashed on ESP32-S3, and passed its on-device LED,
 profile, frame and FIR self-tests. LED PWM is configured for the team's

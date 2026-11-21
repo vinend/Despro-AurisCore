@@ -1,19 +1,10 @@
 name: Deploy AurisCore to Vercel
 
 on:
+  pull_request:
+    branches: [master]
   push:
     branches: [master]
-    paths:
-      - '.github/workflows/deploy-vercel.yml'
-      - 'WebApp/**'
-      - 'AI-Pipeline/src/**'
-      - 'AI-Pipeline/scripts/_bootstrap.py'
-      - 'AI-Pipeline/scripts/analyze_recording.py'
-      - 'AI-Pipeline/results/EXP-L030-frame-temporal-delta/**'
-      - 'AI-Pipeline/results/EXP-A105-abdomen-crnn-specaugment-noise/**'
-      - 'hosting/requirements.txt'
-      - 'hosting/vercel/inference/**'
-      - 'scripts/prepare_vercel_inference.py'
   workflow_dispatch:
     inputs:
       target:
@@ -26,16 +17,92 @@ on:
 permissions:
   contents: read
 
+env:
+  HEART_BUNDLE_URL: https://github.com/vinend/Despro-AurisCore/releases/download/heart-research-model-h022/auriscore-heart-h022-fold1.zip
+  HEART_BUNDLE_SHA256: d711f357fd18bd3788690ce9b1eeb005f9a81b342b05f332ec89625425cce98e
+
 concurrency:
-  group: auriscore-vercel-production
-  cancel-in-progress: false
+  group: auriscore-vercel-${{ github.event.pull_request.number || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  checks:
+    name: Verify WebApp, gateway and model
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            WebApp/package-lock.json
+            WebApp/mini-services/device-gateway/package-lock.json
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: hosting/requirements.txt
+      - name: Install the inference runtime
+        run: python -m pip install -r hosting/requirements.txt 'fastapi==0.117.1' 'uvicorn==0.35.0' 'pytest==8.3.5'
+      - name: Test Lung L030, Abdomen A105 and Heart H022 over HTTP
+        env:
+          AURISCORE_INFERENCE_TOKEN: local-ci-fixture-token-only
+          AURISCORE_LUNG_ENGINEERING_L030: '1'
+          AURISCORE_ABDOMEN_ENGINEERING_A105: '1'
+        run: |
+          archive="$RUNNER_TEMP/auriscore-heart.zip"
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+            --max-time 60 --max-filesize 67108864 --output "$archive" --url "$HEART_BUNDLE_URL"
+          python scripts/prepare_vercel_inference.py --output "$RUNNER_TEMP/auriscore-inference" \
+            --heart-bundle "$archive" --heart-bundle-sha256 "$HEART_BUNDLE_SHA256"
+          python -m uvicorn app:app --app-dir "$RUNNER_TEMP/auriscore-inference" --host 127.0.0.1 --port 8765 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            kill -0 "$server_pid"
+            if curl --silent --max-time 1 --output /dev/null http://127.0.0.1:8765/; then
+              break
+            fi
+            sleep 1
+          done
+          python scripts/smoke_vercel_inference.py http://127.0.0.1:8765
+      - name: Install WebApp dependencies
+        working-directory: WebApp
+        run: npm ci
+      - name: Check WebApp types and run analysis tests
+        working-directory: WebApp
+        env:
+          AURISCORE_TEST_REDIS_URL: redis://127.0.0.1:6379
+        run: |
+          export AURISCORE_PYTHON="$(command -v python)"
+          npm run typecheck
+          npm run test:analysis
+      - name: Test the device gateway
+        working-directory: WebApp/mini-services/device-gateway
+        run: |
+          npm ci
+          npm test
+      - name: Build the production WebApp
+        working-directory: WebApp
+        env:
+          NEXT_PUBLIC_AURISCORE_CLOUD: '1'
+        run: npm run build
+
   deploy:
-    if: github.ref == 'refs/heads/master'
+    needs: checks
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       # Project and team IDs are public identifiers. Authentication is separate.
       VERCEL_ORG_ID: team_A1OilaTOwEzutdlWDjv1DXF5
@@ -52,9 +119,14 @@ jobs:
       - name: Check deployment credentials
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          AURISCORE_INFERENCE_TOKEN: ${{ secrets.AURISCORE_INFERENCE_TOKEN }}
         run: |
           if [[ -z "${VERCEL_TOKEN:-}" ]]; then
             echo "::error::Add VERCEL_TOKEN to the GitHub production environment secrets."
+            exit 1
+          fi
+          if [[ "${#AURISCORE_INFERENCE_TOKEN}" -lt 16 ]]; then
+            echo "::error::Add the existing inference bearer credential as AURISCORE_INFERENCE_TOKEN in the GitHub production environment."
             exit 1
           fi
 
@@ -62,15 +134,18 @@ jobs:
         run: npm install --global "vercel@${VERCEL_CLI_VERSION}"
 
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
-        if: inputs.target != 'website'
         with:
           python-version: '3.12'
 
       - name: Stage inference with frozen model assets
         if: inputs.target != 'website'
         run: |
+          archive="$RUNNER_TEMP/auriscore-heart.zip"
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+            --max-time 60 --max-filesize 67108864 --output "$archive" --url "$HEART_BUNDLE_URL"
           python -m pip install --no-deps 'librosa==0.11.0'
-          python scripts/prepare_vercel_inference.py --output "$RUNNER_TEMP/auriscore-inference"
+          python scripts/prepare_vercel_inference.py --output "$RUNNER_TEMP/auriscore-inference" \
+            --heart-bundle "$archive" --heart-bundle-sha256 "$HEART_BUNDLE_SHA256"
 
       - name: Stage tracked website source
         if: inputs.target != 'inference'
@@ -86,9 +161,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         working-directory: ${{ runner.temp }}/auriscore-web
         run: |
-          vercel deploy --prod --yes --non-interactive
-          curl --fail --silent --show-error --retry 3 --max-time 20 \
-            --output /dev/null https://auriscore-cloud.vercel.app/
+          vercel deploy --prod --yes --non-interactive --meta "sourceCommit=$GITHUB_SHA"
 
       - name: Deploy inference
         if: inputs.target != 'website'
@@ -97,11 +170,18 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         working-directory: ${{ runner.temp }}/auriscore-inference
         run: |
-          vercel deploy --prod --yes --non-interactive
-          status="$(curl --silent --show-error --retry 3 --max-time 20 \
-            --request POST --output /dev/null --write-out '%{http_code}' \
-            https://auriscore-inference.vercel.app/v1/analysis/lung/pcm)"
-          if [[ "$status" != 401 ]]; then
-            echo "::error::Expected inference authentication to return HTTP 401, got $status."
-            exit 1
-          fi
+          vercel deploy --prod --yes --non-interactive --meta "sourceCommit=$GITHUB_SHA" \
+            --env AURISCORE_LUNG_ENGINEERING_L030=1 --env AURISCORE_ABDOMEN_ENGINEERING_A105=1
+
+      - name: Verify production reachability and access controls
+        run: |
+          site=https://auriscore-cloud.vercel.app
+          curl --fail --silent --show-error --retry 3 --max-time 20 --output /dev/null "$site/"
+          test "$(curl --silent --show-error --max-time 20 --output /dev/null --write-out '%{http_code}' "$site/api/device-access")" = 403
+          test "$(curl --silent --show-error --max-time 20 --output /dev/null --write-out '%{http_code}' -X POST "$site/api/analysis/live?mode=lung")" = 401
+          echo 'WebApp reachable. Anonymous device control and live analysis rejected.'
+
+      - name: Verify production model predictions for Heart, Lung and Abdomen
+        env:
+          AURISCORE_INFERENCE_TOKEN: ${{ secrets.AURISCORE_INFERENCE_TOKEN }}
+        run: python scripts/smoke_vercel_inference.py https://auriscore-inference.vercel.app

@@ -20,24 +20,47 @@ patient recordings requires a separately approved design.
 ## Deploy from GitHub Actions
 
 The `Deploy AurisCore to Vercel` workflow targets the existing
-`auriscore-cloud` and `auriscore-inference` projects. It deploys both when
-deployment-related changes reach `master`. To deploy manually, open GitHub
+`auriscore-cloud` and `auriscore-inference` projects. Pull requests to
+`master` run **Verify WebApp, gateway and model** without production
+credentials. Require this check in the branch ruleset to prevent merges
+with pending or failed checks. A push to `master` reruns the checks before
+deploying both projects. To deploy manually, open GitHub
 Actions, select the workflow, choose `master`, then choose `both`,
 `website`, or `inference`. Use `both` if a backend change needs a matching
 WebApp parser. Use `inference` for a compatible model-only update.
 
 One-time setup in GitHub Settings → Environments → `production`:
 add the environment secret `VERCEL_TOKEN` using a Vercel access token scoped to
-`rain-frogs-projects` with production deployment permission. Restrict the
+`rain-frogs-projects` with production deployment permission. Also add
+`AURISCORE_INFERENCE_TOKEN` with the same bearer credential used by the two
+Vercel projects. The workflow requires both before deploying. Restrict the
 environment's deployment branches to `master`. Collaborators with repository
 write access can run the workflow using the saved secret. The public project
 and team IDs are in the workflow. Redis, pairing secrets and inference
 configuration are already managed in the existing Vercel projects.
 
-Inference uses the staging script and its selected tracked assets. Models
-stored outside Git, including a future Heart Murmur package, need an explicit
-private CI source before a deployment can include them. After a model update,
-verify the reported model version with authenticated synthetic audio.
+The check runs TypeScript, WebApp analysis tests with disposable TCP Redis,
+the device-gateway tests, a cloud-mode build, and HTTP requests against the
+staged Python function. The smoke script runs L030 (Lung), A105 (Abdomen),
+and H022 fold 1 (Heart Murmur) on per-organ synthetic audio as PCM and WAV.
+It checks model identity and output agreement and confirms silence is rejected.
+After deployment the workflow checks public WebApp reachability and anonymous
+denials, then repeats authenticated inference against the production Python
+function. Its logs include model versions, Lung and Murmur scores, and Abdomen
+candidate counts and thresholds. Each deployment carries the source SHA in
+`sourceCommit` metadata.
+A failed production smoke marks the run failed for operator investigation.
+These checks complement browser/account, physical acquisition, and optional
+HTTPS Redis relay checks.
+
+The workflow enables the staged L030 and A105 engineering models and downloads
+[H022 fold 1 from GitHub Releases](https://github.com/vinend/Despro-AurisCore/releases/tag/heart-research-model-h022).
+The release contains an encoder, normalization and logistic head derived from
+CirCor DigiScope by Oliveira et al., available under ODC Attribution 1.0.
+The staging script verifies the pinned archive hash and all three asset hashes
+and carries the release license and engineering scope into the bundle. To stage
+it manually, pass `--heart-bundle` and `--heart-bundle-sha256`. A website-only
+run checks the existing production inference backend.
 
 ## Provision the Vercel projects
 
@@ -84,12 +107,12 @@ application pairing. The WebApp needs to be able to reach Python before
 application bearer authentication. Configure Vercel deployment protection
 accordingly for these engineering endpoints.
 
-The staged service includes Heart DSP, opt-in L030 Lung clip candidates, and
+The staged service includes Heart DSP, H022 engineering Murmur when the release
+archive is supplied, opt-in L030 Lung clip candidates, and
 opt-in A105 Abdomen event candidates (`AURISCORE_ABDOMEN_ENGINEERING_A105=1`).
 A105 uses the tracked weights and exported training normalization vectors.
 The WebApp must support the versioned candidate interval fields before enabling
-A105. Heart Murmur requires its separate approved package or explicit
-engineering manifest and assets, which are outside the default stage.
+A105. An explicitly selected verified Heart package takes priority over H022.
 
 ## Prepare the ESP32
 

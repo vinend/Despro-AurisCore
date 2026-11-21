@@ -227,7 +227,8 @@ def l030_definition(pipeline: Path) -> BackendDefinition:
 
 
 def definitions(manifest, *, exclude=frozenset()):
-    config=json.loads(Path(manifest).read_text())
+    manifest = Path(manifest)
+    config=json.loads(manifest.read_text())
     if config.get('scope')!='engineering_test_only' or config.get('deployment_eligible') is not False:
         raise ValueError('Explicit engineering manifest required')
     result=[]
@@ -236,6 +237,7 @@ def definitions(manifest, *, exclude=frozenset()):
             continue
         if mode not in ('heart','abdomen','lung') or not item['hashes']:
             raise ValueError('Unsupported engineering model')
+        item = {**item, **{key: str(manifest.parent / item[key]) for key in item['hashes']}}
         for key,expected in item['hashes'].items():
             if digest(Path(item[key]))!=expected:
                 raise ValueError('Engineering source hash mismatch')

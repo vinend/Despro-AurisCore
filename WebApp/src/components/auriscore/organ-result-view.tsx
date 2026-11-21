@@ -40,6 +40,9 @@ export function OrganResultView({ result, timeOffset = 0 }: { result: OrganAnaly
     {detection && <>
       <dl className="auris-heart-result-grid">
         <div><dt>Versi model</dt><dd>{detection.model_version}</dd></div>
+        <div><dt>Kandidat bunyi usus</dt><dd>{result.analysis?.bowel_events?.length ?? 0}</dd></div>
+        <div><dt>Ambang awal kandidat</dt><dd>{detection.onset_threshold.toFixed(3)}</dd></div>
+        <div><dt>Ambang akhir kandidat</dt><dd>{detection.offset_threshold.toFixed(3)}</dd></div>
         <div><dt>Durasi dianalisis</dt><dd>{detection.analyzed_duration_s.toFixed(2)} s</dd></div>
         <div><dt>Sisa audio tidak dianalisis</dt><dd>{detection.discarded_tail_s.toFixed(2)} s</dd></div>
       </dl>

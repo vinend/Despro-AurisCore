@@ -12,7 +12,18 @@ export function LungResultView({ result, timeOffset = 0 }: { result: LungAnalysi
       <div><dt>Siklus lengkap</dt><dd>{r.complete_cycle_count}</dd></div>
       {(["wheeze", "crackle", "rhonchi"] as const).map(label => <div key={label}><dt>{names[label]}</dt><dd>{!result.supported_classes.includes(label) ? "Model belum mendukung" : `${result.sound_events.filter(e => e.label === label).length} kandidat akustik`}</dd></div>)}
     </dl>
-    {r.reason && <p role="status">Siklus lengkap belum cukup atau fase ambigu; metrik napas belum tersedia.</p>}
+    {r.reason && <p role="status">{r.reason === "model_does_not_support_phases"
+      ? "Model ini tidak mengukur fase atau laju napas."
+      : "Siklus lengkap belum cukup atau fase ambigu; metrik napas belum tersedia."}</p>}
+    <div className="auris-history-scroll"><table>
+      <caption>Skor maksimum dan ambang per kelas Lung</caption>
+      <thead><tr><th scope="col">Kelas</th><th scope="col">Skor</th><th scope="col">Ambang</th></tr></thead>
+      <tbody>{result.class_scores.map(score => <tr key={score.label}>
+        <td>{names[score.label] ?? score.label}</td>
+        <td>{score.maximum_frame_score.toFixed(3)}</td>
+        <td>{score.threshold.toFixed(3)}</td>
+      </tr>)}</tbody>
+    </table></div>
     <EvidenceTimeline timeOffset={timeOffset} title="Linimasa kandidat suara dan fase Lung" duration={result.analyzed_duration_s}
       intervals={[...result.sound_events, ...result.phase_intervals].sort((a,b) => a.start_s - b.start_s)
         .map(e => ({...e, label: names[e.label] ?? e.label}))}
